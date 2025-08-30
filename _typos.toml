@@ -1,0 +1,113 @@
+# Configuration for typos spell checker
+# See https://github.com/crate-ci/typos for configuration options
+
+[default]
+# Check these file types for typos
+extend-glob = ["*.{rs,toml,md,txt,yml,yaml}"]
+
+# Files to ignore
+extend-exclude = ["target/", "Cargo.lock", ".git/", "*.min.js", "node_modules/"]
+
+[default.extend-words]
+# Project name
+bole = "bole"
+
+# Package managers - JavaScript
+npm = "npm"
+pnpm = "pnpm"
+yarn = "yarn"
+bun = "bun"
+deno = "deno"
+
+# Package managers - Python
+pip = "pip"
+conda = "conda"
+poetry = "poetry"
+pdm = "pdm"
+uv = "uv"
+
+# Package managers - System
+homebrew = "homebrew"
+macports = "macports"
+nix = "nix"
+
+# Package managers - Haskell
+cabal = "cabal"
+stack = "stack"
+
+# Package managers - Rust
+cargo = "cargo"
+rustup = "rustup"
+
+# Programming languages
+gleam = "gleam"
+julia = "julia"
+scala = "scala"
+ocaml = "ocaml"
+elixir = "elixir"
+nim = "nim"
+zig = "zig"
+elm = "elm"
+php = "php"
+haskell = "haskell"
+python = "python"
+javascript = "javascript"
+typescript = "typescript"
+golang = "golang"
+
+# Nix ecosystem
+nixpkgs = "nixpkgs"
+flake = "flake"
+buildRustPackage = "buildRustPackage"
+mkShell = "mkShell"
+shellHook = "shellHook"
+buildInputs = "buildInputs"
+nativeBuildInputs = "nativeBuildInputs"
+overlays = "overlays"
+
+# Technical terms
+toolchain = "toolchain"
+codebase = "codebase"
+config = "config"
+toml = "toml"
+yaml = "yaml"
+workflows = "workflows"
+
+# Me
+lemorage = "lemorage"
+
+[type.rust]
+# Rust-specific settings
+extend-glob = ["*.rs"]
+# Allow Rust-specific terms
+extend-words = [
+  "struct",
+  "impl",
+  "enum",
+  "fn",
+  "mut",
+  "pub",
+  "const",
+  "async",
+  "await",
+  "rustc",
+  "rustfmt",
+  "clippy",
+  "toolchain",
+  "stdlib",
+  "std",
+  "serde",
+  "tokio",
+  "clap",
+  "tabled",
+]
+
+[files]
+# Be more lenient with certain files
+extend-exclude = [
+  # Third-party code
+  "vendor/",
+  "third_party/",
+  # Generated files
+  "*.generated.*",
+]

@@ -1,0 +1,22 @@
+# Use nightly to support Rust 2024 edition and rustfmt unstable options
+[toolchain]
+channel = "nightly"
+
+# Components needed for development
+components = [
+  "rustfmt",       # Code formatting
+  "clippy",        # Linting
+  "rust-src",      # Source for rust-analyzer
+  "rust-analyzer", # LSP server
+]
+
+# Target platforms
+targets = [
+  "x86_64-unknown-linux-gnu",
+  "x86_64-apple-darwin",
+  "aarch64-apple-darwin",
+  "x86_64-pc-windows-msvc",
+]
+
+# Use the 2024 profile for faster compilation
+profile = "default"

@@ -1,0 +1,57 @@
+[build]
+# Target directory optimization
+target-dir = "target"
+
+# Incremental compilation for faster rebuilds
+incremental = true
+
+[target.x86_64-unknown-linux-gnu]
+# Linux-specific optimizations
+rustflags = ["-C", "target-cpu=native"]
+
+[target.x86_64-apple-darwin]
+# macOS Intel optimizations  
+rustflags = ["-C", "target-cpu=native"]
+
+[target.aarch64-apple-darwin]
+# macOS Apple Silicon optimizations
+rustflags = ["-C", "target-cpu=native"]
+
+[env]
+# Faster linker on macOS
+CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER = "clang"
+CARGO_TARGET_AARCH64_APPLE_DARWIN_LINKER = "clang"
+
+# Enable faster linker on Linux if available
+# Uncomment if you have mold or lld installed
+# CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER = "clang"
+# CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS = "-C link-arg=-fuse-ld=mold"
+
+[profile.dev]
+# Development profile - prioritize compile speed
+debug = true
+opt-level = 0
+overflow-checks = true
+lto = false
+panic = "unwind"
+incremental = true
+codegen-units = 256  # More units = faster parallel compilation
+
+[profile.release]
+# Release profile - prioritize runtime performance  
+debug = false
+opt-level = 3
+overflow-checks = false
+lto = "fat"          # Full LTO for maximum optimization
+panic = "abort"      # Smaller binary, faster startup
+codegen-units = 1    # Better optimization
+strip = true         # Remove debug symbols for smaller binary
+
+[alias]
+# Useful shortcuts
+b = "build"
+c = "check"
+t = "test"
+r = "run"
+f = "fmt"
+l = "clippy"

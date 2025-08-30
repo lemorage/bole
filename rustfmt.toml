@@ -1,0 +1,39 @@
+# Rustfmt configuration for consistent code formatting
+# See https://rust-lang.github.io/rustfmt for options
+
+# Enable nightly-only formatting options (requires nightly rustfmt)
+unstable_features = true
+
+# Core formatting rules
+max_width = 100
+hard_tabs = false
+tab_spaces = 4
+newline_style = "Unix"
+
+# Import formatting
+imports_granularity = "Crate"
+group_imports = "StdExternalCrate"
+reorder_imports = true
+
+# Code organization
+use_small_heuristics = "Default"
+fn_single_line = false
+where_single_line = false
+force_explicit_abi = true
+
+# Comments and documentation
+wrap_comments = true
+format_code_in_doc_comments = true
+normalize_doc_attributes = true
+
+# String formatting
+format_strings = false
+format_macro_matchers = true
+
+# Control flow
+match_block_trailing_comma = true
+trailing_comma = "Vertical"
+trailing_semicolon = true
+
+# Style choices for CLI tool
+edition = "2024"
