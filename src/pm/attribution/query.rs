@@ -1,6 +1,11 @@
 use std::{collections::HashMap, path::Path};
 
-use crate::pm::{Pipx, python::Pip, rust::Cargo, types::InstallMethod};
+use crate::pm::{
+    Pipx,
+    python::Pip,
+    rust::Cargo,
+    types::{AsOrigin, InstallMethod},
+};
 
 /// Trait for package manager queriers that can authoritatively identify
 /// which tools they manage
@@ -79,15 +84,14 @@ impl Default for Resolver {
 pub fn resolve(tool_name: &str, path: &Path) -> Option<InstallMethod> {
     let resolver = Resolver::new();
     if let Some(manager) = resolver.resolve(tool_name, path) {
-        let static_manager = match manager.as_str() {
-            "pipx" => "pipx",
-            "pip" => "pip",
-            "cargo" => "cargo",
-            "rye" => "rye",
-            "pdm" => "pdm",
-            _ => "package manager", // Generic fallback
+        // Use the AsOrigin trait to get proper origin representation
+        let origin = match manager.as_str() {
+            "pipx" => Pipx::as_origin(),
+            "pip" => Pipx::as_origin(), // pip installs often via pipx
+            "cargo" => Cargo::as_origin(),
+            _ => return Some(InstallMethod::Unknown),
         };
-        return Some(InstallMethod::SystemPackageManager(static_manager));
+        return Some(InstallMethod::Chain(vec![origin]));
     }
     None
 }

@@ -6,6 +6,7 @@ use crate::{
         PmInfo,
         attribution::query::{Querier, Tool},
         find_all_pms_with_args,
+        types::{AsOrigin, Origin},
     },
 };
 
@@ -13,6 +14,12 @@ pub struct Cargo;
 
 impl Cargo {
     const NAME: &'static str = "cargo";
+}
+
+impl AsOrigin for Cargo {
+    fn as_origin() -> Origin {
+        Origin::Toolchain("Rustup") // Cargo normally comes from Rustup toolchain
+    }
 }
 
 impl Find for Cargo {

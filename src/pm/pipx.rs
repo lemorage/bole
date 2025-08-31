@@ -1,6 +1,9 @@
 use std::process::Command;
 
-use crate::pm::attribution::query::{Querier, Tool};
+use crate::pm::{
+    attribution::query::{Querier, Tool},
+    types::{AsOrigin, Origin},
+};
 
 /// Pipx - Python application installer and manager
 ///
@@ -11,6 +14,12 @@ pub struct Pipx;
 
 impl Pipx {
     const NAME: &'static str = "pipx";
+}
+
+impl AsOrigin for Pipx {
+    fn as_origin() -> Origin {
+        Origin::PackageManager("Pipx")
+    }
 }
 
 impl Querier for Pipx {

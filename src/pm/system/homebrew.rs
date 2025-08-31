@@ -1,12 +1,21 @@
 use crate::{
     find::Find,
-    pm::{PmInfo, find_all_pms},
+    pm::{
+        PmInfo, find_all_pms,
+        types::{AsOrigin, Origin},
+    },
 };
 
 pub struct Homebrew;
 
 impl Homebrew {
     const NAME: &'static str = "brew";
+}
+
+impl AsOrigin for Homebrew {
+    fn as_origin() -> Origin {
+        Origin::PackageManager("Homebrew")
+    }
 }
 
 impl Find for Homebrew {

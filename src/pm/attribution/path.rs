@@ -1,6 +1,9 @@
 use std::{fs, path::Path};
 
-use crate::pm::types::InstallMethod;
+use crate::pm::{
+    system::Homebrew,
+    types::{AsOrigin, InstallMethod, Origin},
+};
 
 /// Path-based installation method detection
 pub fn detect(path: &Path) -> InstallMethod {
@@ -31,9 +34,12 @@ fn check_environment_patterns(path_str: &str) -> Option<InstallMethod> {
         if path_str.starts_with(&homebrew_prefix) {
             // Check for more specific patterns
             if path_str.contains("/corepack/dist/") {
-                return Some(InstallMethod::LanguageToolchain("homebrew → corepack"));
+                return Some(InstallMethod::Chain(vec![
+                    Homebrew::as_origin(),
+                    Origin::Wrapper("Corepack"),
+                ]));
             }
-            return Some(InstallMethod::SystemPackageManager("homebrew"));
+            return Some(InstallMethod::Chain(vec![Homebrew::as_origin()]));
         }
     }
     None
@@ -45,44 +51,44 @@ fn check_toolchain_patterns(path_str: &str, home: &str) -> Option<InstallMethod>
     if path_str.contains(&format!("{}/.cargo/", home))
         || path_str.contains(&format!("{}/.rustup/", home))
     {
-        return Some(InstallMethod::LanguageToolchain("rustup"));
+        return Some(InstallMethod::Chain(vec![Origin::Toolchain("Rustup")]));
     }
 
     // Node toolchains
     if path_str.contains(&format!("{}/.nvm/", home)) {
-        return Some(InstallMethod::LanguageToolchain("nvm"));
+        return Some(InstallMethod::Chain(vec![Origin::Toolchain("NVM")]));
     }
 
     // Haskell toolchain
     if path_str.contains(&format!("{}/.ghcup/", home)) {
-        return Some(InstallMethod::LanguageToolchain("ghcup"));
+        return Some(InstallMethod::Chain(vec![Origin::Toolchain("GHCup")]));
     }
 
     // JavaScript runtimes (official installers)
     if path_str.contains(&format!("{}/.bun/", home)) {
-        return Some(InstallMethod::OfficialInstaller("Bun"));
+        return Some(InstallMethod::Chain(vec![Origin::Direct(Some("Bun"))]));
     }
     if path_str.contains(&format!("{}/.deno/", home)) {
-        return Some(InstallMethod::OfficialInstaller("Deno"));
+        return Some(InstallMethod::Chain(vec![Origin::Direct(Some("Deno"))]));
     }
 
     // Python package managers
     if path_str.contains(&format!("{}/.local/bin/", home)) {
         if path_str.contains("poetry") {
-            return Some(InstallMethod::OfficialInstaller("Poetry"));
+            return Some(InstallMethod::Chain(vec![Origin::Direct(Some("Poetry"))]));
         }
         // Other common .local/bin tools
-        return Some(InstallMethod::OfficialInstaller("pipx/pip"));
+        return Some(InstallMethod::Chain(vec![Origin::Direct(Some("pipx/pip"))]));
     }
 
     // pipx installations (the real location after symlink resolution)
     if path_str.contains(&format!("{}/.local/pipx/venvs/", home)) {
-        return Some(InstallMethod::SystemPackageManager("pipx"));
+        return Some(InstallMethod::Chain(vec![Origin::PackageManager("Pipx")]));
     }
 
     // Poetry's alternative location
     if path_str.contains(&format!("{}/.poetry/", home)) {
-        return Some(InstallMethod::OfficialInstaller("Poetry"));
+        return Some(InstallMethod::Chain(vec![Origin::Direct(Some("Poetry"))]));
     }
 
     None
@@ -92,21 +98,24 @@ fn check_toolchain_patterns(path_str: &str, home: &str) -> Option<InstallMethod>
 fn check_system_patterns(path_str: &str) -> InstallMethod {
     // Nix
     if path_str.contains("/nix/store/") {
-        return InstallMethod::SystemPackageManager("nix");
+        return InstallMethod::Chain(vec![Origin::PackageManager("Nix")]);
     }
 
     // System provided
     if path_str.starts_with("/System/") || path_str.starts_with("/usr/bin/") {
-        return InstallMethod::SystemProvided;
+        return InstallMethod::System;
     }
 
     // Official installers
     if path_str.starts_with("/usr/local/") {
         // Check for corepack first
         if path_str.contains("/corepack/dist/") {
-            return InstallMethod::LanguageToolchain("nodejs → corepack");
+            return InstallMethod::Chain(vec![
+                Origin::Toolchain("Node.js"),
+                Origin::Wrapper("Corepack"),
+            ]);
         }
-        return InstallMethod::OfficialInstaller("Direct Install");
+        return InstallMethod::Chain(vec![Origin::Direct(Some("Direct Install"))]);
     }
 
     InstallMethod::Unknown
