@@ -1,142 +1,33 @@
+mod attribution;
 mod gleam;
 mod go;
 mod haskell;
 mod js;
+mod pipx;
 mod python;
 mod rust;
 mod system;
+mod types;
 
-use std::{fs, path::Path, process::Command};
+use std::{path::Path, process::Command};
 
+pub use attribution::query::{Querier, Resolver, Tool};
 pub use gleam::Gleam;
 pub use go::Go;
 pub use haskell::{Cabal, Stack};
 pub use js::{Bun, Deno, Npm, Pnpm, Yarn};
+pub use pipx::Pipx;
 pub use python::{Conda, Pdm, Pip, Poetry, Uv};
 pub use rust::Cargo;
-use serde::Serialize;
 pub use system::{Homebrew, Macports, Nix};
-use tabled::Tabled;
+pub use types::{GroupedPmInfo, InstallMethod, PmInfo};
 use which::which;
 
 use crate::find::Find;
 
-#[derive(Debug, Serialize, Tabled, Clone)]
-pub enum InstallMethod {
-    OfficialInstaller(&'static str),
-    SystemPackageManager(&'static str),
-    LanguageToolchain(&'static str),
-    SystemProvided,
-    Unknown,
-}
-
-impl std::fmt::Display for InstallMethod {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            InstallMethod::OfficialInstaller(via) => write!(f, "Official Installer ({})", via),
-            InstallMethod::SystemPackageManager(pm) => write!(f, "{} Package", pm),
-            InstallMethod::LanguageToolchain(tool) => write!(f, "{}", tool),
-            InstallMethod::SystemProvided => write!(f, "System Provided"),
-            InstallMethod::Unknown => write!(f, "Unknown"),
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Tabled)]
-pub struct PmInfo {
-    #[tabled(rename = "Name")]
-    pub name: String,
-    #[tabled(rename = "Version")]
-    pub version: String,
-
-    #[tabled(rename = "Installed Via")]
-    pub install_method: InstallMethod,
-
-    #[tabled(rename = "Path")]
-    pub path: String,
-}
-
-// The main inference function
-pub(crate) fn determine_install_method(path: &Path) -> InstallMethod {
-    let canonical_path = match fs::canonicalize(path) {
-        Ok(p) => p,
-        Err(_) => return InstallMethod::Unknown,
-    };
-    let path_str = canonical_path.to_string_lossy();
-
-    // 1. Check environment variables first
-    if let Ok(homebrew_prefix) = std::env::var("HOMEBREW_PREFIX") {
-        if path_str.starts_with(&homebrew_prefix) {
-            // Check for more specific patterns first
-            if path_str.contains("/corepack/dist/") {
-                return InstallMethod::LanguageToolchain("homebrew → corepack");
-            }
-            return InstallMethod::SystemPackageManager("homebrew");
-        }
-    }
-
-    // 2. Check well-known toolchain directories
-    let home = std::env::var("HOME").unwrap_or_default();
-
-    // Rust toolchain
-    if path_str.contains(&format!("{}/.cargo/", home))
-        || path_str.contains(&format!("{}/.rustup/", home))
-    {
-        return InstallMethod::LanguageToolchain("rustup");
-    }
-
-    // Node toolchains
-    if path_str.contains(&format!("{}/.nvm/", home)) {
-        return InstallMethod::LanguageToolchain("nvm");
-    }
-
-    // JavaScript runtimes (official installers)
-    if path_str.contains(&format!("{}/.bun/", home)) {
-        return InstallMethod::OfficialInstaller("Bun");
-    }
-    if path_str.contains(&format!("{}/.deno/", home)) {
-        return InstallMethod::OfficialInstaller("Deno");
-    }
-
-    // Python package managers
-    if path_str.contains(&format!("{}/.local/bin/", home)) {
-        if path_str.contains("poetry") {
-            return InstallMethod::OfficialInstaller("Poetry");
-        }
-        // Other common .local/bin tools
-        return InstallMethod::OfficialInstaller("pipx/pip");
-    }
-
-    // pipx installations (the real location after symlink resolution)
-    if path_str.contains(&format!("{}/.local/pipx/venvs/", home)) {
-        return InstallMethod::SystemPackageManager("pipx");
-    }
-
-    // Poetry's alternative location
-    if path_str.contains(&format!("{}/.poetry/", home)) {
-        return InstallMethod::OfficialInstaller("Poetry");
-    }
-
-    // Nix
-    if path_str.contains("/nix/store/") {
-        return InstallMethod::SystemPackageManager("nix");
-    }
-
-    // System provided
-    if path_str.starts_with("/System/") || path_str.starts_with("/usr/bin/") {
-        return InstallMethod::SystemProvided;
-    }
-
-    // Official installers
-    if path_str.starts_with("/usr/local/") {
-        // Check for corepack first
-        if path_str.contains("/corepack/dist/") {
-            return InstallMethod::LanguageToolchain("nodejs → corepack");
-        }
-        return InstallMethod::OfficialInstaller("Direct Install");
-    }
-
-    InstallMethod::Unknown
+/// Main entry point for determining how a package manager was installed
+pub fn determine_install_method(path: &Path) -> InstallMethod {
+    attribution::determine(path)
 }
 
 /// Enhanced detector that finds ALL instances of a package manager
@@ -326,25 +217,25 @@ pub fn all_package_managers() -> Vec<Box<dyn Find<Output = PmInfo>>> {
         Box::new(Homebrew),
         Box::new(Macports),
         Box::new(Nix),
-        // Python
-        Box::new(Conda),
-        Box::new(Pdm),
-        Box::new(Pip),
-        Box::new(Poetry),
-        Box::new(Uv),
         // JavaScript/TypeScript
         Box::new(Bun),
         Box::new(Deno),
         Box::new(Npm),
         Box::new(Pnpm),
         Box::new(Yarn),
+        // Python
+        Box::new(Conda),
+        Box::new(Pdm),
+        Box::new(Pip),
+        Box::new(Poetry),
+        Box::new(Uv),
+        // Go
+        Box::new(Go),
+        // Rust
+        Box::new(Cargo),
         // Haskell
         Box::new(Cabal),
         Box::new(Stack),
-        // Rust
-        Box::new(Cargo),
-        // Go
-        Box::new(Go),
         // Gleam
         Box::new(Gleam),
     ]
