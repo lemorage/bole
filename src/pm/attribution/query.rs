@@ -1,8 +1,7 @@
 use std::{collections::HashMap, path::Path};
 
 use crate::pm::{
-    Pipx,
-    python::Pip,
+    python::{Pip, Pipx},
     rust::Cargo,
     types::{AsOrigin, InstallMethod},
 };

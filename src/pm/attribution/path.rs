@@ -1,6 +1,7 @@
 use std::{fs, path::Path};
 
 use crate::pm::{
+    js::Corepack,
     system::Homebrew,
     types::{AsOrigin, InstallMethod, Origin},
 };
@@ -36,7 +37,7 @@ fn check_environment_patterns(path_str: &str) -> Option<InstallMethod> {
             if path_str.contains("/corepack/dist/") {
                 return Some(InstallMethod::Chain(vec![
                     Homebrew::as_origin(),
-                    Origin::Wrapper("Corepack"),
+                    Corepack::as_origin(),
                 ]));
             }
             return Some(InstallMethod::Chain(vec![Homebrew::as_origin()]));
@@ -110,10 +111,7 @@ fn check_system_patterns(path_str: &str) -> InstallMethod {
     if path_str.starts_with("/usr/local/") {
         // Check for corepack first
         if path_str.contains("/corepack/dist/") {
-            return InstallMethod::Chain(vec![
-                Origin::Toolchain("Node.js"),
-                Origin::Wrapper("Corepack"),
-            ]);
+            return InstallMethod::Chain(vec![Origin::Toolchain("Node.js"), Corepack::as_origin()]);
         }
         return InstallMethod::Chain(vec![Origin::Direct(Some("Direct Install"))]);
     }

@@ -34,9 +34,6 @@ Toolchains to support:
 - Asdf, Sdkman (Multi-language)
 - Pyenv (Python), Go (Go toolchain)
 
-Wrappers to support:
-- Corepack (Node.js package manager wrapper)
-
 Implementation pattern:
 ```rust
 impl AsOrigin for NewPM {
