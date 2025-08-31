@@ -11,15 +11,19 @@ use crate::{
 
 pub struct Cargo;
 
+impl Cargo {
+    const NAME: &'static str = "cargo";
+}
+
 impl Find for Cargo {
     type Output = PmInfo;
 
     fn name(&self) -> &'static str {
-        "cargo"
+        Self::NAME
     }
 
     fn find(&self) -> Vec<PmInfo> {
-        find_all_pms_with_args(<Self as Find>::name(self), &["-V"])
+        find_all_pms_with_args(Self::NAME, &["-V"])
             .into_iter()
             .map(|mut pm_info| {
                 // Clean cargo's verbose output
@@ -35,7 +39,7 @@ impl Find for Cargo {
 
 impl Querier for Cargo {
     fn name(&self) -> &'static str {
-        "cargo"
+        Self::NAME
     }
 
     fn is_available(&self) -> bool {
@@ -64,7 +68,7 @@ impl Querier for Cargo {
                                 name: name.to_string(),
                                 version,
                                 path: None,
-                                manager: <Self as Querier>::name(self).to_string(),
+                                manager: Self::NAME.to_string(),
                             });
                         }
                     }

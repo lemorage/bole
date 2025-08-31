@@ -5,15 +5,19 @@ use crate::{
 
 pub struct Conda;
 
+impl Conda {
+    const NAME: &'static str = "conda";
+}
+
 impl Find for Conda {
     type Output = PmInfo;
 
     fn name(&self) -> &'static str {
-        "conda"
+        Self::NAME
     }
 
     fn find(&self) -> Vec<PmInfo> {
-        find_all_pms(self.name())
+        find_all_pms(Self::NAME)
             .into_iter()
             .map(|mut pm_info| {
                 // Clean conda's verbose output

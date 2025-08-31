@@ -5,15 +5,19 @@ use crate::{
 
 pub struct Stack;
 
+impl Stack {
+    const NAME: &'static str = "stack";
+}
+
 impl Find for Stack {
     type Output = PmInfo;
 
     fn name(&self) -> &'static str {
-        "stack"
+        Self::NAME
     }
 
     fn find(&self) -> Vec<PmInfo> {
-        find_all_pms(self.name())
+        find_all_pms(Self::NAME)
             .into_iter()
             .map(|mut pm_info| {
                 // Clean stack's verbose output

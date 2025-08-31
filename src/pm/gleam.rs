@@ -5,15 +5,19 @@ use crate::{
 
 pub struct Gleam;
 
+impl Gleam {
+    const NAME: &'static str = "gleam";
+}
+
 impl Find for Gleam {
     type Output = PmInfo;
 
     fn name(&self) -> &'static str {
-        "gleam"
+        Self::NAME
     }
 
     fn find(&self) -> Vec<PmInfo> {
-        find_all_pms(self.name())
+        find_all_pms(Self::NAME)
             .into_iter()
             .map(|mut pm_info| {
                 // Clean gleam's verbose output

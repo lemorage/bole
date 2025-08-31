@@ -11,15 +11,19 @@ use crate::{
 
 pub struct Pip;
 
+impl Pip {
+    const NAME: &'static str = "pip";
+}
+
 impl Find for Pip {
     type Output = PmInfo;
 
     fn name(&self) -> &'static str {
-        "pip"
+        Self::NAME
     }
 
     fn find(&self) -> Vec<PmInfo> {
-        find_all_pms(<Self as Find>::name(self))
+        find_all_pms(Self::NAME)
             .into_iter()
             .map(|mut pm_info| {
                 // Clean pip's verbose output
@@ -35,7 +39,7 @@ impl Find for Pip {
 
 impl Querier for Pip {
     fn name(&self) -> &'static str {
-        "pip"
+        Self::NAME
     }
 
     fn is_available(&self) -> bool {
@@ -58,7 +62,7 @@ impl Querier for Pip {
                                 name: name.to_string(),
                                 version: version.to_string(),
                                 path: None,
-                                manager: <Self as Querier>::name(self).to_string(),
+                                manager: Self::NAME.to_string(),
                             })
                         } else {
                             None
@@ -90,7 +94,7 @@ impl Querier for Pip {
                     name: tool_name.to_string(),
                     version,
                     path: None,
-                    manager: <Self as Querier>::name(self).to_string(),
+                    manager: Self::NAME.to_string(),
                 })
             },
             _ => None,

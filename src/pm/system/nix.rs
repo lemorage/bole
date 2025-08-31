@@ -5,6 +5,10 @@ use crate::{
 
 pub struct Nix;
 
+impl Nix {
+    const NAME: &'static str = "nix";
+}
+
 impl Find for Nix {
     type Output = PmInfo;
 
@@ -13,7 +17,7 @@ impl Find for Nix {
     }
 
     fn find(&self) -> Vec<PmInfo> {
-        find_all_pms(self.name())
+        find_all_pms(Self::NAME)
             .into_iter()
             .map(|mut pm_info| {
                 // Clean nix's verbose output

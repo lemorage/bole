@@ -9,9 +9,13 @@ use crate::pm::attribution::query::{Querier, Tool};
 /// as a "package manager to discover"
 pub struct Pipx;
 
+impl Pipx {
+    const NAME: &'static str = "pipx";
+}
+
 impl Querier for Pipx {
     fn name(&self) -> &'static str {
-        "pipx"
+        Self::NAME
     }
 
     fn is_available(&self) -> bool {
@@ -33,7 +37,7 @@ impl Querier for Pipx {
                                 name: parts[0].to_string(),
                                 version: parts[1].to_string(),
                                 path: None, // pipx doesn't provide paths in short format
-                                manager: self.name().to_string(),
+                                manager: Self::NAME.to_string(),
                             })
                         } else {
                             None

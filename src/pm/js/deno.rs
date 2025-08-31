@@ -5,15 +5,19 @@ use crate::{
 
 pub struct Deno;
 
+impl Deno {
+    const NAME: &'static str = "deno";
+}
+
 impl Find for Deno {
     type Output = PmInfo;
 
     fn name(&self) -> &'static str {
-        "deno"
+        Self::NAME
     }
 
     fn find(&self) -> Vec<PmInfo> {
-        find_all_pms_with_args(self.name(), &["-V"])
+        find_all_pms_with_args(Self::NAME, &["-V"])
             .into_iter()
             .map(|mut pm_info| {
                 // Clean deno's verbose output

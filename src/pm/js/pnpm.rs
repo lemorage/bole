@@ -4,13 +4,19 @@ use crate::{
 };
 
 pub struct Pnpm;
+
+impl Pnpm {
+    const NAME: &'static str = "pnpm";
+}
+
 impl Find for Pnpm {
     type Output = PmInfo;
+
     fn name(&self) -> &'static str {
-        "pnpm"
+        Self::NAME
     }
 
     fn find(&self) -> Vec<PmInfo> {
-        find_all_pms(self.name())
+        find_all_pms(Self::NAME)
     }
 }

@@ -5,15 +5,19 @@ use crate::{
 
 pub struct Go;
 
+impl Go {
+    const NAME: &'static str = "go";
+}
+
 impl Find for Go {
     type Output = PmInfo;
 
     fn name(&self) -> &'static str {
-        "go"
+        Self::NAME
     }
 
     fn find(&self) -> Vec<PmInfo> {
-        find_all_pms_with_args(self.name(), &["version"])
+        find_all_pms_with_args(Self::NAME, &["version"])
             .into_iter()
             .map(|mut pm_info| {
                 // Clean go's verbose output

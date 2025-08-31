@@ -5,15 +5,19 @@ use crate::{
 
 pub struct Pdm;
 
+impl Pdm {
+    const NAME: &'static str = "pdm";
+}
+
 impl Find for Pdm {
     type Output = PmInfo;
 
     fn name(&self) -> &'static str {
-        "pdm"
+        Self::NAME
     }
 
     fn find(&self) -> Vec<PmInfo> {
-        find_all_pms(self.name())
+        find_all_pms(Self::NAME)
             .into_iter()
             .map(|mut pm_info| {
                 // Clean pdm's verbose output

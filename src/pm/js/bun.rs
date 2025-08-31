@@ -5,14 +5,18 @@ use crate::{
 
 pub struct Bun;
 
+impl Bun {
+    const NAME: &'static str = "bun";
+}
+
 impl Find for Bun {
     type Output = PmInfo;
 
     fn name(&self) -> &'static str {
-        "bun"
+        Self::NAME
     }
 
     fn find(&self) -> Vec<PmInfo> {
-        find_all_pms(self.name())
+        find_all_pms(Self::NAME)
     }
 }
