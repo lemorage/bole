@@ -1,0 +1,17 @@
+# Clippy configuration for bole
+# See: https://doc.rust-lang.org/clippy/configuration.html
+
+# Cognitive complexity threshold
+cognitive-complexity-threshold = 15
+
+# Don't warn about large enum variants in CLI tools
+enum-variant-size-threshold = 500
+
+# Allow more function parameters for CLI tools
+too-many-arguments-threshold = 10
+
+# CLI tools can have longer functions
+too-many-lines-threshold = 150
+
+# Don't be pedantic about trivial copy types
+trivial-copy-size-limit = 256
