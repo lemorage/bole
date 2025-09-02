@@ -1,5 +1,6 @@
 use bole::{find::Find, pm};
 use clap::Parser;
+use std::collections::HashMap;
 use tabled::{Table, settings::Style};
 
 const BOLE_BANNER: &str = r#"
@@ -26,11 +27,14 @@ const BOLE_BANNER: &str = r#"
     before_help = BOLE_BANNER,
     before_long_help = BOLE_BANNER
 )]
-struct Bole {}
+struct Bole {
+    /// Show all package manager instances
+    #[arg(long, help = "Show all package manager instances with detailed paths")]
+    all: bool,
+}
 
 fn main() {
-    // Parse CLI flags (currently none; enables --help/--version)
-    let _ = Bole::parse();
+    let args = Bole::parse();
 
     let mut found_pms = Vec::new();
 
@@ -44,6 +48,31 @@ fn main() {
         return;
     }
 
-    let mut table = Table::new(found_pms);
-    println!("{}", table.with(Style::modern()));
+    if args.all {
+        let mut table = Table::new(found_pms);
+        println!("{}", table.with(Style::modern()));
+    } else {
+        let mut table = Table::new(group_pm_instances(found_pms));
+        println!("{}", table.with(Style::modern()));
+        println!("\n💡 Use --all to see all individual installations");
+    }
+}
+
+fn group_pm_instances(instances: Vec<pm::PmInfo>) -> Vec<pm::GroupedPmInfo> {
+    let mut grouped: HashMap<String, Vec<pm::PmInfo>> = HashMap::new();
+
+    for instance in instances {
+        grouped
+            .entry(instance.name.clone())
+            .or_default()
+            .push(instance);
+    }
+
+    let mut result: Vec<pm::GroupedPmInfo> = grouped
+        .into_iter()
+        .map(|(name, instances)| pm::GroupedPmInfo::from_instances(name, instances))
+        .collect();
+
+    result.sort_by(|a, b| a.name.cmp(&b.name));
+    result
 }

@@ -41,14 +41,14 @@ pub(crate) fn find_all_pms_with_args(name: &str, version_args: &[&str]) -> Vec<P
     let mut seen_canonical_paths = std::collections::HashSet::new();
 
     // PATH discovery
-    if let Ok(path) = which(name) {
-        if let Some(pm_info) = try_detect_at_path(&path, name, version_args) {
-            // Get canonical path for deduplication
-            if let Ok(canonical) = std::fs::canonicalize(&path) {
-                seen_canonical_paths.insert(canonical);
-            }
-            instances.push(pm_info);
+    if let Ok(path) = which(name)
+        && let Some(pm_info) = try_detect_at_path(&path, name, version_args)
+    {
+        // Get canonical path for deduplication
+        if let Ok(canonical) = std::fs::canonicalize(&path) {
+            seen_canonical_paths.insert(canonical);
         }
+        instances.push(pm_info);
     }
 
     // Known installation locations
@@ -60,11 +60,11 @@ pub(crate) fn find_all_pms_with_args(name: &str, version_args: &[&str]) -> Vec<P
                 continue;
             }
 
-            if location.exists() {
-                if let Some(pm_info) = try_detect_at_path(&location, name, version_args) {
-                    seen_canonical_paths.insert(canonical_location);
-                    instances.push(pm_info);
-                }
+            if location.exists()
+                && let Some(pm_info) = try_detect_at_path(&location, name, version_args)
+            {
+                seen_canonical_paths.insert(canonical_location);
+                instances.push(pm_info);
             }
         }
     }

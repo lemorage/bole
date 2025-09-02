@@ -81,10 +81,10 @@ pub struct PmInfo {
     pub name: String,
     #[tabled(rename = "Version")]
     pub version: String,
-    #[tabled(rename = "Installed Via")]
-    pub install_method: InstallMethod,
     #[tabled(rename = "Path")]
     pub path: String,
+    #[tabled(rename = "Via")]
+    pub install_method: InstallMethod,
 }
 
 /// Grouped package manager information for clean display
@@ -94,11 +94,11 @@ pub struct GroupedPmInfo {
     pub name: String,
     #[tabled(rename = "Version")]
     pub version: String,
-    #[tabled(rename = "Primary Path")]
+    #[tabled(rename = "Path")]
     pub primary_path: String,
-    #[tabled(rename = "Source")]
+    #[tabled(rename = "Via")]
     pub install_method: InstallMethod,
-    #[tabled(rename = "Alternatives")]
+    #[tabled(rename = "Others")]
     pub alternatives: String,
 }
 
