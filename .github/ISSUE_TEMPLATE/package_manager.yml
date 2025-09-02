@@ -1,0 +1,56 @@
+name: Package Manager Support
+description: Request support for a new package manager
+labels: [package-manager, enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Request support for a new package manager in bole.
+
+  - type: input
+    id: pm-name
+    attributes:
+      label: Package Manager Name
+      description: What package manager should be supported?
+      placeholder: e.g., zig, dart pub, etc.
+    validations:
+      required: true
+
+  - type: input
+    id: pm-website
+    attributes:
+      label: Official Website/Documentation
+      description: Link to the package manager's official documentation
+      placeholder: https://...
+    validations:
+      required: true
+
+  - type: textarea
+    id: detection
+    attributes:
+      label: Detection Method
+      description: How should bole detect this package manager?
+      placeholder: |
+        - Binary name: 
+        - Config files: 
+        - Installation path: 
+    validations:
+      required: true
+
+  - type: textarea
+    id: commands
+    attributes:
+      label: Common Commands
+      description: What are the most common commands for this package manager?
+      placeholder: |
+        - Install: 
+        - Update: 
+        - List: 
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any other relevant information about this package manager.
