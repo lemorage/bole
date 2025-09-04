@@ -1,0 +1,36 @@
+# Conventional Commits Configuration
+# https://www.conventionalcommits.org/
+
+# Valid commit types for this project
+types = [
+  "feat",     # New feature
+  "fix",      # Bug fix
+  "docs",     # Documentation changes
+  "style",    # Code style changes (formatting, etc)
+  "refactor", # Code refactoring
+  "perf",     # Performance improvements
+  "test",     # Test changes
+  "build",    # Build system changes
+  "ci",       # CI/CD changes
+  "chore",    # Other changes (dependencies, etc)
+  "revert",   # Revert previous commit
+]
+
+# Scopes (optional, project-specific areas)
+scopes = [
+  "cli",    # Command-line interface
+  "core",   # Core functionality
+  "pm",     # Language-specific package managers
+  "config", # Configuration handling
+  "deps",   # Dependencies
+  "nix",    # Nix-related changes
+]
+
+# Maximum length for commit subject line
+max_subject_length = 72
+
+# Require scope
+require_scope = false
+
+# Allow breaking changes
+allow_breaking_changes = true
