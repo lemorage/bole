@@ -1,6 +1,7 @@
+use std::collections::HashMap;
+
 use bole::{find::Find, pm};
 use clap::Parser;
-use std::collections::HashMap;
 use tabled::{Table, settings::Style};
 
 const BOLE_BANNER: &str = r#"
@@ -28,9 +29,13 @@ const BOLE_BANNER: &str = r#"
     before_long_help = BOLE_BANNER
 )]
 struct Bole {
-    /// Show all package manager instances with format: table (default) or tree
-    #[arg(long, value_name = "FORMAT", default_missing_value = "table", num_args = 0..=1, help = "Show all package manager instances [possible values: table, tree]")]
-    all: Option<String>,
+    /// Show all package manager instances
+    #[arg(short, long, help = "Show all individual package manager instances")]
+    all: bool,
+
+    /// Display output in tree format
+    #[arg(short, long, help = "Display output in tree format")]
+    tree: bool,
 }
 
 fn main() {
@@ -48,17 +53,27 @@ fn main() {
         return;
     }
 
-    match args.all.as_deref() {
-        Some("tree") => display_tree(found_pms),
-        Some("table") | Some(_) => {
-            let mut table = Table::new(found_pms);
-            println!("{}", table.with(Style::modern()));
-        }
-        None => {
+    match (args.all, args.tree) {
+        (false, false) => {
+            // Default: grouped table
             let mut table = Table::new(group_pm_instances(found_pms));
             println!("{}", table.with(Style::modern()));
-            println!("\nTip: Use --all to see all individual installations");
-        }
+            println!("\nTip: Use -a to see all the other locations");
+        },
+        (true, false) => {
+            // All instances table
+            let mut table = Table::new(found_pms);
+            println!("{}", table.with(Style::modern()));
+        },
+        (false, true) => {
+            // Grouped tree
+            display_grouped_tree(group_pm_instances(found_pms));
+            println!("\nTip: Use -a to see all the other locations");
+        },
+        (true, true) => {
+            // All instances tree
+            display_tree(found_pms);
+        },
     }
 }
 
@@ -83,28 +98,73 @@ fn group_pm_instances(instances: Vec<pm::PmInfo>) -> Vec<pm::GroupedPmInfo> {
 
 fn display_tree(instances: Vec<pm::PmInfo>) {
     let mut grouped: HashMap<String, Vec<pm::PmInfo>> = HashMap::new();
-    
+
     for instance in instances {
-        grouped.entry(instance.name.clone()).or_default().push(instance);
+        grouped
+            .entry(instance.name.clone())
+            .or_default()
+            .push(instance);
     }
-    
+
     let mut sorted: Vec<_> = grouped.into_iter().collect();
     sorted.sort_by(|a, b| a.0.cmp(&b.0));
-    
+
     for (i, (name, instances)) in sorted.iter().enumerate() {
         let is_last_group = i == sorted.len() - 1;
-        let group_prefix = if is_last_group { "└──" } else { "├──" };
+        let group_prefix = if is_last_group {
+            "└──"
+        } else {
+            "├──"
+        };
         let count = instances.len();
-        
-        println!("{} {} ({})", group_prefix, name, if count == 1 { "1 installation".to_string() } else { format!("{} installations", count) });
-        
+
+        println!(
+            "{} {} ({})",
+            group_prefix,
+            name,
+            if count == 1 {
+                "1 installation".to_string()
+            } else {
+                format!("{} installations", count)
+            }
+        );
+
         for (j, instance) in instances.iter().enumerate() {
             let is_last_instance = j == instances.len() - 1;
             let continuation = if is_last_group { "    " } else { "│   " };
-            let instance_prefix = if is_last_instance { "└──" } else { "├──" };
+            let instance_prefix = if is_last_instance {
+                "└──"
+            } else {
+                "├──"
+            };
             let indicator = if j == 0 { "*" } else { "-" };
-            
-            println!("{} {} {} {} v{} [{}]", continuation, instance_prefix, indicator, instance.path, instance.version, instance.install_method);
+
+            println!(
+                "{} {} {} {} v{} [{}]",
+                continuation,
+                instance_prefix,
+                indicator,
+                instance.path,
+                instance.version,
+                instance.install_method
+            );
+        }
+    }
+}
+
+fn display_grouped_tree(grouped: Vec<pm::GroupedPmInfo>) {
+    for (i, group) in grouped.iter().enumerate() {
+        let is_last = i == grouped.len() - 1;
+        let prefix = if is_last { "└──" } else { "├──" };
+
+        println!(
+            "{} {} v{} [{}]",
+            prefix, group.name, group.version, group.install_method
+        );
+
+        if group.alternatives != "-" {
+            let continuation = if is_last { "    " } else { "│   " };
+            println!("{}└── {}", continuation, group.alternatives);
         }
     }
 }

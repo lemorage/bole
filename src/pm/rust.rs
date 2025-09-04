@@ -62,22 +62,23 @@ impl Querier for Cargo {
                 let mut tools = Vec::new();
 
                 for line in stdout.lines() {
-                    if !line.starts_with(' ') && line.contains(' ') {
-                        if let Some((name, version_part)) = line.split_once(' ') {
-                            let version = version_part
-                                .trim_start_matches('v')
-                                .split(':')
-                                .next()
-                                .unwrap_or("unknown")
-                                .to_string();
+                    if !line.starts_with(' ')
+                        && line.contains(' ')
+                        && let Some((name, version_part)) = line.split_once(' ')
+                    {
+                        let version = version_part
+                            .trim_start_matches('v')
+                            .split(':')
+                            .next()
+                            .unwrap_or("unknown")
+                            .to_string();
 
-                            tools.push(Tool {
-                                name: name.to_string(),
-                                version,
-                                path: None,
-                                manager: Self::NAME.to_string(),
-                            });
-                        }
+                        tools.push(Tool {
+                            name: name.to_string(),
+                            version,
+                            path: None,
+                            manager: Self::NAME.to_string(),
+                        });
                     }
                 }
                 tools

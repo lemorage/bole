@@ -40,7 +40,7 @@ impl Querier for Pipx {
                 stdout
                     .lines()
                     .filter_map(|line| {
-                        let parts: Vec<&str> = line.trim().split_whitespace().collect();
+                        let parts: Vec<&str> = line.split_whitespace().collect();
                         if parts.len() >= 2 {
                             Some(Tool {
                                 name: parts[0].to_string(),
