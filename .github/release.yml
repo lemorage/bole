@@ -1,0 +1,46 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+      - dependencies
+      - documentation
+    authors:
+      - dependabot
+  categories:
+    - title: Breaking Changes
+      labels:
+        - breaking-change
+        - breaking
+    - title: New Features
+      labels:
+        - enhancement
+        - feature
+        - new-feature
+        - feat
+    - title: Bug Fixes
+      labels:
+        - bug
+        - bugfix
+        - fix
+    - title: Package Manager Support
+      labels:
+        - package-manager
+        - pm
+    - title: Performance
+      labels:
+        - performance
+        - optimization
+        - perf
+    - title: Documentation
+      labels:
+        - documentation
+        - docs
+    - title: Other Changes
+      labels:
+        - refactor
+        - style
+        - test
+        - build
+        - ci
+        - chore
+        - "*"
