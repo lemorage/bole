@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ dev ]
+
+jobs:
+  nix-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v10
+
+      - name: Enable Magic Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@v8
+
+      - name: Run Nix-powered lint checks
+        run: nix run .#checks.x86_64-linux.lint
+
+      - name: Run flake checks
+        run: nix flake check --print-build-logs
