@@ -1,9 +1,9 @@
 use std::{fs, path::Path};
 
 use crate::pm::{
-    js::Corepack,
     system::Homebrew,
     types::{AsOrigin, InstallMethod, Origin},
+    wrappers::{Asdf, Corepack, Mise, Volta},
 };
 
 /// Path-based installation method detection
@@ -63,6 +63,21 @@ fn check_toolchain_patterns(path_str: &str, home: &str) -> Option<InstallMethod>
     // Haskell toolchain
     if path_str.contains(&format!("{}/.ghcup/", home)) {
         return Some(InstallMethod::Chain(vec![Origin::Toolchain("GHCup")]));
+    }
+
+    // Universal version managers
+    // Note: Corepack uses different detection (filesystem symlinks),
+    // while these use runtime PATH modification
+    if path_str.contains(&format!("{}/.asdf/", home)) {
+        return Some(InstallMethod::Chain(vec![Asdf::as_origin()]));
+    }
+    if path_str.contains(&format!("{}/.volta/", home)) {
+        return Some(InstallMethod::Chain(vec![Volta::as_origin()]));
+    }
+    if path_str.contains(&format!("{}/.local/share/mise/", home))
+        || path_str.contains(&format!("{}/.config/mise/", home))
+    {
+        return Some(InstallMethod::Chain(vec![Mise::as_origin()]));
     }
 
     // JavaScript runtimes (official installers)

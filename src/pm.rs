@@ -7,6 +7,7 @@ mod python;
 mod rust;
 mod system;
 mod types;
+mod wrappers;
 
 use std::{path::Path, process::Command};
 
@@ -14,12 +15,13 @@ pub use attribution::query::{Querier, Resolver, Tool};
 pub use gleam::Gleam;
 pub use go::Go;
 pub use haskell::{Cabal, Stack};
-pub use js::{Bun, Corepack, Deno, Npm, Pnpm, Yarn};
+pub use js::{Bun, Deno, Npm, Pnpm, Yarn};
 pub use python::{Conda, Pdm, Pip, Pipx, Poetry, Uv};
 pub use rust::Cargo;
 pub use system::{Homebrew, Macports, Nix};
 pub use types::{GroupedPmInfo, InstallMethod, PmInfo};
 use which::which;
+pub use wrappers::{Asdf, Corepack, Mise, Volta};
 
 use crate::find::Find;
 
@@ -195,6 +197,32 @@ fn get_search_locations_for(name: &str) -> Vec<std::path::PathBuf> {
             locations.push(format!("{}/.local/bin/pip3", home).into());
             locations.push("/opt/homebrew/bin/pip3".into());
         },
+        "asdf" => {
+            // asdf installations
+            locations.push(format!("{}/.asdf/bin/asdf", home).into());
+            locations.push("/opt/homebrew/bin/asdf".into());
+            locations.push("/usr/local/bin/asdf".into());
+        },
+        "volta" => {
+            // volta installations
+            locations.push(format!("{}/.volta/bin/volta", home).into());
+            locations.push("/opt/homebrew/bin/volta".into());
+            locations.push("/usr/local/bin/volta".into());
+        },
+        "mise" => {
+            // mise installations
+            locations.push(format!("{}/.local/bin/mise", home).into());
+            locations.push(format!("{}/.cargo/bin/mise", home).into());
+            locations.push("/opt/homebrew/bin/mise".into());
+            locations.push("/usr/local/bin/mise".into());
+        },
+        "corepack" => {
+            // corepack installations
+            locations.push("/opt/homebrew/bin/corepack".into());
+            locations.push("/usr/local/bin/corepack".into());
+            // Usually comes with Node.js
+            locations.push(format!("{}/.nvm/current/bin/corepack", home).into());
+        },
         _ => {
             // Generic fallback locations
             locations.push(format!("{}/bin/{}", home, name).into());
@@ -236,5 +264,10 @@ pub fn all_package_managers() -> Vec<Box<dyn Find<Output = PmInfo>>> {
         Box::new(Stack),
         // Gleam
         Box::new(Gleam),
+        // Universal Wrappers
+        Box::new(Asdf),
+        Box::new(Volta),
+        Box::new(Mise),
+        Box::new(Corepack),
     ]
 }
