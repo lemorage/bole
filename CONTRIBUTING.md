@@ -65,10 +65,11 @@ typos --write-changes
 cargo clippy --fix
 
 # Run all checks (like CI)
-nix run .#checks.aarch64-darwin.lint   # macOS
+nix run .#checks.aarch64-darwin.lint   # macOS (Apple Silicon)
+nix run .#checks.x86_64-darwin.lint    # macOS (Intel)
 nix run .#checks.x86_64-linux.lint     # Linux
-nix run .#checks.x86_64-windows.lint   # Windows
 ```
+> Note: Nix does not support native Windows yet. Use WSL2 and run `nix` inside your WSL shell.
 
 ## Commit Message Format
 
@@ -119,8 +120,7 @@ direnv reload
 # Update flake dependencies
 nix flake update
 
-# Force rebuild environment
-nix-collect-garbage
+# Rebuild environment
 nix develop
 ```
 
