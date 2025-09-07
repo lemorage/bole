@@ -31,22 +31,44 @@ cargo install bole
 ## Use
 
 ```bash
-# Show primary installations
-bole
+# Show all package managers
+bole show
 
-# Show all installations  
-bole --all
+# Filter by category
+bole show system       # brew, nix, macports
+bole show javascript   # npm, yarn, pnpm, bun, deno
+bole show python       # pip, poetry, uv, conda, pdm
+bole show rust         # cargo
+bole show go           # go toolchain
+bole show haskell      # cabal, stack
+bole show gleam        # gleam
+bole show tools        # asdf, volta, mise, corepack
+
+# Category aliases supported
+bole show js           # same as javascript
+bole show ts           # same as javascript  
+bole show node         # same as javascript
+bole show py           # same as python
+bole show sys          # same as system
+bole show rs           # same as rust
+
+# Show all installations with locations
+bole show python --all
 
 # Tree format
-bole --tree
+bole show javascript --tree
+
+# Just 'bole' shows help (standard CLI behavior)
+bole
 ```
 
 ## Supported
 
 **System:** Homebrew, MacPorts, Nix  
 **JavaScript:** npm, yarn, pnpm, bun, deno  
-**Python:** pip, poetry, uv, conda, pdm, pipx  
-**Other:** Rust (cargo), Go, Haskell (cabal/stack), Gleam
+**Python:** pip, poetry, uv, conda, pdm  
+**Other:** Rust (cargo), Go, Haskell (cabal/stack), Gleam  
+**Tools:** asdf, volta, mise, corepack
 
 ## License
 

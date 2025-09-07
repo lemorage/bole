@@ -72,6 +72,13 @@ pub trait Categorizable {
     fn category(&self) -> Category;
 }
 
+/// Unified trait for package manager detectors
+pub trait Detector: crate::find::Find<Output = PmInfo> + Categorizable {}
+
+// Blanket implementation for any type that implements both Find and
+// Categorizable
+impl<T> Detector for T where T: crate::find::Find<Output = PmInfo> + Categorizable {}
+
 impl std::fmt::Display for Origin {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {

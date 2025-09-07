@@ -19,11 +19,9 @@ pub use js::{Bun, Deno, Npm, Pnpm, Yarn};
 pub use python::{Conda, Pdm, Pip, Pipx, Poetry, Uv};
 pub use rust::Cargo;
 pub use system::{Homebrew, Macports, Nix};
-pub use types::{Categorizable, Category, GroupedPmInfo, InstallMethod, PmInfo};
+pub use types::{Categorizable, Category, Detector, GroupedPmInfo, InstallMethod, PmInfo};
 use which::which;
 pub use wrappers::{Asdf, Corepack, Mise, Volta};
-
-use crate::find::Find;
 
 /// Main entry point for determining how a package manager was installed
 pub fn determine_install_method(path: &Path) -> InstallMethod {
@@ -237,12 +235,19 @@ fn get_search_locations_for(name: &str) -> Vec<std::path::PathBuf> {
 }
 
 // Simple registry, just provides iteration over all package managers
-pub fn all_package_managers() -> Vec<Box<dyn Find<Output = PmInfo>>> {
+pub fn all_package_managers() -> Vec<Box<dyn Detector>> {
     vec![
         // System
         Box::new(Homebrew),
         Box::new(Macports),
         Box::new(Nix),
+        // Gleam
+        Box::new(Gleam),
+        // Go
+        Box::new(Go),
+        // Haskell
+        Box::new(Cabal),
+        Box::new(Stack),
         // JavaScript/TypeScript
         Box::new(Bun),
         Box::new(Deno),
@@ -255,15 +260,8 @@ pub fn all_package_managers() -> Vec<Box<dyn Find<Output = PmInfo>>> {
         Box::new(Pip),
         Box::new(Poetry),
         Box::new(Uv),
-        // Go
-        Box::new(Go),
         // Rust
         Box::new(Cargo),
-        // Haskell
-        Box::new(Cabal),
-        Box::new(Stack),
-        // Gleam
-        Box::new(Gleam),
         // Universal Wrappers
         Box::new(Asdf),
         Box::new(Volta),
