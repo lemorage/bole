@@ -2,7 +2,7 @@ use serde::Serialize;
 use tabled::Tabled;
 
 /// How a package manager was installed on the system
-#[derive(Debug, Serialize, Tabled, Clone)]
+#[derive(Debug, Serialize, Tabled, Clone, PartialEq)]
 pub enum InstallMethod {
     Chain(Vec<Origin>),
     System,
@@ -10,7 +10,7 @@ pub enum InstallMethod {
 }
 
 /// Origin in an installation chain
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Clone, PartialEq)]
 pub enum Origin {
     PackageManager(&'static str),
     Toolchain(&'static str),
@@ -75,7 +75,7 @@ impl std::fmt::Display for InstallMethod {
 }
 
 /// Information about a discovered package manager instance
-#[derive(Debug, Serialize, Tabled)]
+#[derive(Debug, Serialize, Tabled, Clone)]
 pub struct PmInfo {
     #[tabled(rename = "Name")]
     pub name: String,
@@ -127,5 +127,363 @@ impl GroupedPmInfo {
             install_method: primary.install_method.clone(),
             alternatives,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Helper to create test PmInfo instances
+    fn create_pm_info(
+        name: &str,
+        version: &str,
+        path: &str,
+        install_method: InstallMethod,
+    ) -> PmInfo {
+        PmInfo {
+            name: name.to_string(),
+            version: version.to_string(),
+            path: path.to_string(),
+            install_method,
+        }
+    }
+
+    #[test]
+    fn test_origin_display_package_manager() {
+        // Arrange
+        let origin = Origin::PackageManager("Homebrew");
+
+        // Act
+        let display = format!("{}", origin);
+
+        // Assert
+        assert_eq!(display, "Homebrew");
+    }
+
+    #[test]
+    fn test_origin_display_toolchain() {
+        // Arrange
+        let origin = Origin::Toolchain("Rustup");
+
+        // Act
+        let display = format!("{}", origin);
+
+        // Assert
+        assert_eq!(display, "Rustup");
+    }
+
+    #[test]
+    fn test_origin_display_direct_with_name() {
+        // Arrange
+        let origin = Origin::Direct(Some("Poetry"));
+
+        // Act
+        let display = format!("{}", origin);
+
+        // Assert
+        assert_eq!(display, "Official Installer (Poetry)");
+    }
+
+    #[test]
+    fn test_origin_display_direct_without_name() {
+        // Arrange
+        let origin = Origin::Direct(None);
+
+        // Act
+        let display = format!("{}", origin);
+
+        // Assert
+        assert_eq!(display, "Official Installer");
+    }
+
+    #[test]
+    fn test_origin_display_wrapper() {
+        // Arrange
+        let origin = Origin::Wrapper("Corepack");
+
+        // Act
+        let display = format!("{}", origin);
+
+        // Assert
+        assert_eq!(display, "Corepack");
+    }
+
+    #[test]
+    fn test_install_method_display_system() {
+        // Arrange
+        let method = InstallMethod::System;
+
+        // Act
+        let display = format!("{}", method);
+
+        // Assert
+        assert_eq!(display, "System Provided");
+    }
+
+    #[test]
+    fn test_install_method_display_unknown() {
+        // Arrange
+        let method = InstallMethod::Unknown;
+
+        // Act
+        let display = format!("{}", method);
+
+        // Assert
+        assert_eq!(display, "Unknown");
+    }
+
+    #[test]
+    fn test_install_method_display_single_chain() {
+        // Arrange
+        let method = InstallMethod::Chain(vec![Origin::PackageManager("Homebrew")]);
+
+        // Act
+        let display = format!("{}", method);
+
+        // Assert
+        assert_eq!(display, "Homebrew");
+    }
+
+    #[test]
+    fn test_install_method_display_double_chain() {
+        // Arrange
+        let method = InstallMethod::Chain(vec![
+            Origin::Toolchain("Node.js"),
+            Origin::Wrapper("Corepack"),
+        ]);
+
+        // Act
+        let display = format!("{}", method);
+
+        // Assert
+        assert_eq!(display, "Node.js → Corepack");
+    }
+
+    #[test]
+    fn test_install_method_display_complex_chain() {
+        // Arrange
+        let method = InstallMethod::Chain(vec![
+            Origin::PackageManager("Homebrew"),
+            Origin::Toolchain("Node.js"),
+            Origin::Wrapper("Corepack"),
+        ]);
+
+        // Act
+        let display = format!("{}", method);
+
+        // Assert
+        assert_eq!(display, "Homebrew → Node.js → Corepack");
+    }
+
+    #[test]
+    fn test_install_method_display_mixed_origin_types() {
+        // Arrange
+        let method = InstallMethod::Chain(vec![
+            Origin::Direct(Some("Poetry")),
+            Origin::PackageManager("Pipx"),
+            Origin::Toolchain("Pyenv"),
+        ]);
+
+        // Act
+        let display = format!("{}", method);
+
+        // Assert
+        assert_eq!(display, "Official Installer (Poetry) → Pipx → Pyenv");
+    }
+
+    #[test]
+    fn test_install_method_display_empty_chain() {
+        // Arrange - Edge case that shouldn't happen in practice
+        let method = InstallMethod::Chain(vec![]);
+
+        // Act
+        let display = format!("{}", method);
+
+        // Assert
+        assert_eq!(display, "");
+    }
+
+    #[test]
+    fn test_grouped_pm_info_single_instance() {
+        // Arrange
+        let pm_info = create_pm_info(
+            "npm",
+            "8.19.2",
+            "/usr/bin/npm",
+            InstallMethod::Chain(vec![Origin::PackageManager("Homebrew")]),
+        );
+        let instances = vec![pm_info];
+
+        // Act
+        let grouped = GroupedPmInfo::from_instances("npm".to_string(), instances);
+
+        // Assert
+        assert_eq!(grouped.name, "npm");
+        assert_eq!(grouped.version, "8.19.2");
+        assert_eq!(grouped.primary_path, "/usr/bin/npm");
+        assert_eq!(format!("{}", grouped.install_method), "Homebrew");
+        assert_eq!(grouped.alternatives, "-");
+    }
+
+    #[test]
+    fn test_grouped_pm_info_two_instances() {
+        // Arrange
+        let instances = vec![
+            create_pm_info("npm", "8.19.2", "/usr/bin/npm", InstallMethod::System),
+            create_pm_info(
+                "npm",
+                "9.0.0",
+                "/usr/local/bin/npm",
+                InstallMethod::Chain(vec![Origin::Direct(Some("Node.js"))]),
+            ),
+        ];
+
+        // Act
+        let grouped = GroupedPmInfo::from_instances("npm".to_string(), instances);
+
+        // Assert
+        assert_eq!(grouped.name, "npm");
+        assert_eq!(grouped.version, "8.19.2"); // Primary version
+        assert_eq!(grouped.primary_path, "/usr/bin/npm"); // Primary path
+        assert_eq!(format!("{}", grouped.install_method), "System Provided");
+        assert_eq!(grouped.alternatives, "1 other location");
+    }
+
+    #[test]
+    fn test_grouped_pm_info_multiple_instances() {
+        // Arrange
+        let instances = vec![
+            create_pm_info("pip", "22.3.1", "/usr/bin/pip", InstallMethod::System),
+            create_pm_info(
+                "pip",
+                "23.0.0",
+                "/usr/local/bin/pip",
+                InstallMethod::Chain(vec![Origin::PackageManager("Homebrew")]),
+            ),
+            create_pm_info(
+                "pip",
+                "22.0.0",
+                "/home/user/.local/bin/pip",
+                InstallMethod::Chain(vec![Origin::Direct(Some("pipx/pip"))]),
+            ),
+        ];
+
+        // Act
+        let grouped = GroupedPmInfo::from_instances("pip".to_string(), instances);
+
+        // Assert
+        assert_eq!(grouped.name, "pip");
+        assert_eq!(grouped.version, "22.3.1"); // Primary version (first in list)
+        assert_eq!(grouped.primary_path, "/usr/bin/pip"); // Primary path
+        assert_eq!(format!("{}", grouped.install_method), "System Provided");
+        assert_eq!(grouped.alternatives, "2 other locations");
+    }
+
+    #[test]
+    #[should_panic(expected = "Cannot create GroupedPmInfo from empty instances")]
+    fn test_grouped_pm_info_empty_instances_panics() {
+        // Arrange
+        let instances = vec![];
+
+        // Act
+        GroupedPmInfo::from_instances("npm".to_string(), instances);
+    }
+
+    #[test]
+    fn test_grouped_pm_info_preserves_primary_install_method() {
+        // Arrange
+        let complex_method = InstallMethod::Chain(vec![
+            Origin::PackageManager("Homebrew"),
+            Origin::Toolchain("Node.js"),
+            Origin::Wrapper("Corepack"),
+        ]);
+        let instances = vec![
+            create_pm_info(
+                "pnpm",
+                "7.14.0",
+                "/opt/homebrew/bin/pnpm",
+                complex_method.clone(),
+            ),
+            create_pm_info(
+                "pnpm",
+                "6.32.0",
+                "/usr/local/bin/pnpm",
+                InstallMethod::Unknown,
+            ),
+        ];
+
+        // Act
+        let grouped = GroupedPmInfo::from_instances("pnpm".to_string(), instances);
+
+        // Assert
+        assert_eq!(
+            format!("{}", grouped.install_method),
+            "Homebrew → Node.js → Corepack"
+        );
+    }
+
+    #[test]
+    fn test_pm_info_debug_serialization() {
+        // Arrange
+        let pm_info = create_pm_info(
+            "cargo",
+            "1.70.0",
+            "/home/user/.cargo/bin/cargo",
+            InstallMethod::Chain(vec![Origin::Toolchain("Rustup")]),
+        );
+
+        // Assert
+        assert_eq!(pm_info.name, "cargo");
+        assert_eq!(pm_info.version, "1.70.0");
+        assert_eq!(pm_info.path, "/home/user/.cargo/bin/cargo");
+        assert_eq!(
+            pm_info.install_method,
+            InstallMethod::Chain(vec![Origin::Toolchain("Rustup")])
+        );
+    }
+
+    #[test]
+    fn test_install_method_clone() {
+        // Arrange
+        let original = InstallMethod::Chain(vec![
+            Origin::PackageManager("Homebrew"),
+            Origin::Direct(Some("Node.js")),
+        ]);
+
+        // Act
+        let cloned = original.clone();
+
+        // Assert
+        assert_eq!(original, cloned);
+    }
+
+    #[test]
+    fn test_origin_clone() {
+        // Arrange
+        let original = Origin::Direct(Some("Poetry"));
+
+        // Act
+        let cloned = original.clone();
+
+        // Assert
+        assert_eq!(original, cloned);
+    }
+
+    #[test]
+    fn test_alternatives_count_edge_cases() {
+        // Arrange - Test saturating_sub behavior
+        let single_instance = vec![create_pm_info(
+            "test",
+            "1.0",
+            "/usr/bin/test",
+            InstallMethod::Unknown,
+        )];
+
+        // Act
+        let grouped = GroupedPmInfo::from_instances("test".to_string(), single_instance);
+
+        // Assert - Should handle zero alternatives correctly
+        assert_eq!(grouped.alternatives, "-");
     }
 }
