@@ -19,7 +19,7 @@ pub use js::{Bun, Deno, Npm, Pnpm, Yarn};
 pub use python::{Conda, Pdm, Pip, Pipx, Poetry, Uv};
 pub use rust::Cargo;
 pub use system::{Homebrew, Macports, Nix};
-pub use types::{GroupedPmInfo, InstallMethod, PmInfo};
+pub use types::{Categorizable, Category, GroupedPmInfo, InstallMethod, PmInfo};
 use which::which;
 pub use wrappers::{Asdf, Corepack, Mise, Volta};
 

@@ -1,7 +1,7 @@
 use crate::{
     find::Find,
     pm::{
-        PmInfo, find_all_pms,
+        Categorizable, Category, PmInfo, find_all_pms,
         types::{AsOrigin, Origin},
     },
 };
@@ -31,5 +31,11 @@ impl Find for Volta {
 
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
+    }
+}
+
+impl Categorizable for Volta {
+    fn category(&self) -> Category {
+        Category::Tools
     }
 }

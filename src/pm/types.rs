@@ -1,6 +1,24 @@
 use serde::Serialize;
 use tabled::Tabled;
 
+/// Package manager categories for organized display
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Category {
+    // System-wide package managers
+    System,
+
+    // Language-specific package managers
+    JavaScript,
+    Python,
+    Rust,
+    Go,
+    Haskell,
+    Gleam,
+
+    // Version managers / Wrappers
+    Tools,
+}
+
 /// How a package manager was installed on the system
 #[derive(Debug, Serialize, Tabled, Clone, PartialEq)]
 pub enum InstallMethod {
@@ -47,6 +65,11 @@ impl AsOrigin for NewPM {
 /// Trait for types that can represent themselves in an installation chain
 pub trait AsOrigin {
     fn as_origin() -> Origin;
+}
+
+/// Trait for package managers that can categorize themselves
+pub trait Categorizable {
+    fn category(&self) -> Category;
 }
 
 impl std::fmt::Display for Origin {

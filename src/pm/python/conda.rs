@@ -1,6 +1,6 @@
 use crate::{
     find::Find,
-    pm::{PmInfo, find_all_pms},
+    pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
 pub struct Conda;
@@ -28,5 +28,11 @@ impl Find for Conda {
                 pm_info
             })
             .collect()
+    }
+}
+
+impl Categorizable for Conda {
+    fn category(&self) -> Category {
+        Category::Python
     }
 }

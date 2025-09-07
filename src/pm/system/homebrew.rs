@@ -1,7 +1,7 @@
 use crate::{
     find::Find,
     pm::{
-        PmInfo, find_all_pms,
+        Categorizable, Category, PmInfo, find_all_pms,
         types::{AsOrigin, Origin},
     },
 };
@@ -37,5 +37,11 @@ impl Find for Homebrew {
                 pm_info
             })
             .collect()
+    }
+}
+
+impl Categorizable for Homebrew {
+    fn category(&self) -> Category {
+        Category::System
     }
 }

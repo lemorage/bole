@@ -1,6 +1,6 @@
 use crate::{
     find::Find,
-    pm::{PmInfo, find_all_pms},
+    pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
 pub struct Cabal;
@@ -28,5 +28,11 @@ impl Find for Cabal {
                 pm_info
             })
             .collect()
+    }
+}
+
+impl Categorizable for Cabal {
+    fn category(&self) -> Category {
+        Category::Haskell
     }
 }

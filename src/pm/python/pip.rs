@@ -3,7 +3,7 @@ use std::process::Command;
 use crate::{
     find::Find,
     pm::{
-        PmInfo,
+        Categorizable, Category, PmInfo,
         attribution::query::{Querier, Tool},
         find_all_pms,
     },
@@ -99,5 +99,11 @@ impl Querier for Pip {
             },
             _ => None,
         }
+    }
+}
+
+impl Categorizable for Pip {
+    fn category(&self) -> Category {
+        Category::Python
     }
 }

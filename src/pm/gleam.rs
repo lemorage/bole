@@ -1,6 +1,6 @@
 use crate::{
     find::Find,
-    pm::{PmInfo, find_all_pms},
+    pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
 pub struct Gleam;
@@ -28,5 +28,11 @@ impl Find for Gleam {
                 pm_info
             })
             .collect()
+    }
+}
+
+impl Categorizable for Gleam {
+    fn category(&self) -> Category {
+        Category::Gleam
     }
 }

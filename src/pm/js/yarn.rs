@@ -1,6 +1,6 @@
 use crate::{
     find::Find,
-    pm::{PmInfo, find_all_pms},
+    pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
 pub struct Yarn;
@@ -18,5 +18,11 @@ impl Find for Yarn {
 
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
+    }
+}
+
+impl Categorizable for Yarn {
+    fn category(&self) -> Category {
+        Category::JavaScript
     }
 }

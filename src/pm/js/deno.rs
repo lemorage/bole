@@ -1,6 +1,6 @@
 use crate::{
     find::Find,
-    pm::{PmInfo, find_all_pms_with_args},
+    pm::{Categorizable, Category, PmInfo, find_all_pms_with_args},
 };
 
 pub struct Deno;
@@ -28,5 +28,11 @@ impl Find for Deno {
                 pm_info
             })
             .collect()
+    }
+}
+
+impl Categorizable for Deno {
+    fn category(&self) -> Category {
+        Category::JavaScript
     }
 }

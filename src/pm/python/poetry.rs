@@ -1,6 +1,6 @@
 use crate::{
     find::Find,
-    pm::{PmInfo, find_all_pms},
+    pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
 pub struct Poetry;
@@ -29,5 +29,11 @@ impl Find for Poetry {
                 pm_info
             })
             .collect()
+    }
+}
+
+impl Categorizable for Poetry {
+    fn category(&self) -> Category {
+        Category::Python
     }
 }

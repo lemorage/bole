@@ -3,7 +3,7 @@ use std::process::Command;
 use crate::{
     find::Find,
     pm::{
-        PmInfo,
+        Categorizable, Category, PmInfo,
         attribution::query::{Querier, Tool},
         find_all_pms_with_args,
         types::{AsOrigin, Origin},
@@ -89,5 +89,11 @@ impl Querier for Cargo {
 
     fn owns(&self, tool_name: &str) -> Option<Tool> {
         self.list().into_iter().find(|tool| tool.name == tool_name)
+    }
+}
+
+impl Categorizable for Cargo {
+    fn category(&self) -> Category {
+        Category::Rust
     }
 }

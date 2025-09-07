@@ -1,7 +1,7 @@
 use crate::{
     find::Find,
     pm::{
-        PmInfo, find_all_pms,
+        Categorizable, Category, PmInfo, find_all_pms,
         types::{AsOrigin, Origin},
     },
 };
@@ -32,5 +32,11 @@ impl Find for Asdf {
 
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
+    }
+}
+
+impl Categorizable for Asdf {
+    fn category(&self) -> Category {
+        Category::Tools
     }
 }

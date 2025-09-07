@@ -1,6 +1,7 @@
 use std::process::Command;
 
 use crate::pm::{
+    Categorizable, Category,
     attribution::query::{Querier, Tool},
     types::{AsOrigin, Origin},
 };
@@ -60,5 +61,11 @@ impl Querier for Pipx {
 
     fn owns(&self, tool_name: &str) -> Option<Tool> {
         self.list().into_iter().find(|tool| tool.name == tool_name)
+    }
+}
+
+impl Categorizable for Pipx {
+    fn category(&self) -> Category {
+        Category::Python
     }
 }

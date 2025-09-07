@@ -47,10 +47,10 @@ impl Resolver {
     /// Find which package manager owns a specific tool at a given path
     pub fn resolve(&self, tool_name: &str, _path: &Path) -> Option<String> {
         for querier in &self.queriers {
-            if querier.is_available() {
-                if let Some(_tool) = querier.owns(tool_name) {
-                    return Some(querier.name().to_string());
-                }
+            if querier.is_available()
+                && let Some(_tool) = querier.owns(tool_name)
+            {
+                return Some(querier.name().to_string());
             }
         }
         None

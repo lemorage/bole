@@ -1,6 +1,6 @@
 use crate::{
     find::Find,
-    pm::{PmInfo, find_all_pms_with_args},
+    pm::{Categorizable, Category, PmInfo, find_all_pms_with_args},
 };
 
 pub struct Go;
@@ -32,5 +32,11 @@ impl Find for Go {
                 pm_info
             })
             .collect()
+    }
+}
+
+impl Categorizable for Go {
+    fn category(&self) -> Category {
+        Category::Go
     }
 }
