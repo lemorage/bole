@@ -16,3 +16,18 @@ target
 result
 result-*
 .direnv/
+
+# OS cruft
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor/IDE files
+.vscode/
+.idea/
+.vim/
+*.swp
+*.swo
+*~
+.#*
+\#*\#
