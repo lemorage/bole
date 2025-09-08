@@ -69,17 +69,157 @@ jobs:
           fi
           cargo publish --token "$CARGO_REGISTRY_TOKEN"
 
-      - name: Generate changelog from commits
-        if: github.event.pull_request == null
+      - name: Check if release already exists
+        id: rel_exists
         run: |
-          git log --pretty=format:'- %s' $(git describe --tags --abbrev=0)..HEAD > changelog.txt
+          set -euo pipefail
+          TAG="v${{ steps.version_check.outputs.version }}"
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}")
+          if [ "$CODE" = "200" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate formatted changelog
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          CURRENT_TAG="${GITHUB_REF_NAME}"
+
+          # Find the previous tag before the just-pushed tag commit
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD~ 2>/dev/null || true)
+
+          if [ -z "${PREV_TAG}" ]; then
+            RANGE="HEAD"
+          else
+            RANGE="${PREV_TAG}..HEAD"
+          fi
+
+          # Prepare temp files per section
+          TMPDIR=$(mktemp -d)
+          declare -A SECTION_FILES
+          declare -A SECTION_TITLES
+
+          add_section() {
+            local key="$1" title="$2"
+            SECTION_TITLES["$key"]="$title"
+            SECTION_FILES["$key"]="$TMPDIR/$key.txt"
+            : > "${SECTION_FILES[$key]}"
+          }
+
+          add_section feat   "New Features"
+          add_section fix    "Bug Fixes"
+          add_section perf   "Performance"
+          add_section revert "Reverts"
+          add_section docs   "Documentation"
+          add_section breaking "Breaking Changes"
+
+          include_docs_commit() {
+            local hash="$1"
+            # Check if commit touches documentation files
+            git diff-tree --no-commit-id --name-only -r "$hash" | \
+              grep -Eq '\.(md|rst|txt|adoc)$|^docs/|^documentation/|README|CHANGELOG|CONTRIBUTING|LICENSE'
+          }
+
+          # Iterate commits with NUL-separated records and field separator 0x1f
+          git log -z --no-merges --format='%H%x1f%s%x1f%b%x00' ${RANGE} |
+          while IFS= read -r -d '' rec; do
+            IFS=$'\x1f' read -r hash subject body <<< "$rec"
+
+            # Parse conventional commit type and detect breaking
+            type="" rest="" bang=""
+            if [[ "$subject" =~ ^([a-zA-Z]+)(\([^)]+\))?(!)?:[[:space:]](.*)$ ]]; then
+              type="${BASH_REMATCH[1]}"
+              bang="${BASH_REMATCH[3]:-}"
+              rest="${BASH_REMATCH[4]}"
+            else
+              # Not a conventional commit, treat as other
+              type="other"
+              rest="$subject"
+            fi
+
+            lower_type=$(printf '%s' "$type" | tr '[:upper:]' '[:lower:]')
+
+            # Detect breaking change hints in body
+            breaking_hint=""
+            if [ -n "$bang" ] || printf '%s' "$body" | grep -qi '^breaking change\|^breaking:'; then
+              breaking_hint=1
+            fi
+
+            line="- ${subject}"
+
+            case "$lower_type" in
+              feat)
+                printf '%s\n' "$line" >> "${SECTION_FILES[feat]}" ;;
+              fix)
+                printf '%s\n' "$line" >> "${SECTION_FILES[fix]}" ;;
+              perf)
+                printf '%s\n' "$line" >> "${SECTION_FILES[perf]}" ;;
+              revert)
+                printf '%s\n' "$line" >> "${SECTION_FILES[revert]}" ;;
+              docs)
+                if include_docs_commit "$hash"; then
+                  printf '%s\n' "$line" >> "${SECTION_FILES[docs]}"
+                fi ;;
+              *)
+                # Skip chores, ci, tests, refactors, build, style by default
+                : ;;
+            esac
+
+            if [ -n "$breaking_hint" ]; then
+              printf '%s\n' "$line" >> "${SECTION_FILES[breaking]}"
+            fi
+          done
+
+          DATE_UTC=$(date -u +%Y-%m-%d)
+
+          {
+            printf '# Changelog %s (%s)\n\n' "$CURRENT_TAG" "$DATE_UTC"
+            if [ -n "${PREV_TAG}" ]; then
+              printf 'Compare %s...%s (https://github.com/%s/compare/%s...%s)\n\n' \
+                     "$PREV_TAG" "$CURRENT_TAG" "$GITHUB_REPOSITORY" "$PREV_TAG" "$CURRENT_TAG"
+              commit_count=$(git rev-list --count "$PREV_TAG"..HEAD)
+            else
+              commit_count=$(git rev-list --count HEAD)
+            fi
+            printf 'This release includes %d commits.\n\n' "$commit_count"
+          } > changelog.md
+
+          emit_section() {
+            local key="$1"
+            local title="${SECTION_TITLES[$key]}"
+            local file="${SECTION_FILES[$key]}"
+            if [ -s "$file" ]; then
+              printf '## %s\n\n' "$title" >> changelog.md
+              cat "$file" >> changelog.md
+              printf '\n' >> changelog.md
+            fi
+          }
+
+          # Emit sections in user-centric order
+          emit_section breaking
+          emit_section feat
+          emit_section fix
+          emit_section perf
+          emit_section docs
+          emit_section revert
+
+          if [ ! -s changelog.md ] || ! grep -q '^## ' changelog.md; then
+            printf 'This release does not include user-visible changes.\n' >> changelog.md
+          fi
 
       - name: Create GitHub Release
+        if: steps.rel_exists.outputs.exists != 'true'
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: ${{ github.event.pull_request != null }}
           name: v${{ steps.version_check.outputs.version }}
-          body_path: ${{ github.event.pull_request == null && 'changelog.txt' || '' }}
+          body_path: ${{ github.event.pull_request == null && 'changelog.md' || '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
