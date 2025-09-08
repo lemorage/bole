@@ -1,10 +1,16 @@
 # bole
 
-Discover all package managers on your system.
+<div align="center">
+  <a href="#bole">
+    <img src="assets/bole-logo.png" alt="Logo" width="180" height="180">
+  </a>
+
+<br />
 
 > <em>Package managers<br>
 > scattered like autumn leaves fall—<br>
 > the bole holds them firm.</em>
+</div>
 
 ## What
 
@@ -57,18 +63,15 @@ bole show python --all
 
 # Tree format
 bole show javascript --tree
-
-# Just 'bole' shows help (standard CLI behavior)
-bole
 ```
 
 ## Supported
 
-**System:** Homebrew, MacPorts, Nix  
-**JavaScript:** npm, yarn, pnpm, bun, deno  
-**Python:** pip, poetry, uv, conda, pdm  
-**Other:** Rust (cargo), Go, Haskell (cabal/stack), Gleam  
-**Tools:** asdf, volta, mise, corepack
+- **System:** Homebrew, MacPorts, Nix  
+- **JavaScript:** npm, yarn, pnpm, bun, deno  
+- **Python:** pip, poetry, uv, conda, pdm  
+- **Other:** Rust (cargo), Go, Haskell (cabal/stack), Gleam  
+- **Tools:** asdf, volta, mise, corepack
 
 ## License
 
