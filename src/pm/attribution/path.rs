@@ -31,17 +31,17 @@ pub fn detect(path: &Path) -> InstallMethod {
 
 /// Check environment-based patterns (e.g., HOMEBREW_PREFIX)
 fn check_environment_patterns(path_str: &str) -> Option<InstallMethod> {
-    if let Ok(homebrew_prefix) = std::env::var("HOMEBREW_PREFIX") {
-        if path_str.starts_with(&homebrew_prefix) {
-            // Check for more specific patterns
-            if path_str.contains("/corepack/dist/") {
-                return Some(InstallMethod::Chain(vec![
-                    Homebrew::as_origin(),
-                    Corepack::as_origin(),
-                ]));
-            }
-            return Some(InstallMethod::Chain(vec![Homebrew::as_origin()]));
+    if let Ok(homebrew_prefix) = std::env::var("HOMEBREW_PREFIX")
+        && path_str.starts_with(&homebrew_prefix)
+    {
+        // Check for more specific patterns
+        if path_str.contains("/corepack/dist/") {
+            return Some(InstallMethod::Chain(vec![
+                Homebrew::as_origin(),
+                Corepack::as_origin(),
+            ]));
         }
+        return Some(InstallMethod::Chain(vec![Homebrew::as_origin()]));
     }
     None
 }
@@ -132,4 +132,21 @@ fn check_system_patterns(path_str: &str) -> InstallMethod {
     }
 
     InstallMethod::Unknown
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_detect_with_nonexistent_path() {
+        // Arrange
+        let nonexistent_path = std::path::PathBuf::from("/this/path/does/not/exist");
+
+        // Act
+        let result = detect(&nonexistent_path);
+
+        // Assert
+        assert_eq!(result, InstallMethod::Unknown);
+    }
 }
