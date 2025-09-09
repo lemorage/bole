@@ -131,25 +131,23 @@ jobs:
           while IFS= read -r -d '' rec; do
             IFS=$'\x1f' read -r hash subject body <<< "$rec"
 
-            # Parse conventional commit type and detect breaking
-            type="" rest="" bang=""
-            if [[ "$subject" =~ ^([a-zA-Z]+)(\([^)]+\))?(!)?:[[:space:]](.*)$ ]]; then
-              type="${BASH_REMATCH[1]}"
-              bang="${BASH_REMATCH[3]:-}"
-              rest="${BASH_REMATCH[4]}"
-            else
-              # Not a conventional commit, treat as other
-              type="other"
-              rest="$subject"
-            fi
+            # Extract header to infer type and breaking
+            header=${subject%%:*}
+            rest=${subject#*: }
 
-            lower_type=$(printf '%s' "$type" | tr '[:upper:]' '[:lower:]')
-
-            # Detect breaking change hints in body
+            # Infer breaking via '!' in header or markers in body
             breaking_hint=""
-            if [ -n "$bang" ] || printf '%s' "$body" | grep -qi '^breaking change\|^breaking:'; then
+            case "$header" in
+              *!*) breaking_hint=1 ;;
+            esac
+            if [ -z "$breaking_hint" ] && printf '%s' "$body" | grep -qiE '^breaking change|^breaking:'; then
               breaking_hint=1
             fi
+
+            # Normalize type: strip optional scope and trailing '!'
+            base=${header%%(*}
+            base=${base%%!*}
+            lower_type=$(printf '%s' "$base" | tr '[:upper:]' '[:lower:]')
 
             line="- ${subject}"
 
