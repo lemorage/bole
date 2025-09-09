@@ -31,6 +31,16 @@ impl Find for Mise {
 
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
+            .into_iter()
+            .map(|mut pm_info| {
+                // Clean mise's verbose output
+                if let Some(version) = pm_info.version.split_whitespace().nth(0) {
+                    // "2025.9.6 ... (...)" -> "2025.9.6"
+                    pm_info.version = version.to_string();
+                }
+                pm_info
+            })
+            .collect()
     }
 }
 
