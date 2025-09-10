@@ -1,32 +1,17 @@
+mod banner;
 mod cli;
 mod display;
 
+use banner::stream_banner;
 use clap::{CommandFactory, Parser, Subcommand};
 use cli::handle_show_command;
-
-const BOLE_BANNER: &str = r#"
-           .-.
-          /   \
-         /  .  \
-        /__/ \__\
-          || ||
-        __||_||__
-       /  BOLE   \
-      /___________\
-         \  |  /
-          \ | /
-           \|/
-            V
-    "#;
 
 /// A CLI to manage your package managers.
 #[derive(Parser, Debug)]
 #[command(
     version,
     about = "Bole is a unified CLI for managing all package managers on your system.",
-    long_about = None,
-    before_help = BOLE_BANNER,
-    before_long_help = BOLE_BANNER
+    long_about = None
 )]
 struct Bole {
     #[command(subcommand)]
@@ -58,7 +43,23 @@ enum Commands {
     },
 }
 
+#[inline]
+fn show_help_and_exit(exit_code: i32) -> ! {
+    stream_banner();
+    println!();
+    let mut app = Bole::command();
+    app.print_help().unwrap();
+    std::process::exit(exit_code);
+}
+
 fn main() {
+    // Check if user wants help before parsing
+    let help_requested = std::env::args().any(|arg| arg == "--help" || arg == "-h");
+
+    if help_requested {
+        show_help_and_exit(0);
+    }
+
     let args = Bole::parse();
 
     match args.command {
@@ -70,10 +71,7 @@ fn main() {
             handle_show_command(category, all, tree);
         },
         None => {
-            // We show help when no subcommand provided
-            let mut app = Bole::command();
-            app.print_help().unwrap();
-            std::process::exit(1);
+            show_help_and_exit(1);
         },
     }
 }
