@@ -4,6 +4,7 @@ mod go;
 mod haskell;
 mod js;
 mod python;
+mod ruby;
 mod rust;
 mod system;
 mod types;
@@ -17,6 +18,7 @@ pub use go::Go;
 pub use haskell::{Cabal, Stack};
 pub use js::{Bun, Deno, Npm, Pnpm, Yarn};
 pub use python::{Conda, Pdm, Pip, Pipx, Poetry, Uv};
+pub use ruby::{Bundle, Bundler, Gem, Rbenv, Rvm};
 pub use rust::Cargo;
 pub use system::{Homebrew, Macports, Nix};
 pub use types::{Categorizable, Category, Detector, GroupedPmInfo, InstallMethod, PmInfo};
@@ -221,6 +223,51 @@ fn get_search_locations_for(name: &str) -> Vec<std::path::PathBuf> {
             // Usually comes with Node.js
             locations.push(format!("{}/.nvm/current/bin/corepack", home).into());
         },
+        "gem" => {
+            // System Ruby
+            locations.push("/usr/bin/gem".into());
+            // Homebrew Ruby
+            locations.push("/opt/homebrew/bin/gem".into());
+            locations.push("/usr/local/bin/gem".into());
+            // rbenv Ruby
+            locations.push(format!("{}/.rbenv/shims/gem", home).into());
+            // RVM Ruby
+            locations.push(format!("{}/.rvm/rubies/default/bin/gem", home).into());
+        },
+        "bundle" => {
+            // System Ruby
+            locations.push("/usr/bin/bundle".into());
+            // Homebrew Ruby
+            locations.push("/opt/homebrew/bin/bundle".into());
+            locations.push("/usr/local/bin/bundle".into());
+            // rbenv Ruby
+            locations.push(format!("{}/.rbenv/shims/bundle", home).into());
+            // RVM Ruby
+            locations.push(format!("{}/.rvm/rubies/default/bin/bundle", home).into());
+        },
+        "bundler" => {
+            // System Ruby
+            locations.push("/usr/bin/bundler".into());
+            // Homebrew Ruby
+            locations.push("/opt/homebrew/bin/bundler".into());
+            locations.push("/usr/local/bin/bundler".into());
+            // rbenv Ruby
+            locations.push(format!("{}/.rbenv/shims/bundler", home).into());
+            // RVM Ruby
+            locations.push(format!("{}/.rvm/rubies/default/bin/bundler", home).into());
+        },
+        "rbenv" => {
+            // rbenv installations
+            locations.push(format!("{}/.rbenv/bin/rbenv", home).into());
+            locations.push("/opt/homebrew/bin/rbenv".into());
+            locations.push("/usr/local/bin/rbenv".into());
+        },
+        "rvm" => {
+            // RVM installations
+            locations.push(format!("{}/.rvm/bin/rvm", home).into());
+            locations.push(format!("{}/.rvm/scripts/rvm", home).into());
+            locations.push("/usr/local/rvm/bin/rvm".into());
+        },
         _ => {
             // Generic fallback locations
             locations.push(format!("{}/bin/{}", home, name).into());
@@ -260,6 +307,10 @@ pub fn all_package_managers() -> Vec<Box<dyn Detector>> {
         Box::new(Pip),
         Box::new(Poetry),
         Box::new(Uv),
+        // Ruby
+        Box::new(Bundle),
+        Box::new(Bundler),
+        Box::new(Gem),
         // Rust
         Box::new(Cargo),
         // Universal Wrappers
@@ -267,5 +318,7 @@ pub fn all_package_managers() -> Vec<Box<dyn Detector>> {
         Box::new(Volta),
         Box::new(Mise),
         Box::new(Corepack),
+        Box::new(Rbenv),
+        Box::new(Rvm),
     ]
 }

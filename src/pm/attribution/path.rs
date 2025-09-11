@@ -65,6 +65,14 @@ fn check_toolchain_patterns(path_str: &str, home: &str) -> Option<InstallMethod>
         return Some(InstallMethod::Chain(vec![Origin::Toolchain("GHCup")]));
     }
 
+    // Ruby toolchains
+    if path_str.contains(&format!("{}/.rvm/", home)) {
+        return Some(InstallMethod::Chain(vec![Origin::Toolchain("RVM")]));
+    }
+    if path_str.contains(&format!("{}/.rbenv/", home)) {
+        return Some(InstallMethod::Chain(vec![Origin::Toolchain("rbenv")]));
+    }
+
     // Universal version managers
     // Note: Corepack uses different detection (filesystem symlinks),
     // while these use runtime PATH modification
