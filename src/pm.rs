@@ -17,13 +17,13 @@ pub use gleam::Gleam;
 pub use go::Go;
 pub use haskell::{Cabal, Stack};
 pub use js::{Bun, Deno, Npm, Pnpm, Yarn};
-pub use python::{Conda, Pdm, Pip, Pipx, Poetry, Uv};
+pub use python::{Conda, Pdm, Pip, Pipenv, Pipx, Poetry, Uv};
 pub use ruby::{Bundle, Bundler, Gem, Rbenv, Rvm};
 pub use rust::Cargo;
 pub use system::{Homebrew, Macports, Nix};
 pub use types::{Categorizable, Category, Detector, GroupedPmInfo, InstallMethod, PmInfo};
 use which::which;
-pub use wrappers::{Asdf, Corepack, Mise, Volta};
+pub use wrappers::{Asdf, Corepack, Mise, Pyenv, Volta};
 
 /// Main entry point for determining how a package manager was installed
 pub fn determine_install_method(path: &Path) -> InstallMethod {
@@ -268,6 +268,19 @@ fn get_search_locations_for(name: &str) -> Vec<std::path::PathBuf> {
             locations.push(format!("{}/.rvm/scripts/rvm", home).into());
             locations.push("/usr/local/rvm/bin/rvm".into());
         },
+        "pipenv" => {
+            // pipenv installations
+            locations.push(format!("{}/.local/bin/pipenv", home).into());
+            locations.push("/opt/homebrew/bin/pipenv".into());
+            locations.push("/usr/local/bin/pipenv".into());
+            locations.push("/usr/bin/pipenv".into());
+        },
+        "pyenv" => {
+            // pyenv installations
+            locations.push(format!("{}/.pyenv/bin/pyenv", home).into());
+            locations.push("/opt/homebrew/bin/pyenv".into());
+            locations.push("/usr/local/bin/pyenv".into());
+        },
         _ => {
             // Generic fallback locations
             locations.push(format!("{}/bin/{}", home, name).into());
@@ -305,6 +318,7 @@ pub fn all_package_managers() -> Vec<Box<dyn Detector>> {
         Box::new(Conda),
         Box::new(Pdm),
         Box::new(Pip),
+        Box::new(Pipenv),
         Box::new(Poetry),
         Box::new(Uv),
         // Ruby
@@ -318,6 +332,7 @@ pub fn all_package_managers() -> Vec<Box<dyn Detector>> {
         Box::new(Volta),
         Box::new(Mise),
         Box::new(Corepack),
+        Box::new(Pyenv),
         Box::new(Rbenv),
         Box::new(Rvm),
     ]
