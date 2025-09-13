@@ -16,7 +16,7 @@ pub use attribution::query::{Querier, Resolver, Tool};
 pub use gleam::Gleam;
 pub use go::Go;
 pub use haskell::{Cabal, Stack};
-pub use js::{Bun, Deno, Npm, Pnpm, Yarn};
+pub use js::{Bun, Deno, Ni, Npm, Pnpm, Yarn};
 pub use python::{Conda, Pdm, Pip, Pipenv, Pipx, Poetry, Uv};
 pub use ruby::{Bundle, Bundler, Gem, Rbenv, Rvm};
 pub use rust::Cargo;
@@ -281,6 +281,13 @@ fn get_search_locations_for(name: &str) -> Vec<std::path::PathBuf> {
             locations.push("/opt/homebrew/bin/pyenv".into());
             locations.push("/usr/local/bin/pyenv".into());
         },
+        "ni" => {
+            // ni installations
+            locations.push(format!("{}/.local/bin/ni", home).into());
+            locations.push("/opt/homebrew/bin/ni".into());
+            locations.push("/usr/local/bin/ni".into());
+            locations.push("/usr/bin/ni".into());
+        },
         _ => {
             // Generic fallback locations
             locations.push(format!("{}/bin/{}", home, name).into());
@@ -311,6 +318,7 @@ pub fn all_package_managers() -> Vec<Box<dyn Detector>> {
         // JavaScript/TypeScript
         Box::new(Bun),
         Box::new(Deno),
+        Box::new(Ni),
         Box::new(Npm),
         Box::new(Pnpm),
         Box::new(Yarn),

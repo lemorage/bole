@@ -12,10 +12,10 @@ pub(super) fn handle_show_command(category: Option<String>, all: bool, tree: boo
                 println!("Unknown category '{}'. Available categories:", category_str);
                 println!("  system      - System package managers (brew, nix, macports)");
                 println!(
-                    "  javascript  - JavaScript package managers (npm, yarn, pnpm, bun, deno)"
+                    "  javascript  - JavaScript package managers (npm, yarn, pnpm, bun, deno, ni)"
                 );
                 println!(
-                    "  python      - Python package managers (pip, poetry, uv, conda, pdm, pipx)"
+                    "  python      - Python package managers (pip, poetry, uv, conda, pdm, pipx, pipenv)"
                 );
                 println!("  ruby        - Ruby package managers (gem, bundle, bundler)");
                 println!("  rust        - Rust package managers (cargo)");
