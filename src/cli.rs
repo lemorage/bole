@@ -17,6 +17,7 @@ pub(super) fn handle_show_command(category: Option<String>, all: bool, tree: boo
                 println!(
                     "  python      - Python package managers (pip, poetry, uv, conda, pdm, pipx, pipenv)"
                 );
+                println!("  php         - PHP package managers (composer, pecl)");
                 println!("  ruby        - Ruby package managers (gem, bundle, bundler)");
                 println!("  rust        - Rust package managers (cargo)");
                 println!("  go          - Go package managers (go)");
@@ -82,6 +83,7 @@ fn parse_category(category_str: &str) -> Option<Category> {
             Some(Category::JavaScript)
         },
         "python" | "py" => Some(Category::Python),
+        "php" => Some(Category::PHP),
         "ruby" | "rb" => Some(Category::Ruby),
         "rust" | "rs" => Some(Category::Rust),
         "go" => Some(Category::Go),

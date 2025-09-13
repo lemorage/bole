@@ -10,6 +10,7 @@ pub enum Category {
     // Language-specific package managers
     JavaScript,
     Python,
+    PHP,
     Ruby,
     Rust,
     Go,

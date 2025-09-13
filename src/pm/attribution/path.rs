@@ -78,6 +78,11 @@ fn check_toolchain_patterns(path_str: &str, home: &str) -> Option<InstallMethod>
         return Some(InstallMethod::Chain(vec![Origin::Toolchain("pyenv")]));
     }
 
+    // PHP toolchain
+    if path_str.contains(&format!("{}/.phpbrew/", home)) {
+        return Some(InstallMethod::Chain(vec![Origin::Toolchain("phpbrew")]));
+    }
+
     // Universal version managers
     // Note: Corepack uses different detection (filesystem symlinks),
     // while these use runtime PATH modification

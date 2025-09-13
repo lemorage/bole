@@ -3,6 +3,7 @@ mod gleam;
 mod go;
 mod haskell;
 mod js;
+mod php;
 mod python;
 mod ruby;
 mod rust;
@@ -17,13 +18,14 @@ pub use gleam::Gleam;
 pub use go::Go;
 pub use haskell::{Cabal, Stack};
 pub use js::{Bun, Deno, Ni, Npm, Pnpm, Yarn};
+pub use php::{Composer, Pecl};
 pub use python::{Conda, Pdm, Pip, Pipenv, Pipx, Poetry, Uv};
 pub use ruby::{Bundle, Bundler, Gem, Rbenv, Rvm};
 pub use rust::Cargo;
 pub use system::{Homebrew, Macports, Nix};
 pub use types::{Categorizable, Category, Detector, GroupedPmInfo, InstallMethod, PmInfo};
 use which::which;
-pub use wrappers::{Asdf, Corepack, Mise, Pyenv, Volta};
+pub use wrappers::{Asdf, Corepack, Mise, Phpbrew, Pyenv, Volta};
 
 /// Main entry point for determining how a package manager was installed
 pub fn determine_install_method(path: &Path) -> InstallMethod {
@@ -288,6 +290,25 @@ fn get_search_locations_for(name: &str) -> Vec<std::path::PathBuf> {
             locations.push("/usr/local/bin/ni".into());
             locations.push("/usr/bin/ni".into());
         },
+        "composer" => {
+            // composer installations
+            locations.push(format!("{}/.composer/vendor/bin/composer", home).into());
+            locations.push("/opt/homebrew/bin/composer".into());
+            locations.push("/usr/local/bin/composer".into());
+            locations.push("/usr/bin/composer".into());
+        },
+        "pecl" => {
+            // pecl installations
+            locations.push("/opt/homebrew/bin/pecl".into());
+            locations.push("/usr/local/bin/pecl".into());
+            locations.push("/usr/bin/pecl".into());
+        },
+        "phpbrew" => {
+            // phpbrew installations
+            locations.push(format!("{}/.phpbrew/bin/phpbrew", home).into());
+            locations.push("/opt/homebrew/bin/phpbrew".into());
+            locations.push("/usr/local/bin/phpbrew".into());
+        },
         _ => {
             // Generic fallback locations
             locations.push(format!("{}/bin/{}", home, name).into());
@@ -322,6 +343,9 @@ pub fn all_package_managers() -> Vec<Box<dyn Detector>> {
         Box::new(Npm),
         Box::new(Pnpm),
         Box::new(Yarn),
+        // PHP
+        Box::new(Composer),
+        Box::new(Pecl),
         // Python
         Box::new(Conda),
         Box::new(Pdm),
@@ -340,6 +364,7 @@ pub fn all_package_managers() -> Vec<Box<dyn Detector>> {
         Box::new(Volta),
         Box::new(Mise),
         Box::new(Corepack),
+        Box::new(Phpbrew),
         Box::new(Pyenv),
         Box::new(Rbenv),
         Box::new(Rvm),
