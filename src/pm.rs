@@ -34,16 +34,18 @@ pub use wrappers::{Asdf, Corepack, Mise, Phpbrew, Pyenv, Volta};
 
 /// Determines how a package manager was installed by analyzing its path.
 ///
-/// Combines authoritative querying with path-based heuristics to trace installation sources.
-/// Handles complex chains like `Homebrew → Node.js → Corepack`.
+/// Combines authoritative querying with path-based heuristics to trace
+/// installation sources. Handles complex chains like `Homebrew → Node.js →
+/// Corepack`.
 pub fn determine_install_method(path: &Path) -> InstallMethod {
     attribution::determine(path)
 }
 
 /// Finds all instances of a package manager across the system.
 ///
-/// Searches PATH and known installation locations, deduplicating by canonical path.
-/// Returns instances in priority order: PATH-resolved first, then additional locations.
+/// Searches PATH and known installation locations, deduplicating by canonical
+/// path. Returns instances in priority order: PATH-resolved first, then
+/// additional locations.
 #[must_use]
 pub(crate) fn find_all_pms(name: &str) -> Vec<PmInfo> {
     find_all_pms_with_args(name, &["--version"])
@@ -331,6 +333,15 @@ fn get_search_locations_for(name: &str) -> Vec<std::path::PathBuf> {
     }
 
     locations
+}
+
+/// Returns the names of all package managers in a category.
+pub fn get_package_managers_in_category(category: Category) -> Vec<&'static str> {
+    all_package_managers()
+        .into_iter()
+        .filter(|detector| detector.category() == category)
+        .map(|detector| detector.name())
+        .collect()
 }
 
 /// Returns detectors for all supported package managers.

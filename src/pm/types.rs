@@ -21,6 +21,68 @@ pub enum Category {
     Tools,
 }
 
+impl Category {
+    /// Returns all available categories.
+    pub const fn all() -> &'static [Category] {
+        &[
+            Category::System,
+            Category::JavaScript,
+            Category::Python,
+            Category::PHP,
+            Category::Ruby,
+            Category::Rust,
+            Category::Go,
+            Category::Haskell,
+            Category::Gleam,
+            Category::Tools,
+        ]
+    }
+
+    /// Returns the primary name for this category.
+    pub const fn name(self) -> &'static str {
+        match self {
+            Category::System => "system",
+            Category::JavaScript => "javascript",
+            Category::Python => "python",
+            Category::PHP => "php",
+            Category::Ruby => "ruby",
+            Category::Rust => "rust",
+            Category::Go => "go",
+            Category::Haskell => "haskell",
+            Category::Gleam => "gleam",
+            Category::Tools => "tools",
+        }
+    }
+
+    /// Returns all aliases for this category.
+    pub const fn aliases(self) -> &'static [&'static str] {
+        match self {
+            Category::System => &["sys"],
+            Category::JavaScript => &["js", "typescript", "ts", "node.js", "node"],
+            Category::Python => &["py"],
+            Category::Ruby => &["rb"],
+            Category::Rust => &["rs"],
+            _ => &[],
+        }
+    }
+
+    /// Returns description of what this category contains.
+    pub const fn description(self) -> &'static str {
+        match self {
+            Category::System => "System package managers",
+            Category::JavaScript => "JavaScript package managers",
+            Category::Python => "Python package managers",
+            Category::PHP => "PHP package managers",
+            Category::Ruby => "Ruby package managers",
+            Category::Rust => "Rust package managers",
+            Category::Go => "Go package managers",
+            Category::Haskell => "Haskell package managers",
+            Category::Gleam => "Gleam package managers",
+            Category::Tools => "Version managers",
+        }
+    }
+}
+
 /// Installation method of a package manager.
 #[derive(Debug, Serialize, Tabled, Clone, PartialEq)]
 pub enum InstallMethod {

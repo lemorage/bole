@@ -2,8 +2,9 @@
 //!
 //! Package manager discovery system for the `bole` CLI tool.
 //!
-//! Detects package managers across all ecosystems: JavaScript, Python, Rust, system tools,
-//! and version managers. Determines installation sources and resolves complex dependency chains.
+//! Detects package managers across all ecosystems: JavaScript, Python, Rust,
+//! system tools, and version managers. Determines installation sources and
+//! resolves complex dependency chains.
 //!
 //! ## Architecture
 //!

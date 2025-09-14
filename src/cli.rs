@@ -1,7 +1,7 @@
 //! Command-line interface handling for the show command.
 
 use bole::pm::{self, Category};
-use tabled::{Table, settings::Style};
+use tabled::{Table, Tabled, settings::Style};
 
 use crate::display::{display_grouped_tree, display_tree, group_pm_instances};
 
@@ -12,21 +12,7 @@ pub(super) fn handle_show_command(category: Option<String>, all: bool, tree: boo
         let target_category = match parse_category(category_str) {
             Some(cat) => cat,
             None => {
-                println!("Unknown category '{}'. Available categories:", category_str);
-                println!("  system      - System package managers (brew, nix, macports)");
-                println!(
-                    "  javascript  - JavaScript package managers (npm, yarn, pnpm, bun, deno, ni)"
-                );
-                println!(
-                    "  python      - Python package managers (pip, poetry, uv, conda, pdm, pipx, pipenv)"
-                );
-                println!("  php         - PHP package managers (composer, pecl)");
-                println!("  ruby        - Ruby package managers (gem, bundle, bundler)");
-                println!("  rust        - Rust package managers (cargo)");
-                println!("  go          - Go package managers (go)");
-                println!("  haskell     - Haskell package managers (cabal, stack)");
-                println!("  gleam       - Gleam package managers (gleam)");
-                println!("  tools       - Version managers (asdf, volta, mise, corepack)");
+                print_category_help(category_str);
                 return;
             },
         };
@@ -79,23 +65,72 @@ pub(super) fn handle_show_command(category: Option<String>, all: bool, tree: boo
     }
 }
 
+/// Prints help for available categories with dynamically generated package
+/// lists.
+fn print_category_help(unknown_category: &str) {
+    #[derive(Tabled)]
+    struct CategoryRow<'a> {
+        #[tabled(rename = "Category")]
+        category: &'a str,
+        #[tabled(rename = "Managers")]
+        managers: String,
+        #[tabled(rename = "Aliases")]
+        aliases: String,
+    }
+
+    println!("Unknown category '{}'.", unknown_category);
+    println!("\nAvailable categories:");
+
+    let mut rows: Vec<CategoryRow> = Vec::new();
+
+    for &category in Category::all() {
+        let mut tools = pm::get_package_managers_in_category(category);
+        tools.sort_unstable();
+
+        let managers = if tools.is_empty() {
+            String::from("-")
+        } else {
+            tools.join(", ")
+        };
+
+        let aliases = if category.aliases().is_empty() {
+            String::from("-")
+        } else {
+            category.aliases().join(", ")
+        };
+
+        rows.push(CategoryRow {
+            category: category.name(),
+            managers,
+            aliases,
+        });
+    }
+
+    let mut table = Table::new(rows);
+    println!("{}", table.with(Style::modern()));
+
+    println!("\nHint: use 'bole show <category>' to filter.");
+}
+
 /// Parses category string into Category enum, supporting aliases.
 fn parse_category(category_str: &str) -> Option<Category> {
-    match category_str.to_lowercase().as_str() {
-        "system" | "sys" => Some(Category::System),
-        "javascript" | "js" | "typescript" | "ts" | "node.js" | "node" => {
-            Some(Category::JavaScript)
-        },
-        "python" | "py" => Some(Category::Python),
-        "php" => Some(Category::PHP),
-        "ruby" | "rb" => Some(Category::Ruby),
-        "rust" | "rs" => Some(Category::Rust),
-        "go" => Some(Category::Go),
-        "haskell" => Some(Category::Haskell),
-        "gleam" => Some(Category::Gleam),
-        "tools" => Some(Category::Tools),
-        _ => None,
+    let input = category_str.to_lowercase();
+
+    for &category in Category::all() {
+        // Check primary name
+        if input == category.name() {
+            return Some(category);
+        }
+
+        // Check aliases
+        for &alias in category.aliases() {
+            if input == alias {
+                return Some(category);
+            }
+        }
     }
+
+    None
 }
 
 /// Filters package managers by category and returns all matching instances.
