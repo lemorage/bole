@@ -11,9 +11,14 @@ readme = "README.md"
 repository = "https://github.com/lemorage/bole"
 keywords = ["cli", "package-manager", "discovery", "tools"]
 categories = ["command-line-utilities", "development-tools"]
+include = ["src/**/*", "LICENSE", "README.md", "Cargo.toml"]
 
 [dependencies]
 clap = { version = "4.5.45", features = ["derive"] }
 serde = { version = "1.0.219", features = ["derive"] }
 tabled = "0.20.0"
 which = "8.0.0"
+
+[workspace]
+members = ["xtask"]
+resolver = "2"

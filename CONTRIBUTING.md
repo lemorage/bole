@@ -50,26 +50,32 @@ mkdir -p .git/hooks
 5. Commit with proper format: `git commit -m "feat: your change"`
 6. Push and create pull request
 
-### Manual Quality Checks
+### Development Commands
+
+**Contributors:**
 ```bash
-# Run tests
-cargo test
-
-# Format code
-cargo fmt
-
-# Fix spelling errors
-typos --write-changes
-
-# Run linting
-cargo clippy --fix
-
-# Run all checks (like CI)
+# All checks (same as CI)
 nix run .#checks.aarch64-darwin.lint   # macOS (Apple Silicon)
 nix run .#checks.x86_64-darwin.lint    # macOS (Intel)
 nix run .#checks.x86_64-linux.lint     # Linux
+
+# Individual fixes
+cargo fmt
+cargo clippy --fix
+typos --write-changes
+cargo test
+
+# Or use xtask to check (format, lint, test, build)
+cargo xtask check
 ```
 > Note: Nix does not support native Windows yet. Use WSL2 and run `nix` inside your WSL shell.
+
+**Maintainers:**
+```bash
+cargo xtask release patch    # Patch version bump
+cargo xtask release minor    # Minor version bump
+cargo xtask release major    # Major version bump
+```
 
 ## Commit Message Format
 
@@ -102,13 +108,9 @@ git commit -m "feat: describe your change"
 
 ### Code quality issues
 ```bash
-# Fix formatting
+# Fix all issues
 cargo fmt
-
-# Fix typos
 typos --write-changes
-
-# Fix linting issues
 cargo clippy --fix
 ```
 

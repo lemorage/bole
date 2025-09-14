@@ -55,3 +55,6 @@ t = "test"
 r = "run"
 f = "fmt"
 l = "clippy"
+
+# Project automation
+xtask = "run --package xtask --"
