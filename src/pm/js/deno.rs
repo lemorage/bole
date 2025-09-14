@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms_with_args},
 };
 
+/// deno - Secure runtime for JavaScript and TypeScript
 pub struct Deno;
 
 impl Deno {

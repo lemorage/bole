@@ -1,3 +1,5 @@
+//! Ruby package managers.
+
 pub mod bundle;
 pub mod bundler;
 pub mod gem;

@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
+/// phpbrew - PHP version manager
 pub struct Phpbrew;
 
 impl Phpbrew {

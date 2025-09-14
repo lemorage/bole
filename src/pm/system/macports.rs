@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
+/// port - MacPorts package manager for macOS
 pub struct Macports;
 
 impl Macports {

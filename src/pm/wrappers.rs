@@ -1,3 +1,5 @@
+//! Version managers.
+
 mod asdf;
 mod corepack;
 mod mise;

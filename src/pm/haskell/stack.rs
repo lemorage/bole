@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
+/// stack - Haskell build tool and package manager
 pub struct Stack;
 
 impl Stack {

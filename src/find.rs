@@ -1,6 +1,8 @@
-/// Generic discovery trait used by lightweight "detectors" to enumerate
-/// instances of a given tool or resource.
-///
+//! Discovery trait for package managers.
+//!
+//! Enumerates all installations of supported tools (PATH‑first, de‑duplicated)
+//! and identifies their provenance (Homebrew, Nix, Corepack, etc.) across
+//! system managers, language ecosystems, and version managers.
 /// In this codebase it is implemented by package‑manager detectors (npm, pip,
 /// brew, etc.). Implementations should return all discoverable instances with
 /// the following conventions:

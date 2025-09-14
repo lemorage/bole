@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
+/// gleam - Gleam build tool and package manager
 pub struct Gleam;
 
 impl Gleam {

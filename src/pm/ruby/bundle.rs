@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
+/// bundle - Ruby dependency manager (bundler CLI)
 pub struct Bundle;
 
 impl Bundle {

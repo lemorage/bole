@@ -1,7 +1,10 @@
+//! Output formatting for package manager information.
+
 use std::collections::HashMap;
 
 use bole::pm::{GroupedPmInfo, PmInfo};
 
+/// Groups package manager instances by name for clean display.
 pub(super) fn group_pm_instances(instances: Vec<PmInfo>) -> Vec<GroupedPmInfo> {
     let mut grouped: HashMap<String, Vec<PmInfo>> = HashMap::new();
 
@@ -21,6 +24,7 @@ pub(super) fn group_pm_instances(instances: Vec<PmInfo>) -> Vec<GroupedPmInfo> {
     result
 }
 
+/// Displays package manager instances in tree format with full details.
 pub(super) fn display_tree(instances: Vec<PmInfo>) {
     let mut grouped: HashMap<String, Vec<PmInfo>> = HashMap::new();
 
@@ -77,6 +81,7 @@ pub(super) fn display_tree(instances: Vec<PmInfo>) {
     }
 }
 
+/// Displays grouped package manager information in tree format.
 pub(super) fn display_grouped_tree(grouped: Vec<GroupedPmInfo>) {
     for (i, group) in grouped.iter().enumerate() {
         let is_last = i == grouped.len() - 1;

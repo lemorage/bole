@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms_with_args},
 };
 
+/// pecl - PHP extension manager
 pub struct Pecl;
 
 impl Pecl {

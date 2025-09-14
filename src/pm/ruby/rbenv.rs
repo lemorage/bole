@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
+/// rbenv - Ruby version manager
 pub struct Rbenv;
 
 impl Rbenv {

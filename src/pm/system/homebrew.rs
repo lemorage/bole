@@ -6,6 +6,7 @@ use crate::{
     },
 };
 
+/// Homebrew package manager for macOS and Linux.
 pub struct Homebrew;
 
 impl Homebrew {

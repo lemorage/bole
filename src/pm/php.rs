@@ -1,3 +1,5 @@
+//! PHP package managers.
+
 pub mod composer;
 pub mod pecl;
 

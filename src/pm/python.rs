@@ -1,3 +1,5 @@
+//! Python package managers.
+
 pub mod conda;
 pub mod pdm;
 pub mod pip;

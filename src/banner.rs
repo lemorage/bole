@@ -1,3 +1,5 @@
+//! ASCII art banner with streaming reveal effect.
+
 use std::{
     io::{self, Write},
     thread,
@@ -19,7 +21,7 @@ const BOLE_BANNER: &str = r#"
             V
     "#;
 
-/// Stream banner with Matrix-style reveal effect
+/// Displays ASCII banner with Matrix-style streaming reveal effect.
 pub fn stream_banner() {
     let stdout = io::stdout();
     let mut handle = stdout.lock();

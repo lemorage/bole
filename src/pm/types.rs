@@ -1,7 +1,7 @@
 use serde::Serialize;
 use tabled::Tabled;
 
-/// Package manager categories for organized display
+/// Package manager categories for filtering and organization.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Category {
     // System-wide package managers
@@ -21,7 +21,7 @@ pub enum Category {
     Tools,
 }
 
-/// How a package manager was installed on the system
+/// Installation method of a package manager.
 #[derive(Debug, Serialize, Tabled, Clone, PartialEq)]
 pub enum InstallMethod {
     Chain(Vec<Origin>),
@@ -29,7 +29,7 @@ pub enum InstallMethod {
     Unknown,
 }
 
-/// Origin in an installation chain
+/// Single step in an installation chain.
 #[derive(Debug, Serialize, Clone, PartialEq)]
 pub enum Origin {
     PackageManager(&'static str),
@@ -64,17 +64,17 @@ impl AsOrigin for NewPM {
 ```
 */
 
-/// Trait for types that can represent themselves in an installation chain
+/// Types that can represent themselves in an installation chain.
 pub trait AsOrigin {
     fn as_origin() -> Origin;
 }
 
-/// Trait for package managers that can categorize themselves
+/// Package managers that can categorize themselves.
 pub trait Categorizable {
     fn category(&self) -> Category;
 }
 
-/// Unified trait for package manager detectors
+/// Combined discovery and categorization trait for package managers.
 pub trait Detector: crate::find::Find<Output = PmInfo> + Categorizable {}
 
 // Blanket implementation for any type that implements both Find and
@@ -106,7 +106,7 @@ impl std::fmt::Display for InstallMethod {
     }
 }
 
-/// Information about a discovered package manager instance
+/// Information about a discovered package manager instance.
 #[derive(Debug, Serialize, Tabled, Clone)]
 pub struct PmInfo {
     #[tabled(rename = "Name")]
@@ -119,7 +119,7 @@ pub struct PmInfo {
     pub install_method: InstallMethod,
 }
 
-/// Grouped package manager information for clean display
+/// Grouped package manager information for clean display.
 #[derive(Debug, Serialize, Tabled)]
 pub struct GroupedPmInfo {
     #[tabled(rename = "Name")]

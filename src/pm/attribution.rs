@@ -1,3 +1,8 @@
+//! Installation source attribution system.
+//!
+//! Determines how package managers were installed by combining authoritative
+//! querying with path-based heuristics.
+
 pub mod path;
 pub mod query;
 
@@ -5,9 +10,7 @@ use std::path::Path;
 
 use crate::pm::types::InstallMethod;
 
-/// Main entry point for installation source attribution
-///
-/// Strategy: Query authoritative sources first, fall back to path analysis
+/// Determines installation source using query-first, path-fallback strategy.
 pub fn determine(path: &Path) -> InstallMethod {
     let tool_name = path
         .file_name()

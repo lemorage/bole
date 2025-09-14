@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
+/// conda - Package and environment manager
 pub struct Conda;
 
 impl Conda {

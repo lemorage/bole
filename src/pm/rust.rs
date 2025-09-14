@@ -10,6 +10,7 @@ use crate::{
     },
 };
 
+/// cargo - Rust package manager and build tool
 pub struct Cargo;
 
 impl Cargo {

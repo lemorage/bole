@@ -1,3 +1,5 @@
+//! Haskell package managers.
+
 pub mod cabal;
 pub mod stack;
 

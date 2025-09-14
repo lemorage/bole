@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
+/// gem - Ruby package manager
 pub struct Gem;
 
 impl Gem {

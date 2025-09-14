@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
+/// composer - PHP dependency manager
 pub struct Composer;
 
 impl Composer {

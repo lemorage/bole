@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
+/// bun - All-in-one JavaScript runtime and toolkit
 pub struct Bun;
 
 impl Bun {

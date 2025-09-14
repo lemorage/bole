@@ -1,3 +1,8 @@
+//! Package manager detection and attribution.
+//!
+//! This module provides the core registry of all supported package managers and
+//! determines how each tool was installed on the system.
+
 mod attribution;
 mod gleam;
 mod go;
@@ -27,18 +32,24 @@ pub use types::{Categorizable, Category, Detector, GroupedPmInfo, InstallMethod,
 use which::which;
 pub use wrappers::{Asdf, Corepack, Mise, Phpbrew, Pyenv, Volta};
 
-/// Main entry point for determining how a package manager was installed
+/// Determines how a package manager was installed by analyzing its path.
+///
+/// Combines authoritative querying with path-based heuristics to trace installation sources.
+/// Handles complex chains like `Homebrew → Node.js → Corepack`.
 pub fn determine_install_method(path: &Path) -> InstallMethod {
     attribution::determine(path)
 }
 
-/// Enhanced detector that finds ALL instances of a package manager
+/// Finds all instances of a package manager across the system.
+///
+/// Searches PATH and known installation locations, deduplicating by canonical path.
+/// Returns instances in priority order: PATH-resolved first, then additional locations.
 #[must_use]
 pub(crate) fn find_all_pms(name: &str) -> Vec<PmInfo> {
     find_all_pms_with_args(name, &["--version"])
 }
 
-/// Enhanced detector helper that finds ALL instances with custom version args
+/// Finds all instances using custom version detection arguments.
 #[must_use]
 pub(crate) fn find_all_pms_with_args(name: &str, version_args: &[&str]) -> Vec<PmInfo> {
     let mut instances = Vec::new();
@@ -76,7 +87,7 @@ pub(crate) fn find_all_pms_with_args(name: &str, version_args: &[&str]) -> Vec<P
     instances
 }
 
-/// Try to detect a package manager at a specific path
+/// Attempts to detect a package manager at the given path.
 fn try_detect_at_path(path: &std::path::Path, name: &str, version_args: &[&str]) -> Option<PmInfo> {
     let version = match Command::new(path).args(version_args).output() {
         Ok(output) => String::from_utf8(output.stdout)
@@ -96,7 +107,7 @@ fn try_detect_at_path(path: &std::path::Path, name: &str, version_args: &[&str])
     })
 }
 
-/// Get common installation locations for a specific package manager
+/// Returns common installation paths for the specified package manager.
 fn get_search_locations_for(name: &str) -> Vec<std::path::PathBuf> {
     let mut locations = Vec::new();
     let home = std::env::var("HOME").unwrap_or_default();
@@ -322,7 +333,10 @@ fn get_search_locations_for(name: &str) -> Vec<std::path::PathBuf> {
     locations
 }
 
-// Simple registry, just provides iteration over all package managers
+/// Returns detectors for all supported package managers.
+///
+/// Provides access to 40+ package manager detectors across all ecosystems:
+/// system tools, language-specific managers, and version managers.
 pub fn all_package_managers() -> Vec<Box<dyn Detector>> {
     vec![
         // System

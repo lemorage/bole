@@ -1,3 +1,5 @@
+//! JavaScript and TypeScript ecosystem package managers.
+
 pub mod bun;
 pub mod deno;
 pub mod ni;

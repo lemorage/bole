@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
+/// yarn - JavaScript package manager
 pub struct Yarn;
 
 impl Yarn {

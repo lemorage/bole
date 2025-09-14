@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
+/// poetry - Python dependency management and packaging
 pub struct Poetry;
 
 impl Poetry {

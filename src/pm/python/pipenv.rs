@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
+/// pipenv - Python virtual environment and dependency manager
 pub struct Pipenv;
 
 impl Pipenv {

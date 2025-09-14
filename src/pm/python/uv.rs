@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
+/// uv - Extremely fast Python package manager
 pub struct Uv;
 
 impl Uv {

@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
+/// ni - Package manager agnostic scripts runner
 pub struct Ni;
 
 impl Ni {

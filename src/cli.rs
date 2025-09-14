@@ -1,8 +1,11 @@
+//! Command-line interface handling for the show command.
+
 use bole::pm::{self, Category};
 use tabled::{Table, settings::Style};
 
 use crate::display::{display_grouped_tree, display_tree, group_pm_instances};
 
+/// Handles the show command with filtering and output format options.
 pub(super) fn handle_show_command(category: Option<String>, all: bool, tree: bool) {
     // Filter by category if specified
     let filtered_pms = if let Some(ref category_str) = category {
@@ -76,6 +79,7 @@ pub(super) fn handle_show_command(category: Option<String>, all: bool, tree: boo
     }
 }
 
+/// Parses category string into Category enum, supporting aliases.
 fn parse_category(category_str: &str) -> Option<Category> {
     match category_str.to_lowercase().as_str() {
         "system" | "sys" => Some(Category::System),
@@ -94,6 +98,7 @@ fn parse_category(category_str: &str) -> Option<Category> {
     }
 }
 
+/// Filters package managers by category and returns all matching instances.
 fn filter_by_category(target_category: Category) -> Vec<pm::PmInfo> {
     let mut filtered = Vec::new();
 

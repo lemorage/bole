@@ -9,6 +9,7 @@ use crate::{
     },
 };
 
+/// pip - Python package installer
 pub struct Pip;
 
 impl Pip {

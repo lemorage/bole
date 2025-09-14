@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
+/// cabal - Haskell package manager and build tool
 pub struct Cabal;
 
 impl Cabal {

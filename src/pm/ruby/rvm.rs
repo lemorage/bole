@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms_with_args},
 };
 
+/// rvm - Ruby version manager
 pub struct Rvm;
 
 impl Rvm {

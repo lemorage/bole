@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
+/// pyenv - Python version manager
 pub struct Pyenv;
 
 impl Pyenv {

@@ -1,3 +1,5 @@
+//! System-wide package managers.
+
 pub mod homebrew;
 pub mod macports;
 pub mod nix;

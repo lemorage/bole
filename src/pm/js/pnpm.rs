@@ -3,6 +3,7 @@ use crate::{
     pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
+/// pnpm - Fast disk space efficient package manager
 pub struct Pnpm;
 
 impl Pnpm {
