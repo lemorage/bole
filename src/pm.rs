@@ -37,6 +37,7 @@ pub use wrappers::{Asdf, Corepack, Mise, Phpbrew, Pyenv, Volta};
 /// Combines authoritative querying with path-based heuristics to trace
 /// installation sources. Handles complex chains like `Homebrew → Node.js →
 /// Corepack`.
+#[inline]
 pub fn determine_install_method(path: &Path) -> InstallMethod {
     attribution::determine(path)
 }
@@ -47,7 +48,7 @@ pub fn determine_install_method(path: &Path) -> InstallMethod {
 /// path. Returns instances in priority order: PATH-resolved first, then
 /// additional locations.
 #[must_use]
-pub(crate) fn find_all_pms(name: &str) -> Vec<PmInfo> {
+pub fn find_all_pms(name: &str) -> Vec<PmInfo> {
     find_all_pms_with_args(name, &["--version"])
 }
 

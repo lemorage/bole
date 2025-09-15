@@ -1,3 +1,5 @@
+use std::{collections::HashMap, sync::LazyLock};
+
 use serde::Serialize;
 use tabled::Tabled;
 
@@ -21,8 +23,21 @@ pub enum Category {
     Tools,
 }
 
+/// Lazy-initialized cache of category-to-managers mapping.
+/// Built once on first access for optimal performance.
+static CATEGORY_MANAGERS_CACHE: LazyLock<HashMap<Category, Vec<&'static str>>> =
+    LazyLock::new(|| {
+        let mut cache = HashMap::new();
+        for &category in Category::all() {
+            let managers = crate::pm::get_package_managers_in_category(category);
+            cache.insert(category, managers);
+        }
+        cache
+    });
+
 impl Category {
     /// Returns all available categories.
+    #[inline]
     pub const fn all() -> &'static [Category] {
         &[
             Category::System,
@@ -39,6 +54,7 @@ impl Category {
     }
 
     /// Returns the primary name for this category.
+    #[inline]
     pub const fn name(self) -> &'static str {
         match self {
             Category::System => "system",
@@ -55,6 +71,7 @@ impl Category {
     }
 
     /// Returns all aliases for this category.
+    #[inline]
     pub const fn aliases(self) -> &'static [&'static str] {
         match self {
             Category::System => &["sys"],
@@ -64,6 +81,13 @@ impl Category {
             Category::Rust => &["rs"],
             _ => &[],
         }
+    }
+
+    /// Returns the package manager names in this category.
+    /// Uses lazy-initialized cache for optimal performance.
+    #[inline]
+    pub fn managers(self) -> &'static [&'static str] {
+        &CATEGORY_MANAGERS_CACHE[&self]
     }
 
     /// Returns description of what this category contains.

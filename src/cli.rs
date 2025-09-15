@@ -7,8 +7,8 @@ use crate::display::{display_grouped_tree, display_tree, group_pm_instances};
 
 /// Handles the show command with filtering and output format options.
 pub(super) fn handle_show_command(category: Option<String>, all: bool, tree: bool) {
-    // Filter by category if specified
-    let filtered_pms = if let Some(ref category_str) = category {
+    // Determine target categories, either specific or all
+    let target_categories = if let Some(ref category_str) = category {
         let target_category = match parse_category(category_str) {
             Some(cat) => cat,
             None => {
@@ -16,19 +16,16 @@ pub(super) fn handle_show_command(category: Option<String>, all: bool, tree: boo
                 return;
             },
         };
-
-        filter_by_category(target_category)
-    // No category filter, return all found package managers
+        vec![target_category]
     } else {
-        let mut found_pms = Vec::new();
-
-        for detector in pm::all_package_managers() {
-            let instances = detector.find();
-            found_pms.extend(instances);
-        }
-
-        found_pms
+        Category::all().to_vec()
     };
+
+    let filtered_pms: Vec<_> = target_categories
+        .iter()
+        .flat_map(|&cat| cat.managers())
+        .flat_map(|&name| pm::find_all_pms(name))
+        .collect();
 
     if filtered_pms.is_empty() {
         if let Some(cat_str) = category {
@@ -65,8 +62,28 @@ pub(super) fn handle_show_command(category: Option<String>, all: bool, tree: boo
     }
 }
 
-/// Prints help for available categories with dynamically generated package
-/// lists.
+/// Parses category string into Category enum, supporting aliases.
+fn parse_category(category_str: &str) -> Option<Category> {
+    let input = category_str.to_lowercase();
+
+    for &category in Category::all() {
+        // Check primary name
+        if input == category.name() {
+            return Some(category);
+        }
+
+        // Check aliases
+        for &alias in category.aliases() {
+            if input == alias {
+                return Some(category);
+            }
+        }
+    }
+
+    None
+}
+
+/// Prints help for available categories with package manager lists.
 fn print_category_help(unknown_category: &str) {
     #[derive(Tabled)]
     struct CategoryRow<'a> {
@@ -84,7 +101,7 @@ fn print_category_help(unknown_category: &str) {
     let mut rows: Vec<CategoryRow> = Vec::new();
 
     for &category in Category::all() {
-        let mut tools = pm::get_package_managers_in_category(category);
+        let mut tools = category.managers().to_vec();
         tools.sort_unstable();
 
         let managers = if tools.is_empty() {
@@ -110,39 +127,4 @@ fn print_category_help(unknown_category: &str) {
     println!("{}", table.with(Style::modern()));
 
     println!("\nHint: use 'bole show <category>' to filter.");
-}
-
-/// Parses category string into Category enum, supporting aliases.
-fn parse_category(category_str: &str) -> Option<Category> {
-    let input = category_str.to_lowercase();
-
-    for &category in Category::all() {
-        // Check primary name
-        if input == category.name() {
-            return Some(category);
-        }
-
-        // Check aliases
-        for &alias in category.aliases() {
-            if input == alias {
-                return Some(category);
-            }
-        }
-    }
-
-    None
-}
-
-/// Filters package managers by category and returns all matching instances.
-fn filter_by_category(target_category: Category) -> Vec<pm::PmInfo> {
-    let mut filtered = Vec::new();
-
-    for detector in pm::all_package_managers() {
-        if detector.category() == target_category {
-            let instances = detector.find();
-            filtered.extend(instances);
-        }
-    }
-
-    filtered
 }
