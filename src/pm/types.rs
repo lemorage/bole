@@ -1,5 +1,3 @@
-use std::{collections::HashMap, sync::LazyLock};
-
 use serde::Serialize;
 use tabled::Tabled;
 
@@ -22,18 +20,6 @@ pub enum Category {
     // Version managers / Wrappers
     Tools,
 }
-
-/// Lazy-initialized cache of category-to-managers mapping.
-/// Built once on first access for optimal performance.
-static CATEGORY_MANAGERS_CACHE: LazyLock<HashMap<Category, Vec<&'static str>>> =
-    LazyLock::new(|| {
-        let mut cache = HashMap::new();
-        for &category in Category::all() {
-            let managers = crate::pm::get_package_managers_in_category(category);
-            cache.insert(category, managers);
-        }
-        cache
-    });
 
 impl Category {
     /// Returns all available categories.
@@ -81,13 +67,6 @@ impl Category {
             Category::Rust => &["rs"],
             _ => &[],
         }
-    }
-
-    /// Returns the package manager names in this category.
-    /// Uses lazy-initialized cache for optimal performance.
-    #[inline]
-    pub fn managers(self) -> &'static [&'static str] {
-        &CATEGORY_MANAGERS_CACHE[&self]
     }
 
     /// Returns description of what this category contains.
@@ -161,11 +140,11 @@ pub trait Categorizable {
 }
 
 /// Combined discovery and categorization trait for package managers.
-pub trait Detector: crate::find::Find<Output = PmInfo> + Categorizable {}
+pub trait Detector: crate::find::Find<Output = PmInfo> + Categorizable + Send + Sync {}
 
-// Blanket implementation for any type that implements both Find and
-// Categorizable
-impl<T> Detector for T where T: crate::find::Find<Output = PmInfo> + Categorizable {}
+// Blanket implementation for any type that implements Find, Categorizable,
+// Send, and Sync
+impl<T> Detector for T where T: crate::find::Find<Output = PmInfo> + Categorizable + Send + Sync {}
 
 impl std::fmt::Display for Origin {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

@@ -1,6 +1,7 @@
 //! Command-line interface handling for the show command.
 
 use bole::pm::{self, Category};
+use rayon::prelude::*;
 use tabled::{Table, Tabled, settings::Style};
 
 use crate::display::{display_grouped_tree, display_tree, group_pm_instances};
@@ -21,10 +22,17 @@ pub(super) fn handle_show_command(category: Option<String>, all: bool, tree: boo
         Category::all().to_vec()
     };
 
-    let filtered_pms: Vec<_> = target_categories
-        .iter()
-        .flat_map(|&cat| cat.managers())
-        .flat_map(|&name| pm::find_all_pms(name))
+    // Filter detectors by target categories, then parallelize their execution
+    let filtered_pms: Vec<_> = pm::all_package_managers()
+        .into_iter()
+        .filter(|detector| {
+            target_categories
+                .iter()
+                .any(|&cat| detector.category() == cat)
+        })
+        .collect::<Vec<_>>()
+        .par_iter()
+        .flat_map(|detector| detector.find())
         .collect();
 
     if filtered_pms.is_empty() {
@@ -98,30 +106,36 @@ fn print_category_help(unknown_category: &str) {
     println!("Unknown category '{}'.", unknown_category);
     println!("\nAvailable categories:");
 
-    let mut rows: Vec<CategoryRow> = Vec::new();
+    // Parallel category help generation
+    let rows: Vec<CategoryRow> = Category::all()
+        .par_iter()
+        .map(|&category| {
+            let mut tools: Vec<&str> = pm::all_package_managers()
+                .iter()
+                .filter(|detector| detector.category() == category)
+                .map(|detector| detector.name())
+                .collect();
+            tools.sort_unstable();
 
-    for &category in Category::all() {
-        let mut tools = category.managers().to_vec();
-        tools.sort_unstable();
+            let managers = if tools.is_empty() {
+                String::from("-")
+            } else {
+                tools.join(", ")
+            };
 
-        let managers = if tools.is_empty() {
-            String::from("-")
-        } else {
-            tools.join(", ")
-        };
+            let aliases = if category.aliases().is_empty() {
+                String::from("-")
+            } else {
+                category.aliases().join(", ")
+            };
 
-        let aliases = if category.aliases().is_empty() {
-            String::from("-")
-        } else {
-            category.aliases().join(", ")
-        };
-
-        rows.push(CategoryRow {
-            category: category.name(),
-            managers,
-            aliases,
-        });
-    }
+            CategoryRow {
+                category: category.name(),
+                managers,
+                aliases,
+            }
+        })
+        .collect();
 
     let mut table = Table::new(rows);
     println!("{}", table.with(Style::modern()));
