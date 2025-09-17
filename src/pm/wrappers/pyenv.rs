@@ -17,6 +17,14 @@ impl Find for Pyenv {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "~/.pyenv/bin/pyenv",
+            "/opt/homebrew/bin/pyenv",
+            "/usr/local/bin/pyenv",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
             .into_iter()

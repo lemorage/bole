@@ -17,6 +17,16 @@ impl Find for Bundle {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "/usr/bin/bundle",
+            "/opt/homebrew/bin/bundle",
+            "/usr/local/bin/bundle",
+            "~/.rbenv/shims/bundle",
+            "~/.rvm/rubies/default/bin/bundle",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
             .into_iter()

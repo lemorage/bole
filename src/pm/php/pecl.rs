@@ -17,6 +17,14 @@ impl Find for Pecl {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "/opt/homebrew/bin/pecl",
+            "/usr/local/bin/pecl",
+            "/usr/bin/pecl",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms_with_args(Self::NAME, &["-V"])
             .into_iter()

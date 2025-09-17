@@ -17,6 +17,14 @@ impl Find for Pdm {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "~/.local/bin/pdm",
+            "/opt/homebrew/bin/pdm",
+            "/usr/local/bin/pdm",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
             .into_iter()

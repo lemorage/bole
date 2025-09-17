@@ -1,32 +1,31 @@
 //! Discovery trait for package managers.
 //!
-//! Enumerates all installations of supported tools (PATH‑first, de‑duplicated)
-//! and identifies their provenance (Homebrew, Nix, Corepack, etc.) across
-//! system managers, language ecosystems, and version managers.
-/// In this codebase it is implemented by package‑manager detectors (npm, pip,
-/// brew, etc.). Implementations should return all discoverable instances with
-/// the following conventions:
-/// - The first element is the active instance resolved from PATH.
-/// - Additional elements are instances found in well‑known install locations.
-/// - Results should be de‑duplicated by canonical path.
+//! Provides standardized discovery interface for all package managers.
+
+/// Package manager discovery interface.
 ///
-/// The `Output` type is the per‑instance info struct (e.g. `PmInfo`).
+/// Implementations should return instances in priority order:
+/// - First: active PATH-resolved instance
+/// - Rest: additional locations, deduplicated by canonical path
 pub trait Find {
-    /// Per‑instance information yielded by this finder.
+    /// Discovery result type.
     type Output;
-    /// Stable identifier for the thing being discovered.
+    /// Package manager name.
     fn name(&self) -> &'static str;
-    /// Run discovery and return all found instances in the order described
-    /// above (active first, then other locations), with duplicates removed.
+    /// Search path templates for this package manager.
+    fn search_paths(&self) -> &'static [&'static str];
+    /// Find all instances (PATH-first, deduplicated).
     fn find(&self) -> Vec<Self::Output>;
 }
 
-/// Handy blanket impls so `&T` and `Box<T>` can be used anywhere a `Find`
-/// implementor is expected, without forcing clones or moves.
+/// Blanket implementations for references and boxes (`&T` and `Box<T>`).
 impl<T: Find + ?Sized> Find for &T {
     type Output = T::Output;
     fn name(&self) -> &'static str {
         (**self).name()
+    }
+    fn search_paths(&self) -> &'static [&'static str] {
+        (**self).search_paths()
     }
     fn find(&self) -> Vec<Self::Output> {
         (**self).find()
@@ -37,6 +36,9 @@ impl<T: Find + ?Sized> Find for Box<T> {
     type Output = T::Output;
     fn name(&self) -> &'static str {
         (**self).name()
+    }
+    fn search_paths(&self) -> &'static [&'static str] {
+        (**self).search_paths()
     }
     fn find(&self) -> Vec<Self::Output> {
         (**self).find()
@@ -64,6 +66,10 @@ mod tests {
 
         fn name(&self) -> &'static str {
             self.name
+        }
+
+        fn search_paths(&self) -> &'static [&'static str] {
+            &["/usr/bin/test", "/usr/local/bin/test"]
         }
 
         fn find(&self) -> Vec<Self::Output> {

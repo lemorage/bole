@@ -17,6 +17,16 @@ impl Find for Yarn {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "~/.npm/bin/yarn",
+            "~/.yarn/bin/yarn",
+            "/opt/homebrew/bin/yarn",
+            "/usr/local/bin/yarn",
+            "/usr/bin/yarn",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
     }

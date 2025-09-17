@@ -23,6 +23,19 @@ impl Find for Pip {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "/usr/bin/pip",
+            "/usr/bin/pip3",
+            "~/.local/bin/pip",
+            "~/.local/bin/pip3",
+            "/opt/homebrew/bin/pip",
+            "/opt/homebrew/bin/pip3",
+            "/usr/local/bin/pip",
+            "/usr/local/bin/pip3",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
             .into_iter()

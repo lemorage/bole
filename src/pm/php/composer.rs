@@ -17,6 +17,15 @@ impl Find for Composer {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "~/.composer/vendor/bin/composer",
+            "/opt/homebrew/bin/composer",
+            "/usr/local/bin/composer",
+            "/usr/bin/composer",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
             .into_iter()

@@ -26,6 +26,10 @@ impl Find for Homebrew {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &["/opt/homebrew/bin/brew", "/usr/local/bin/brew"]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
             .into_iter()

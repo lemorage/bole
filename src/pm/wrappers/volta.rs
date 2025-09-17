@@ -29,6 +29,14 @@ impl Find for Volta {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "~/.volta/bin/volta",
+            "/opt/homebrew/bin/volta",
+            "/usr/local/bin/volta",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
     }

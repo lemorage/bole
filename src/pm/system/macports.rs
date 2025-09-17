@@ -17,6 +17,10 @@ impl Find for Macports {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &["/opt/local/bin/port"]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
             .into_iter()

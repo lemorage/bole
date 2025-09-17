@@ -29,6 +29,14 @@ impl Find for Corepack {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "/opt/homebrew/bin/corepack",
+            "/usr/local/bin/corepack",
+            "~/.nvm/current/bin/corepack",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
     }

@@ -17,6 +17,14 @@ impl Find for Rvm {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "~/.rvm/bin/rvm",
+            "~/.rvm/scripts/rvm",
+            "/usr/local/rvm/bin/rvm",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms_with_args(Self::NAME, &["--version"])
             .into_iter()

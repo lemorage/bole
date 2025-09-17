@@ -17,6 +17,16 @@ impl Find for Gem {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "/usr/bin/gem",
+            "/opt/homebrew/bin/gem",
+            "/usr/local/bin/gem",
+            "~/.rbenv/shims/gem",
+            "~/.rvm/rubies/default/bin/gem",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
     }

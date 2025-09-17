@@ -17,6 +17,15 @@ impl Find for Pipenv {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "~/.local/bin/pipenv",
+            "/opt/homebrew/bin/pipenv",
+            "/usr/local/bin/pipenv",
+            "/usr/bin/pipenv",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
             .into_iter()

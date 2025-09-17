@@ -17,6 +17,15 @@ impl Find for Cabal {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "~/.cabal/bin/cabal",
+            "~/.local/bin/cabal",
+            "/opt/homebrew/bin/cabal",
+            "/usr/local/bin/cabal",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
             .into_iter()

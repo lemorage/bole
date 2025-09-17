@@ -30,6 +30,14 @@ impl Find for Asdf {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "~/.asdf/bin/asdf",
+            "/opt/homebrew/bin/asdf",
+            "/usr/local/bin/asdf",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
             .into_iter()

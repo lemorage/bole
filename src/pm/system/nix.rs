@@ -17,6 +17,13 @@ impl Find for Nix {
         "nix"
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "~/.nix-profile/bin/nix",
+            "/nix/var/nix/profiles/default/bin/nix",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
             .into_iter()

@@ -29,6 +29,15 @@ impl Find for Mise {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "~/.local/bin/mise",
+            "~/.cargo/bin/mise",
+            "/opt/homebrew/bin/mise",
+            "/usr/local/bin/mise",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
             .into_iter()

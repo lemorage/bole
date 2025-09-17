@@ -17,6 +17,15 @@ impl Find for Gleam {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "~/.local/bin/gleam",
+            "~/.cargo/bin/gleam",
+            "/opt/homebrew/bin/gleam",
+            "/usr/local/bin/gleam",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
             .into_iter()

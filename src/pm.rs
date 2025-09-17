@@ -1,7 +1,7 @@
 //! Package manager discovery and attribution.
 //!
-//! This module provides the core registry of all supported package managers and
-//! determines how each tool was installed on the system.
+//! Core registry of supported package managers with installation source
+//! detection.
 
 mod attribution;
 mod gleam;
@@ -17,7 +17,7 @@ mod system;
 mod types;
 mod wrappers;
 
-use std::{collections::HashSet, hash::Hash, path::Path, process::Command};
+use std::{collections::HashSet, path::Path, process::Command};
 
 pub use attribution::query::{Querier, Resolver, Tool};
 use dashmap::DashMap;
@@ -55,21 +55,19 @@ impl CacheKey {
 static PM_DISCOVERY_CACHE: std::sync::OnceLock<DashMap<CacheKey, Vec<PmInfo>>> =
     std::sync::OnceLock::new();
 
-/// Infer install method from an executable path.
+/// Determine how a package manager was installed.
 #[inline]
 pub fn determine_install_method(path: &Path) -> InstallMethod {
     attribution::determine(path)
 }
 
-/// Find all installations of a package manager.
-///
-/// Searches PATH and known locations; deduplicates by canonical path.
+/// Find all package manager instances.
 #[must_use]
 pub fn find_all_pms(name: &str) -> Vec<PmInfo> {
     find_all_pms_with_args(name, &["--version"])
 }
 
-/// Find all installations using custom version arguments.
+/// Find all instances with custom version args.
 #[must_use]
 pub(crate) fn find_all_pms_with_args(name: &str, version_args: &[&str]) -> Vec<PmInfo> {
     let cache = PM_DISCOVERY_CACHE.get_or_init(DashMap::new);
@@ -79,37 +77,36 @@ pub(crate) fn find_all_pms_with_args(name: &str, version_args: &[&str]) -> Vec<P
         return cached_results.clone();
     }
 
-    let results = exhaustive_discovery(name, version_args);
+    let results = find_all_installations(name, version_args);
     cache.insert(cache_key, results.clone());
     results
 }
 
-fn exhaustive_discovery(name: &str, version_args: &[&str]) -> Vec<PmInfo> {
+fn find_all_installations(name: &str, version_args: &[&str]) -> Vec<PmInfo> {
     let mut instances = Vec::new();
     let mut seen_canonical_paths = HashSet::new();
 
     // PATH discovery
-    if let Ok(path) = which(name) {
-        if let Some(pm_info) = try_detect_at_path(&path, name, version_args) {
-            if let Ok(canonical) = std::fs::canonicalize(&path) {
-                seen_canonical_paths.insert(canonical);
-                instances.push(pm_info);
-            }
-        }
+    if let Ok(path) = which(name)
+        && let Some(pm_info) = try_detect_at_path(&path, name, version_args)
+        && let Ok(canonical) = std::fs::canonicalize(&path)
+    {
+        seen_canonical_paths.insert(canonical);
+        instances.push(pm_info);
     }
 
     // Known installation locations
     let search_locations = get_search_locations(name);
     for location in search_locations {
-        if location.exists() {
-            if let Ok(canonical_location) = std::fs::canonicalize(&location) {
-                if seen_canonical_paths.contains(&canonical_location) {
-                    continue;
-                }
-                if let Some(pm_info) = try_detect_at_path(&location, name, version_args) {
-                    seen_canonical_paths.insert(canonical_location);
-                    instances.push(pm_info);
-                }
+        if location.exists()
+            && let Ok(canonical_location) = std::fs::canonicalize(&location)
+        {
+            if seen_canonical_paths.contains(&canonical_location) {
+                continue;
+            }
+            if let Some(pm_info) = try_detect_at_path(&location, name, version_args) {
+                seen_canonical_paths.insert(canonical_location);
+                instances.push(pm_info);
             }
         }
     }
@@ -121,33 +118,15 @@ fn exhaustive_discovery(name: &str, version_args: &[&str]) -> Vec<PmInfo> {
     instances
 }
 
-/// Detect a package manager at a path with timeout protection.
+/// Detect a package manager at a path.
 fn try_detect_at_path(path: &std::path::Path, name: &str, version_args: &[&str]) -> Option<PmInfo> {
-    use std::{sync::mpsc, thread, time::Duration};
+    let output = Command::new(path).args(version_args).output().ok()?;
 
-    let (tx, rx) = mpsc::channel();
-    let path_clone = path.to_path_buf();
-    let args_clone: Vec<String> = version_args.iter().map(|s| s.to_string()).collect();
+    if !output.status.success() {
+        return None;
+    }
 
-    // Spawn command in separate thread to enable timeout
-    thread::spawn(move || {
-        let result = Command::new(&path_clone)
-            .args(&args_clone)
-            .output()
-            .map_err(|_| ())
-            .and_then(|output| {
-                String::from_utf8(output.stdout)
-                    .map(|s| s.trim().to_string())
-                    .map_err(|_| ())
-            });
-        let _ = tx.send(result);
-    });
-
-    // Wait for result with 3-second timeout
-    let version = match rx.recv_timeout(Duration::from_secs(3)) {
-        Ok(Ok(version)) => version,
-        Ok(Err(_)) | Err(_) => return None, // Command failed or timed out
-    };
+    let version = String::from_utf8(output.stdout).ok()?.trim().to_string();
 
     let install_method = determine_install_method(path);
 
@@ -155,12 +134,11 @@ fn try_detect_at_path(path: &std::path::Path, name: &str, version_args: &[&str])
         name: name.to_string(),
         version,
         install_method,
-        // Use original path for display (before canonicalization)
         path: path.display().to_string(),
     })
 }
 
-/// List package manager names in a category.
+/// Get package manager names by category.
 pub fn get_package_managers_in_category(category: Category) -> Vec<&'static str> {
     all_package_managers()
         .into_iter()
@@ -169,7 +147,7 @@ pub fn get_package_managers_in_category(category: Category) -> Vec<&'static str>
         .collect()
 }
 
-/// Return detectors for all supported package managers.
+/// All supported package manager detectors.
 pub fn all_package_managers() -> Vec<Box<dyn Detector>> {
     vec![
         // System

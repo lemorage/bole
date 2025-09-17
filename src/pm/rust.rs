@@ -30,6 +30,15 @@ impl Find for Cargo {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "~/.cargo/bin/cargo",
+            "/opt/homebrew/bin/cargo",
+            "/usr/local/bin/cargo",
+            "/usr/bin/cargo",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms_with_args(Self::NAME, &["-V"])
             .into_iter()

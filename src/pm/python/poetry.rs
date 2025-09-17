@@ -17,6 +17,15 @@ impl Find for Poetry {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "~/.local/bin/poetry",
+            "~/.poetry/bin/poetry",
+            "/opt/homebrew/bin/poetry",
+            "/usr/local/bin/poetry",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
             .into_iter()

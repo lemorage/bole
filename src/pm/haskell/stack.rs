@@ -17,6 +17,14 @@ impl Find for Stack {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "~/.local/bin/stack",
+            "/opt/homebrew/bin/stack",
+            "/usr/local/bin/stack",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
             .into_iter()

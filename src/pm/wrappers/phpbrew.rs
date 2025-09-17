@@ -17,6 +17,14 @@ impl Find for Phpbrew {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "~/.phpbrew/bin/phpbrew",
+            "/opt/homebrew/bin/phpbrew",
+            "/usr/local/bin/phpbrew",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
             .into_iter()

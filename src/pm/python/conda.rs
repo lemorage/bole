@@ -17,6 +17,15 @@ impl Find for Conda {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "~/miniconda3/bin/conda",
+            "~/anaconda3/bin/conda",
+            "/opt/miniconda3/bin/conda",
+            "/opt/anaconda3/bin/conda",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
             .into_iter()

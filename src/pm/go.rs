@@ -17,6 +17,15 @@ impl Find for Go {
         Self::NAME
     }
 
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[
+            "/usr/local/go/bin/go",
+            "~/.local/bin/go",
+            "/opt/homebrew/bin/go",
+            "/usr/bin/go",
+        ]
+    }
+
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms_with_args(Self::NAME, &["version"])
             .into_iter()
