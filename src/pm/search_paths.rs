@@ -25,25 +25,18 @@ fn expand_home(path: &str) -> PathBuf {
     }
 }
 
-/// Get search paths from detector.
-pub(crate) fn get_search_locations_for<F: crate::find::Find + ?Sized>(
-    detector: &F,
-) -> Vec<PathBuf> {
-    detector
-        .search_paths()
-        .iter()
-        .map(|&path| expand_home(path))
-        .collect()
-}
-
 /// Find detector by name, fallback to generic paths.
-pub(crate) fn get_search_locations(name: &str) -> Vec<PathBuf> {
+pub(super) fn get_search_locations(name: &str) -> Vec<PathBuf> {
     // Try to find the detector by name (O(n))
     if let Some(detector) = crate::pm::all_package_managers()
         .iter()
         .find(|detector| detector.name() == name)
     {
-        return get_search_locations_for(detector.as_ref());
+        return detector
+            .search_paths()
+            .iter()
+            .map(|&path| expand_home(path))
+            .collect();
     }
 
     // Fallback to generic patterns for unknown tools
@@ -56,7 +49,7 @@ pub(crate) fn get_search_locations(name: &str) -> Vec<PathBuf> {
 /// Scan common directories for `name` and detect installations.
 ///
 /// Skips paths already present in `seen_paths` (by canonical path).
-pub(crate) fn scan_common_directories(
+pub(super) fn scan_common_directories(
     name: &str,
     seen_paths: &mut HashSet<PathBuf>,
 ) -> Vec<PmInfo> {
