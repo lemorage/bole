@@ -5,7 +5,7 @@
     <img src="assets/bole-logo.png" alt="Logo" width="180" height="180">
   </a>
 
-<br /><br />
+<div>&nbsp;</div>
 
 > <em>Package managers<br>
 > scattered like autumn leaves fall—<br>
@@ -47,6 +47,7 @@ bole show python       # pip, poetry, uv, conda, pdm, pipx, pipenv
 bole show php          # composer, pecl
 bole show ruby         # gem, bundler, rvm, rbenv
 bole show rust         # cargo
+bole show zig          # zig
 bole show go           # go toolchain
 bole show haskell      # cabal, stack
 bole show gleam        # gleam
@@ -54,7 +55,7 @@ bole show tools        # asdf, volta, mise, corepack, pyenv, phpbrew
 
 # Category aliases supported
 bole show js           # same as javascript
-bole show ts           # same as javascript  
+bole show ts           # same as javascript
 bole show node         # same as javascript
 bole show py           # same as python
 bole show rb           # same as ruby
@@ -70,12 +71,12 @@ bole show javascript --tree
 
 ## Supported
 
-- **System:** Homebrew, MacPorts, Nix  
-- **JavaScript:** npm, yarn, pnpm, bun, deno, ni  
-- **Python:** pip, poetry, uv, conda, pdm, pipx, pipenv  
-- **PHP:** composer, pecl  
+- **System:** Homebrew, MacPorts, Nix
+- **JavaScript:** npm, yarn, pnpm, bun, deno, ni
+- **Python:** pip, poetry, uv, conda, pdm, pipx, pipenv
+- **PHP:** composer, pecl
 - **Ruby:** gem, bundler, rvm, rbenv
-- **Other:** Rust (cargo), Go, Haskell (cabal/stack), Gleam  
+- **Other:** Rust (cargo), Zig, Go, Haskell (cabal/stack), Gleam
 - **Tools:** asdf, volta, mise, corepack, pyenv, phpbrew
 
 ## License

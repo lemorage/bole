@@ -16,8 +16,9 @@ mod search_paths;
 mod system;
 mod types;
 mod wrappers;
+mod zig;
 
-use std::{collections::HashSet, path::Path, process::Command};
+use std::{collections::HashSet, hash::Hash, path::Path, process::Command};
 
 pub use attribution::query::{Querier, Resolver, Tool};
 use dashmap::DashMap;
@@ -33,6 +34,7 @@ pub use system::{Homebrew, Macports, Nix};
 pub use types::{Categorizable, Category, Detector, GroupedPmInfo, InstallMethod, PmInfo};
 use which::which;
 pub use wrappers::{Asdf, Corepack, Mise, Phpbrew, Pyenv, Volta};
+pub use zig::Zig;
 
 use crate::pm::search_paths::{get_search_locations, scan_common_directories};
 
@@ -69,7 +71,7 @@ pub fn find_all_pms(name: &str) -> Vec<PmInfo> {
 
 /// Find all instances with custom version args.
 #[must_use]
-pub(crate) fn find_all_pms_with_args(name: &str, version_args: &[&str]) -> Vec<PmInfo> {
+pub(super) fn find_all_pms_with_args(name: &str, version_args: &[&str]) -> Vec<PmInfo> {
     let cache = PM_DISCOVERY_CACHE.get_or_init(DashMap::new);
     let cache_key = CacheKey::new(name, version_args);
 
@@ -184,6 +186,8 @@ pub fn all_package_managers() -> Vec<Box<dyn Detector>> {
         Box::new(Gem),
         // Rust
         Box::new(Cargo),
+        // Zig
+        Box::new(Zig),
         // Universal Wrappers
         Box::new(Asdf),
         Box::new(Volta),

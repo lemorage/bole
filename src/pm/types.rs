@@ -16,6 +16,7 @@ pub enum Category {
     Go,
     Haskell,
     Gleam,
+    Zig,
 
     // Version managers / Wrappers
     Tools,
@@ -35,6 +36,7 @@ impl Category {
             Category::Go,
             Category::Haskell,
             Category::Gleam,
+            Category::Zig,
             Category::Tools,
         ]
     }
@@ -52,6 +54,7 @@ impl Category {
             Category::Go => "go",
             Category::Haskell => "haskell",
             Category::Gleam => "gleam",
+            Category::Zig => "zig",
             Category::Tools => "tools",
         }
     }
@@ -81,6 +84,7 @@ impl Category {
             Category::Go => "Go package managers",
             Category::Haskell => "Haskell package managers",
             Category::Gleam => "Gleam package managers",
+            Category::Zig => "Zig package managers",
             Category::Tools => "Version managers",
         }
     }
