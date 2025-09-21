@@ -90,7 +90,7 @@ checksum = "2261d10cca569e4643e526d8dc2e62e433cc8aba21ab764233731f8d369bf394"
 
 [[package]]
 name = "bole"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "clap",
  "dashmap",
