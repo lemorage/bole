@@ -40,6 +40,14 @@ enum Commands {
         /// Display output in tree format
         #[arg(short, long, help = "Display output in tree format")]
         tree: bool,
+
+        /// Output in JSON format
+        #[arg(long, conflicts_with = "csv", help = "Output in JSON format")]
+        json: bool,
+
+        /// Output in CSV format
+        #[arg(long, conflicts_with = "json", help = "Output in CSV format")]
+        csv: bool,
     },
 }
 
@@ -67,8 +75,10 @@ fn main() {
             category,
             all,
             tree,
+            json,
+            csv,
         }) => {
-            handle_show_command(category, all, tree);
+            handle_show_command(category, all, tree, json, csv);
         },
         None => {
             show_help_and_exit(1);

@@ -4,6 +4,25 @@ use std::collections::HashMap;
 
 use bole::pm::{GroupedPmInfo, PmInfo};
 
+/// Output formats for package manager information.
+#[derive(Debug, Clone, Copy)]
+pub(super) enum OutputFormat {
+    Table,
+    Json,
+    Csv,
+}
+
+impl OutputFormat {
+    /// Detect output format from flags.
+    pub(super) fn from_flags(json: bool, csv: bool) -> Self {
+        match (json, csv) {
+            (true, _) => Self::Json,
+            (_, true) => Self::Csv,
+            _ => Self::Table,
+        }
+    }
+}
+
 /// Groups package manager instances by name for clean display.
 pub(super) fn group_pm_instances(instances: Vec<PmInfo>) -> Vec<GroupedPmInfo> {
     let mut grouped: HashMap<String, Vec<PmInfo>> = HashMap::new();
@@ -96,5 +115,57 @@ pub(super) fn display_grouped_tree(grouped: Vec<GroupedPmInfo>) {
             let continuation = if is_last { "    " } else { "│   " };
             println!("{}└── {}", continuation, group.alternatives);
         }
+    }
+}
+
+/// Output package manager instances in JSON format.
+pub(super) fn output_json(instances: &[PmInfo]) -> Result<(), Box<dyn std::error::Error>> {
+    println!("{}", serde_json::to_string_pretty(instances)?);
+    Ok(())
+}
+
+/// Output grouped package manager instances in JSON format.
+pub(super) fn output_grouped_json(
+    grouped: &[GroupedPmInfo],
+) -> Result<(), Box<dyn std::error::Error>> {
+    println!("{}", serde_json::to_string_pretty(grouped)?);
+    Ok(())
+}
+
+/// Output package manager instances in CSV format.
+pub(super) fn output_csv(instances: &[PmInfo]) {
+    println!("Name,Version,Path,Via");
+    for pm in instances {
+        println!(
+            "{},{},{},\"{}\"",
+            escape_csv(&pm.name),
+            escape_csv(&pm.version),
+            escape_csv(&pm.path),
+            pm.install_method
+        );
+    }
+}
+
+/// Output grouped package manager instances in CSV format.
+pub(super) fn output_grouped_csv(grouped: &[GroupedPmInfo]) {
+    println!("Name,Version,Path,Via,Others");
+    for pm in grouped {
+        println!(
+            "{},{},{},\"{}\",\"{}\"",
+            escape_csv(&pm.name),
+            escape_csv(&pm.version),
+            escape_csv(&pm.primary_path),
+            pm.install_method,
+            pm.alternatives
+        );
+    }
+}
+
+/// Escape CSV field if it contains commas or quotes.
+fn escape_csv(field: &str) -> String {
+    if field.contains(',') || field.contains('"') {
+        format!("\"{}\"", field.replace('"', "\"\""))
+    } else {
+        field.to_string()
     }
 }

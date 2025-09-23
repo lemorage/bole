@@ -4,10 +4,19 @@ use bole::pm::{self, Category};
 use rayon::prelude::*;
 use tabled::{Table, Tabled, settings::Style};
 
-use crate::display::{display_grouped_tree, display_tree, group_pm_instances};
+use crate::display::{
+    OutputFormat, display_grouped_tree, display_tree, group_pm_instances, output_csv,
+    output_grouped_csv, output_grouped_json, output_json,
+};
 
 /// Handles the show command with filtering and output format options.
-pub(super) fn handle_show_command(category: Option<String>, all: bool, tree: bool) {
+pub(super) fn handle_show_command(
+    category: Option<String>,
+    all: bool,
+    tree: bool,
+    json: bool,
+    csv: bool,
+) {
     // Determine target categories, either specific or all
     let target_categories = if let Some(ref category_str) = category {
         let target_category = match parse_category(category_str) {
@@ -42,30 +51,52 @@ pub(super) fn handle_show_command(category: Option<String>, all: bool, tree: boo
         return;
     }
 
-    match (all, tree) {
-        (false, false) => {
-            // Default: grouped table
-            let mut table = Table::new(group_pm_instances(filtered_pms));
-            println!("{}", table.with(Style::modern()));
-            if !all {
-                println!("\nTip: Use --all to see all the other locations");
+    let format = OutputFormat::from_flags(json, csv);
+
+    match format {
+        OutputFormat::Json => {
+            if all {
+                if let Err(e) = output_json(&filtered_pms) {
+                    eprintln!("Error outputting JSON: {}", e);
+                }
+            } else {
+                let grouped = group_pm_instances(filtered_pms);
+                if let Err(e) = output_grouped_json(&grouped) {
+                    eprintln!("Error outputting JSON: {}", e);
+                }
             }
         },
-        (true, false) => {
-            // All instances table
-            let mut table = Table::new(filtered_pms);
-            println!("{}", table.with(Style::modern()));
-        },
-        (false, true) => {
-            // Grouped tree
-            display_grouped_tree(group_pm_instances(filtered_pms));
-            if !all {
-                println!("\nTip: Use --all to see all the other locations");
+        OutputFormat::Csv => {
+            if all {
+                output_csv(&filtered_pms);
+            } else {
+                let grouped = group_pm_instances(filtered_pms);
+                output_grouped_csv(&grouped);
             }
         },
-        (true, true) => {
-            // All instances tree
-            display_tree(filtered_pms);
+        OutputFormat::Table => {
+            match (all, tree) {
+                (false, false) => {
+                    // Default: grouped table
+                    let mut table = Table::new(group_pm_instances(filtered_pms));
+                    println!("{}", table.with(Style::modern()));
+                    println!("\nTip: Use --all to see all the other locations");
+                },
+                (true, false) => {
+                    // All instances table
+                    let mut table = Table::new(filtered_pms);
+                    println!("{}", table.with(Style::modern()));
+                },
+                (false, true) => {
+                    // Grouped tree
+                    display_grouped_tree(group_pm_instances(filtered_pms));
+                    println!("\nTip: Use --all to see all the other locations");
+                },
+                (true, true) => {
+                    // All instances tree
+                    display_tree(filtered_pms);
+                },
+            }
         },
     }
 }
