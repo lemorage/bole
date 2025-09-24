@@ -200,7 +200,10 @@ pub struct GroupedPmInfo {
     #[tabled(rename = "Via")]
     pub install_method: InstallMethod,
     #[tabled(rename = "Others")]
+    #[serde(skip)]
     pub alternatives: String,
+    #[tabled(skip)]
+    pub alternative_paths: Vec<String>,
 }
 
 impl GroupedPmInfo {
@@ -211,7 +214,9 @@ impl GroupedPmInfo {
 
         // Find the "primary" instance - prioritize PATH order
         let primary = &instances[0];
-        let alternatives_count = instances.len().saturating_sub(1);
+        let alternative_paths: Vec<String> =
+            instances[1..].iter().map(|pm| pm.path.clone()).collect();
+        let alternatives_count = alternative_paths.len();
 
         let alternatives = if alternatives_count == 0 {
             "-".to_string()
@@ -227,6 +232,7 @@ impl GroupedPmInfo {
             primary_path: primary.path.clone(),
             install_method: primary.install_method.clone(),
             alternatives,
+            alternative_paths,
         }
     }
 }

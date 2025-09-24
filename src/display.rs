@@ -150,13 +150,18 @@ pub(super) fn output_csv(instances: &[PmInfo]) {
 pub(super) fn output_grouped_csv(grouped: &[GroupedPmInfo]) {
     println!("Name,Version,Path,Via,Others");
     for pm in grouped {
+        let others = if pm.alternative_paths.is_empty() {
+            String::new()
+        } else {
+            pm.alternative_paths.join(":")
+        };
         println!(
             "{},{},{},\"{}\",\"{}\"",
             escape_csv(&pm.name),
             escape_csv(&pm.version),
             escape_csv(&pm.primary_path),
             pm.install_method,
-            pm.alternatives
+            others
         );
     }
 }
