@@ -177,4 +177,30 @@ mod tests {
         // Assert
         assert_eq!(results.len(), 2);
     }
+
+    #[test]
+    fn find_blanket_impl_reference_search_paths() {
+        // Arrange
+        let finder = MockFinder::new("npm", vec![]);
+        let finder_ref: &MockFinder = &finder;
+
+        // Act
+        let paths = <&MockFinder as Find>::search_paths(&finder_ref);
+
+        // Assert
+        assert_eq!(paths, &["/usr/bin/test", "/usr/local/bin/test"]);
+    }
+
+    #[test]
+    fn find_blanket_impl_box_search_paths() {
+        // Arrange
+        let finder = MockFinder::new("cargo", vec![]);
+        let finder_box: Box<MockFinder> = Box::new(finder);
+
+        // Act
+        let paths = <Box<MockFinder> as Find>::search_paths(&finder_box);
+
+        // Assert
+        assert_eq!(paths, &["/usr/bin/test", "/usr/local/bin/test"]);
+    }
 }

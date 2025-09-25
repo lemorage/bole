@@ -593,4 +593,102 @@ mod tests {
         // Assert - Should handle zero alternatives correctly
         assert_eq!(grouped.alternatives, "-");
     }
+
+    #[test]
+    fn category_all_includes_major_ecosystems() {
+        // Arrange & Act
+        let categories = Category::all();
+
+        // Assert
+        assert!(categories.contains(&Category::System));
+        assert!(categories.contains(&Category::JavaScript));
+        assert!(categories.contains(&Category::Python));
+        assert!(categories.contains(&Category::Rust));
+        assert!(categories.contains(&Category::Tools));
+        assert!(categories.len() >= 10, "Should support major ecosystems");
+    }
+
+    #[test]
+    fn category_name_matches_cli_expectations() {
+        // Arrange
+        let test_cases = [
+            (Category::System, "system"),
+            (Category::JavaScript, "javascript"),
+            (Category::Python, "python"),
+            (Category::PHP, "php"),
+            (Category::Ruby, "ruby"),
+            (Category::Rust, "rust"),
+            (Category::Go, "go"),
+            (Category::Haskell, "haskell"),
+            (Category::Gleam, "gleam"),
+            (Category::Zig, "zig"),
+            (Category::Tools, "tools"),
+        ];
+
+        for (category, expected_name) in test_cases {
+            // Act
+            let name = category.name();
+
+            // Assert
+            assert_eq!(name, expected_name, "Category {:?} name mismatch", category);
+        }
+    }
+
+    #[test]
+    fn category_aliases_support_user_shortcuts() {
+        // Arrange & Act
+        let system_aliases = Category::System.aliases();
+        let js_aliases = Category::JavaScript.aliases();
+        let python_aliases = Category::Python.aliases();
+        let ruby_aliases = Category::Ruby.aliases();
+        let rust_aliases = Category::Rust.aliases();
+
+        // Assert
+        assert!(system_aliases.contains(&"sys"));
+        assert!(js_aliases.contains(&"js"));
+        assert!(js_aliases.contains(&"node"));
+        assert!(js_aliases.contains(&"typescript"));
+        assert!(python_aliases.contains(&"py"));
+        assert!(ruby_aliases.contains(&"rb"));
+        assert!(rust_aliases.contains(&"rs"));
+
+        // Test categories without aliases
+        let php_aliases = Category::PHP.aliases();
+        let go_aliases = Category::Go.aliases();
+        let gleam_aliases = Category::Gleam.aliases();
+        assert!(php_aliases.is_empty(), "PHP should have no aliases");
+        assert!(go_aliases.is_empty(), "Go should have no aliases");
+        assert!(gleam_aliases.is_empty(), "Gleam should have no aliases");
+    }
+
+    #[test]
+    fn category_description_provides_user_context() {
+        // Arrange
+        let test_cases = [
+            (Category::System, "System package managers"),
+            (Category::JavaScript, "JavaScript package managers"),
+            (Category::Python, "Python package managers"),
+            (Category::PHP, "PHP package managers"),
+            (Category::Ruby, "Ruby package managers"),
+            (Category::Rust, "Rust package managers"),
+            (Category::Go, "Go package managers"),
+            (Category::Haskell, "Haskell package managers"),
+            (Category::Gleam, "Gleam package managers"),
+            (Category::Zig, "Zig package managers"),
+            (Category::Tools, "Version managers"),
+        ];
+
+        for (category, expected_desc) in test_cases {
+            // Act
+            let description = category.description();
+
+            // Assert
+            assert_eq!(
+                description, expected_desc,
+                "Category {:?} description mismatch",
+                category
+            );
+            assert!(!description.is_empty(), "Description should not be empty");
+        }
+    }
 }
