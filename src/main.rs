@@ -16,14 +16,6 @@ use cli::handle_show_command;
 struct Bole {
     #[command(subcommand)]
     command: Option<Commands>,
-
-    /// Show all package manager instances
-    #[arg(short, long, help = "Show all individual package manager instances")]
-    all: bool,
-
-    /// Display output in tree format
-    #[arg(short, long, help = "Display output in tree format")]
-    tree: bool,
 }
 
 #[derive(Subcommand, Debug)]
@@ -53,19 +45,22 @@ enum Commands {
 
 #[inline]
 fn show_help_and_exit(exit_code: i32) -> ! {
-    stream_banner();
-    println!();
     let mut app = Bole::command();
     app.print_help().unwrap();
+    println!();
     std::process::exit(exit_code);
 }
 
 fn main() {
-    // Check if user wants help before parsing
-    let help_requested = std::env::args().any(|arg| arg == "--help" || arg == "-h");
+    let raw_args: Vec<String> = std::env::args().skip(1).collect();
 
-    if help_requested {
-        show_help_and_exit(0);
+    if raw_args.is_empty()
+        || (raw_args.len() == 1 && matches!(raw_args[0].as_str(), "--help" | "-h" | "help"))
+    {
+        // Bare `bole` or explicit top-level help
+        stream_banner();
+        println!();
+        show_help_and_exit(if raw_args.is_empty() { 1 } else { 0 });
     }
 
     let args = Bole::parse();
