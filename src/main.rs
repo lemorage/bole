@@ -4,7 +4,7 @@ mod display;
 
 use banner::stream_banner;
 use clap::{CommandFactory, Parser, Subcommand};
-use cli::handle_show_command;
+use cli::{handle_check_command, handle_show_command};
 
 /// A CLI to manage your package managers.
 #[derive(Parser, Debug)]
@@ -41,6 +41,8 @@ enum Commands {
         #[arg(long, conflicts_with = "json", help = "Output in CSV format")]
         csv: bool,
     },
+    /// Check package manager health and status
+    Check,
 }
 
 #[inline]
@@ -74,6 +76,9 @@ fn main() {
             csv,
         }) => {
             handle_show_command(category, all, tree, json, csv);
+        },
+        Some(Commands::Check) => {
+            handle_check_command();
         },
         None => {
             show_help_and_exit(1);

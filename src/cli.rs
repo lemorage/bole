@@ -101,6 +101,50 @@ pub(super) fn handle_show_command(
     }
 }
 
+/// Handles the check command for package manager health analysis.
+pub(super) fn handle_check_command() {
+    println!("Checking package manager health...\n");
+
+    // Discover all package managers in parallel
+    let all_pms: Vec<_> = pm::all_package_managers()
+        .into_par_iter()
+        .flat_map(|detector| detector.find())
+        .collect();
+
+    if all_pms.is_empty() {
+        println!("No package managers found.");
+        return;
+    }
+
+    // If discovery succeeded and got version, PM is healthy
+    // If version is empty, PM is broken
+    let broken: Vec<_> = all_pms
+        .iter()
+        .filter(|pm| pm.version.trim().is_empty())
+        .collect();
+
+    for pm in &broken {
+        println!("BROKEN: {} at {}", pm.name, pm.path);
+    }
+
+    let names = all_pms
+        .iter()
+        .map(|pm| pm.name.clone())
+        .collect::<Vec<String>>();
+
+    // Summary
+    let healthy_count = all_pms.len() - broken.len();
+    println!(
+        "\nTotal: {} package managers: {}",
+        all_pms.len(),
+        names.join(", ")
+    );
+    println!("Healthy: {}", healthy_count);
+    if !broken.is_empty() {
+        println!("Broken: {}", broken.len());
+    }
+}
+
 /// Parses category string into Category enum, supporting aliases.
 fn parse_category(category_str: &str) -> Option<Category> {
     let input = category_str.to_lowercase();
