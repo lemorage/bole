@@ -42,7 +42,11 @@ enum Commands {
         csv: bool,
     },
     /// Check package manager health and status
-    Check,
+    Check {
+        /// Increase verbosity level (use -v for categories, -vv for detailed)
+        #[arg(short, long, action = clap::ArgAction::Count, help = "Increase verbosity")]
+        verbose: u8,
+    },
 }
 
 #[inline]
@@ -77,8 +81,8 @@ fn main() {
         }) => {
             handle_show_command(category, all, tree, json, csv);
         },
-        Some(Commands::Check) => {
-            handle_check_command();
+        Some(Commands::Check { verbose }) => {
+            handle_check_command(verbose);
         },
         None => {
             show_help_and_exit(1);

@@ -102,46 +102,140 @@ pub(super) fn handle_show_command(
 }
 
 /// Handles the check command for package manager health analysis.
-pub(super) fn handle_check_command() {
-    println!("Checking package manager health...\n");
+pub(super) fn handle_check_command(verbose: u8) {
+    use std::collections::HashMap;
 
-    // Discover all package managers in parallel
-    let all_pms: Vec<_> = pm::all_package_managers()
+    // Discover all package managers in parallel and group by category
+    let all_detectors = pm::all_package_managers();
+    let all_pms_raw: Vec<(Category, pm::PmInfo)> = all_detectors
         .into_par_iter()
-        .flat_map(|detector| detector.find())
+        .flat_map(|detector| {
+            let pms: Vec<(Category, pm::PmInfo)> = detector
+                .find()
+                .into_iter()
+                .map(move |pm| (detector.category(), pm))
+                .collect();
+            pms
+        })
         .collect();
 
-    if all_pms.is_empty() {
+    // Group PMs by category
+    let mut pms_by_category: HashMap<Category, Vec<pm::PmInfo>> = HashMap::new();
+    for (category, pm) in all_pms_raw {
+        pms_by_category.entry(category).or_default().push(pm);
+    }
+
+    // Flatten to get all PMs
+    let flat_pms: Vec<_> = pms_by_category
+        .values()
+        .flat_map(|pms| pms.iter())
+        .collect();
+
+    if flat_pms.is_empty() {
         println!("No package managers found.");
         return;
     }
 
-    // If discovery succeeded and got version, PM is healthy
-    // If version is empty, PM is broken
-    let broken: Vec<_> = all_pms
+    // Find broken PMs
+    let broken: Vec<_> = flat_pms
         .iter()
         .filter(|pm| pm.version.trim().is_empty())
         .collect();
 
-    for pm in &broken {
-        println!("BROKEN: {} at {}", pm.name, pm.path);
-    }
+    println!("Checking package manager health...\n");
 
-    let names = all_pms
-        .iter()
-        .map(|pm| pm.name.clone())
-        .collect::<Vec<String>>();
+    match verbose {
+        0 => {
+            for pm in &broken {
+                println!("BROKEN: {} at {}", pm.name, pm.path);
+            }
 
-    // Summary
-    let healthy_count = all_pms.len() - broken.len();
-    println!(
-        "\nTotal: {} package managers: {}",
-        all_pms.len(),
-        names.join(", ")
-    );
-    println!("Healthy: {}", healthy_count);
-    if !broken.is_empty() {
-        println!("Broken: {}", broken.len());
+            let healthy_count = flat_pms.len() - broken.len();
+            println!("\nTotal: {} package managers", flat_pms.len());
+            println!("Healthy: {}", healthy_count);
+            if !broken.is_empty() {
+                println!("Broken: {}", broken.len());
+            }
+        },
+        1 => {
+            // Display by category
+            for category in Category::all() {
+                if let Some(pms) = pms_by_category.get(category) {
+                    // Count occurrences of each PM name
+                    let mut name_counts: HashMap<&str, usize> = HashMap::new();
+                    for pm in pms {
+                        *name_counts.entry(pm.name.as_str()).or_insert(0) += 1;
+                    }
+
+                    // Sort PM names for consistent display
+                    let mut sorted_names: Vec<_> = name_counts.keys().copied().collect();
+                    sorted_names.sort();
+
+                    // Build display string with counts
+                    let display_names: Vec<String> = sorted_names
+                        .iter()
+                        .map(|&name| {
+                            let count = name_counts[name];
+                            if count > 1 {
+                                format!("{}({})", name, count)
+                            } else {
+                                name.to_string()
+                            }
+                        })
+                        .collect();
+
+                    println!(
+                        "{}: {} checked ({})",
+                        category.name(),
+                        pms.len(),
+                        display_names.join(", ")
+                    );
+                }
+            }
+
+            if !broken.is_empty() {
+                println!("\nBROKEN:");
+                for pm in &broken {
+                    println!("  {} at {}", pm.name, pm.path);
+                }
+            }
+
+            let healthy_count = flat_pms.len() - broken.len();
+            println!("\nTotal: {} package managers", flat_pms.len());
+            println!("Healthy: {}", healthy_count);
+            if !broken.is_empty() {
+                println!("Broken: {}", broken.len());
+            }
+        },
+        _ => {
+            for category in Category::all() {
+                if let Some(pms) = pms_by_category.get(category) {
+                    println!("Checking {} package managers:", category.name());
+                    for pm in pms {
+                        let status = if pm.version.trim().is_empty() {
+                            "BROKEN"
+                        } else {
+                            "OK"
+                        };
+                        println!("  [{}] {} v{} at {}", status, pm.name, pm.version, pm.path);
+                    }
+                }
+            }
+
+            if !broken.is_empty() {
+                println!("\nBROKEN SUMMARY:");
+                for pm in &broken {
+                    println!("  {} at {}", pm.name, pm.path);
+                }
+            }
+
+            let healthy_count = flat_pms.len() - broken.len();
+            println!("\nTotal: {} package managers", flat_pms.len());
+            println!("Healthy: {}", healthy_count);
+            if !broken.is_empty() {
+                println!("Broken: {}", broken.len());
+            }
+        },
     }
 }
 
