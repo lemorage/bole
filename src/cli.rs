@@ -102,7 +102,7 @@ pub(super) fn handle_show_command(
 }
 
 /// Handles the check command for package manager health analysis.
-pub(super) fn handle_check_command(verbose: u8) {
+pub(super) fn handle_check_command(verbose: u8, broken: bool) {
     use std::collections::HashMap;
 
     // Discover all package managers in parallel and group by category
@@ -137,24 +137,65 @@ pub(super) fn handle_check_command(verbose: u8) {
     }
 
     // Find broken PMs
-    let broken: Vec<_> = flat_pms
+    let broken_pms: Vec<_> = flat_pms
         .iter()
         .filter(|pm| pm.version.trim().is_empty())
         .collect();
+
+    // Handle --broken flag: show only broken PMs with diagnostic info
+    if broken {
+        if broken_pms.is_empty() {
+            println!("No broken package managers found.");
+            std::process::exit(0);
+        }
+
+        println!("Broken package managers detected:\n");
+        for pm in &broken_pms {
+            println!("BROKEN: {} at {}", pm.name, pm.path);
+
+            // Provide diagnostic information
+            if !std::path::Path::new(&pm.path).exists() {
+                println!("  Issue: Binary not found at expected path");
+                println!("  Fix: Reinstall {} or update PATH", pm.name);
+            } else {
+                println!("  Issue: Binary exists but version check failed");
+                println!(
+                    "  Fix: Check if {} is properly installed or corrupted",
+                    pm.name
+                );
+
+                // Check file permissions
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::PermissionsExt;
+                    if let Ok(metadata) = std::fs::metadata(&pm.path) {
+                        let perms = metadata.permissions();
+                        if perms.mode() & 0o111 == 0 {
+                            println!("  Note: File is not executable");
+                        }
+                    }
+                }
+            }
+            println!();
+        }
+
+        println!("Total broken: {}", broken_pms.len());
+        std::process::exit(1);
+    }
 
     println!("Checking package manager health...\n");
 
     match verbose {
         0 => {
-            for pm in &broken {
+            for pm in &broken_pms {
                 println!("BROKEN: {} at {}", pm.name, pm.path);
             }
 
-            let healthy_count = flat_pms.len() - broken.len();
+            let healthy_count = flat_pms.len() - broken_pms.len();
             println!("\nTotal: {} package managers", flat_pms.len());
             println!("Healthy: {}", healthy_count);
-            if !broken.is_empty() {
-                println!("Broken: {}", broken.len());
+            if !broken_pms.is_empty() {
+                println!("Broken: {}", broken_pms.len());
             }
         },
         1 => {
@@ -193,18 +234,18 @@ pub(super) fn handle_check_command(verbose: u8) {
                 }
             }
 
-            if !broken.is_empty() {
+            if !broken_pms.is_empty() {
                 println!("\nBROKEN:");
-                for pm in &broken {
+                for pm in &broken_pms {
                     println!("  {} at {}", pm.name, pm.path);
                 }
             }
 
-            let healthy_count = flat_pms.len() - broken.len();
+            let healthy_count = flat_pms.len() - broken_pms.len();
             println!("\nTotal: {} package managers", flat_pms.len());
             println!("Healthy: {}", healthy_count);
-            if !broken.is_empty() {
-                println!("Broken: {}", broken.len());
+            if !broken_pms.is_empty() {
+                println!("Broken: {}", broken_pms.len());
             }
         },
         _ => {
@@ -222,18 +263,18 @@ pub(super) fn handle_check_command(verbose: u8) {
                 }
             }
 
-            if !broken.is_empty() {
+            if !broken_pms.is_empty() {
                 println!("\nBROKEN SUMMARY:");
-                for pm in &broken {
+                for pm in &broken_pms {
                     println!("  {} at {}", pm.name, pm.path);
                 }
             }
 
-            let healthy_count = flat_pms.len() - broken.len();
+            let healthy_count = flat_pms.len() - broken_pms.len();
             println!("\nTotal: {} package managers", flat_pms.len());
             println!("Healthy: {}", healthy_count);
-            if !broken.is_empty() {
-                println!("Broken: {}", broken.len());
+            if !broken_pms.is_empty() {
+                println!("Broken: {}", broken_pms.len());
             }
         },
     }
