@@ -186,6 +186,10 @@ pub struct PmInfo {
     pub path: String,
     #[tabled(rename = "Via")]
     pub install_method: InstallMethod,
+    /// Latest available version (only when checking for updates)
+    #[tabled(skip)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub latest_version: Option<String>,
 }
 
 /// Grouped package manager information for clean display.
@@ -253,6 +257,7 @@ mod tests {
             version: version.to_string(),
             path: path.to_string(),
             install_method,
+            latest_version: None,
         }
     }
 

@@ -48,8 +48,12 @@ enum Commands {
         verbose: u8,
 
         /// Show only broken package managers
-        #[arg(short, long, help = "Show only broken package managers")]
+        #[arg(long, help = "Show only broken package managers")]
         broken: bool,
+
+        /// Show only outdated package managers
+        #[arg(long, help = "Show only outdated package managers")]
+        outdated: bool,
     },
 }
 
@@ -85,8 +89,12 @@ fn main() {
         }) => {
             handle_show_command(category, all, tree, json, csv);
         },
-        Some(Commands::Check { verbose, broken }) => {
-            handle_check_command(verbose, broken);
+        Some(Commands::Check {
+            verbose,
+            broken,
+            outdated,
+        }) => {
+            handle_check_command(verbose, broken, outdated);
         },
         None => {
             show_help_and_exit(1);

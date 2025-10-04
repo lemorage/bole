@@ -102,7 +102,7 @@ pub(super) fn handle_show_command(
 }
 
 /// Handles the check command for package manager health analysis.
-pub(super) fn handle_check_command(verbose: u8, broken: bool) {
+pub(super) fn handle_check_command(verbose: u8, broken: bool, outdated: bool) {
     use std::collections::HashMap;
 
     // Discover all package managers in parallel and group by category
@@ -141,6 +141,54 @@ pub(super) fn handle_check_command(verbose: u8, broken: bool) {
         .iter()
         .filter(|pm| pm.version.trim().is_empty())
         .collect();
+
+    // Check for outdated PMs if requested
+    let outdated_pms: Vec<(&pm::PmInfo, bole::find::Bump)> = if outdated {
+        flat_pms
+            .iter()
+            .filter_map(|pm| {
+                // Skip broken PMs
+                if pm.version.trim().is_empty() {
+                    return None;
+                }
+
+                // Get the detector for this PM
+                let detector = pm::all_package_managers()
+                    .into_iter()
+                    .find(|d| d.name() == pm.name)?;
+
+                // Check if outdated
+                if let Some(bump) = detector.check_bump(&pm.version)
+                    && bump.latest != pm.version
+                {
+                    return Some((*pm, bump));
+                }
+                None
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
+
+    // Handle --outdated flag: show only outdated PMs
+    if outdated {
+        if outdated_pms.is_empty() {
+            println!("All package managers are up to date.");
+            std::process::exit(0);
+        }
+
+        println!("Outdated package managers:\n");
+        for (pm, bump) in &outdated_pms {
+            println!("OUTDATED: {} at {}", pm.name, pm.path);
+            println!("  Current: {}", pm.version);
+            println!("  Latest:  {}", bump.latest);
+            println!("  Update: {}", bump.cmd);
+            println!();
+        }
+
+        println!("Total outdated: {}", outdated_pms.len());
+        std::process::exit(0);
+    }
 
     // Handle --broken flag: show only broken PMs with diagnostic info
     if broken {

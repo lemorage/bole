@@ -2,6 +2,15 @@
 //!
 //! Provides standardized discovery interface for all package managers.
 
+/// Available version bump information.
+#[derive(Debug, Clone)]
+pub struct Bump {
+    /// Latest available version
+    pub latest: String,
+    /// Command to bump to latest version
+    pub cmd: &'static str,
+}
+
 /// Package manager discovery interface.
 ///
 /// Implementations should return instances in priority order:
@@ -16,6 +25,11 @@ pub trait Find {
     fn search_paths(&self) -> &'static [&'static str];
     /// Find all instances (PATH-first, deduplicated).
     fn find(&self) -> Vec<Self::Output>;
+    /// Check if a version bump is available.
+    /// Returns Some(Bump) if outdated, None if up-to-date or unknown.
+    fn check_bump(&self, _current_version: &str) -> Option<Bump> {
+        None
+    }
 }
 
 /// Blanket implementations for references and boxes (`&T` and `Box<T>`).
@@ -30,6 +44,9 @@ impl<T: Find + ?Sized> Find for &T {
     fn find(&self) -> Vec<Self::Output> {
         (**self).find()
     }
+    fn check_bump(&self, current_version: &str) -> Option<Bump> {
+        (**self).check_bump(current_version)
+    }
 }
 
 impl<T: Find + ?Sized> Find for Box<T> {
@@ -42,6 +59,9 @@ impl<T: Find + ?Sized> Find for Box<T> {
     }
     fn find(&self) -> Vec<Self::Output> {
         (**self).find()
+    }
+    fn check_bump(&self, current_version: &str) -> Option<Bump> {
+        (**self).check_bump(current_version)
     }
 }
 
@@ -83,6 +103,7 @@ mod tests {
             version: "1.0.0".to_string(),
             path: "/usr/bin/test".to_string(),
             install_method: InstallMethod::Unknown,
+            latest_version: None,
         }
     }
 

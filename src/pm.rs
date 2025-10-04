@@ -137,6 +137,7 @@ fn try_detect_at_path(path: &std::path::Path, name: &str, version_args: &[&str])
         version,
         install_method,
         path: path.display().to_string(),
+        latest_version: None,
     })
 }
 
