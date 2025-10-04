@@ -48,11 +48,11 @@ enum Commands {
         verbose: u8,
 
         /// Show only broken package managers
-        #[arg(long, help = "Show only broken package managers")]
+        #[arg(short, long, help = "Show only broken package managers")]
         broken: bool,
 
         /// Show only outdated package managers
-        #[arg(long, help = "Show only outdated package managers")]
+        #[arg(short, long, help = "Show only outdated package managers")]
         outdated: bool,
     },
 }
