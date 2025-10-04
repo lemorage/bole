@@ -9,6 +9,27 @@ use crate::display::{
     output_grouped_csv, output_grouped_json, output_json,
 };
 
+/// Verbosity level for check command output.
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum Verbosity {
+    /// Minimal output (summary)
+    Quiet,
+    /// Normal output (progress list)
+    Normal,
+    /// Verbose output (full details)
+    Verbose,
+}
+
+impl From<u8> for Verbosity {
+    fn from(count: u8) -> Self {
+        match count {
+            0 => Self::Quiet,
+            1 => Self::Normal,
+            _ => Self::Verbose,
+        }
+    }
+}
+
 /// Handles the show command with filtering and output format options.
 pub(super) fn handle_show_command(
     category: Option<String>,
@@ -114,9 +135,9 @@ pub(super) fn handle_check_command(verbose: u8, broken: bool, outdated: bool) {
     }
 
     match (broken, outdated) {
-        (true, false) => handle_broken_check(&all_pms, verbose),
-        (false, true) => handle_outdated_check(&all_pms, verbose),
-        (false, false) => handle_overview_check(&all_pms, verbose),
+        (true, false) => handle_broken_check(&all_pms),
+        (false, true) => handle_outdated_check(&all_pms),
+        (false, false) => handle_overview_check(&all_pms, Verbosity::from(verbose)),
         (true, true) => {
             eprintln!("Error: Cannot use --broken and --outdated together");
             std::process::exit(1);
@@ -125,7 +146,7 @@ pub(super) fn handle_check_command(verbose: u8, broken: bool, outdated: bool) {
 }
 
 /// Shows overview dashboard of all package managers
-fn handle_overview_check(all_pms: &[pm::PmInfo], verbose: u8) {
+fn handle_overview_check(all_pms: &[pm::PmInfo], verbosity: Verbosity) {
     use std::collections::HashMap;
 
     println!("Checking package manager health...\n");
@@ -157,11 +178,11 @@ fn handle_overview_check(all_pms: &[pm::PmInfo], verbose: u8) {
         })
         .collect();
 
-    match verbose {
-        0 => {
+    match verbosity {
+        Verbosity::Quiet => {
             // Just show summary
         },
-        1 => {
+        Verbosity::Normal => {
             // Simple progress list
             for pm in all_pms {
                 if pm.version.trim().is_empty() {
@@ -174,7 +195,7 @@ fn handle_overview_check(all_pms: &[pm::PmInfo], verbose: u8) {
             }
             println!();
         },
-        _ => {
+        Verbosity::Verbose => {
             // Full categorized details
             let mut by_category: HashMap<Category, Vec<&pm::PmInfo>> = HashMap::new();
             for pm in all_pms {
@@ -238,7 +259,7 @@ fn handle_overview_check(all_pms: &[pm::PmInfo], verbose: u8) {
 }
 
 /// Shows detailed diagnostics for broken package managers
-fn handle_broken_check(all_pms: &[pm::PmInfo], verbose: u8) {
+fn handle_broken_check(all_pms: &[pm::PmInfo]) {
     let broken_pms: Vec<_> = all_pms
         .iter()
         .filter(|pm| pm.version.trim().is_empty())
@@ -254,7 +275,7 @@ fn handle_broken_check(all_pms: &[pm::PmInfo], verbose: u8) {
     for pm in &broken_pms {
         println!("BROKEN: {} at {}", pm.name, pm.path);
 
-        // Basic diagnostics
+        // Show diagnostics
         if !std::path::Path::new(&pm.path).exists() {
             println!("  Issue: Binary not found at expected path");
             println!("  Fix: Reinstall {} or update PATH", pm.name);
@@ -264,28 +285,16 @@ fn handle_broken_check(all_pms: &[pm::PmInfo], verbose: u8) {
                 "  Fix: Check if {} is properly installed or corrupted",
                 pm.name
             );
-        }
 
-        // Verbose diagnostics
-        if verbose > 0 {
+            // Check file permissions on Unix
             #[cfg(unix)]
             {
                 use std::os::unix::fs::PermissionsExt;
                 if let Ok(metadata) = std::fs::metadata(&pm.path) {
                     let perms = metadata.permissions();
                     if perms.mode() & 0o111 == 0 {
-                        println!("  Permission: File is not executable");
+                        println!("  Note: File is not executable");
                     }
-                }
-            }
-        }
-
-        if verbose > 1 {
-            // Check if in PATH
-            if let Ok(path_var) = std::env::var("PATH") {
-                let in_path = path_var.split(':').any(|dir| pm.path.starts_with(dir));
-                if !in_path {
-                    println!("  PATH: Not in system PATH");
                 }
             }
         }
@@ -298,7 +307,7 @@ fn handle_broken_check(all_pms: &[pm::PmInfo], verbose: u8) {
 }
 
 /// Shows update information for outdated package managers
-fn handle_outdated_check(all_pms: &[pm::PmInfo], _verbose: u8) {
+fn handle_outdated_check(all_pms: &[pm::PmInfo]) {
     let outdated_pms: Vec<(&pm::PmInfo, bole::find::Bump)> = all_pms
         .iter()
         .filter_map(|pm| {
