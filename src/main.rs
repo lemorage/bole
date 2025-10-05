@@ -1,5 +1,6 @@
 mod banner;
 mod cli;
+mod color;
 mod display;
 
 use banner::stream_banner;

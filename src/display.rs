@@ -6,7 +6,7 @@ use bole::pm::{GroupedPmInfo, PmInfo};
 
 /// Output formats for package manager information.
 #[derive(Debug, Clone, Copy)]
-pub(super) enum OutputFormat {
+pub(crate) enum OutputFormat {
     Table,
     Json,
     Csv,
@@ -14,7 +14,7 @@ pub(super) enum OutputFormat {
 
 impl OutputFormat {
     /// Detect output format from flags.
-    pub(super) fn from_flags(json: bool, csv: bool) -> Self {
+    pub(crate) fn from_flags(json: bool, csv: bool) -> Self {
         match (json, csv) {
             (true, _) => Self::Json,
             (_, true) => Self::Csv,
@@ -24,7 +24,7 @@ impl OutputFormat {
 }
 
 /// Groups package manager instances by name for clean display.
-pub(super) fn group_pm_instances(instances: Vec<PmInfo>) -> Vec<GroupedPmInfo> {
+pub(crate) fn group_pm_instances(instances: Vec<PmInfo>) -> Vec<GroupedPmInfo> {
     let mut grouped: HashMap<String, Vec<PmInfo>> = HashMap::new();
 
     for instance in instances {
@@ -44,7 +44,7 @@ pub(super) fn group_pm_instances(instances: Vec<PmInfo>) -> Vec<GroupedPmInfo> {
 }
 
 /// Displays package manager instances in tree format with full details.
-pub(super) fn display_tree(instances: Vec<PmInfo>) {
+pub(crate) fn display_tree(instances: Vec<PmInfo>) {
     let mut grouped: HashMap<String, Vec<PmInfo>> = HashMap::new();
 
     for instance in instances {
@@ -101,7 +101,7 @@ pub(super) fn display_tree(instances: Vec<PmInfo>) {
 }
 
 /// Displays grouped package manager information in tree format.
-pub(super) fn display_grouped_tree(grouped: Vec<GroupedPmInfo>) {
+pub(crate) fn display_grouped_tree(grouped: Vec<GroupedPmInfo>) {
     for (i, group) in grouped.iter().enumerate() {
         let is_last = i == grouped.len() - 1;
         let prefix = if is_last { "└──" } else { "├──" };
@@ -119,13 +119,13 @@ pub(super) fn display_grouped_tree(grouped: Vec<GroupedPmInfo>) {
 }
 
 /// Output package manager instances in JSON format.
-pub(super) fn output_json(instances: &[PmInfo]) -> Result<(), Box<dyn std::error::Error>> {
+pub(crate) fn output_json(instances: &[PmInfo]) -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", serde_json::to_string_pretty(instances)?);
     Ok(())
 }
 
 /// Output grouped package manager instances in JSON format.
-pub(super) fn output_grouped_json(
+pub(crate) fn output_grouped_json(
     grouped: &[GroupedPmInfo],
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", serde_json::to_string_pretty(grouped)?);
@@ -133,7 +133,7 @@ pub(super) fn output_grouped_json(
 }
 
 /// Output package manager instances in CSV format.
-pub(super) fn output_csv(instances: &[PmInfo]) {
+pub(crate) fn output_csv(instances: &[PmInfo]) {
     println!("Name,Version,Path,Via");
     for pm in instances {
         println!(
@@ -147,7 +147,7 @@ pub(super) fn output_csv(instances: &[PmInfo]) {
 }
 
 /// Output grouped package manager instances in CSV format.
-pub(super) fn output_grouped_csv(grouped: &[GroupedPmInfo]) {
+pub(crate) fn output_grouped_csv(grouped: &[GroupedPmInfo]) {
     println!("Name,Version,Path,Via,Others");
     for pm in grouped {
         let others = if pm.alternative_paths.is_empty() {

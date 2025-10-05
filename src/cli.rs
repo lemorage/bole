@@ -1,12 +1,17 @@
-//! Command-line interface handling for the show command.
+//! Command-line interface handling.
+
+use std::{sync::mpsc, thread};
 
 use bole::pm::{self, Category};
 use rayon::prelude::*;
 use tabled::{Table, Tabled, settings::Style};
 
-use crate::display::{
-    OutputFormat, display_grouped_tree, display_tree, group_pm_instances, output_csv,
-    output_grouped_csv, output_grouped_json, output_json,
+use crate::{
+    color,
+    display::{
+        OutputFormat, display_grouped_tree, display_tree, group_pm_instances, output_csv,
+        output_grouped_csv, output_grouped_json, output_json,
+    },
 };
 
 /// Verbosity level for check command output.
@@ -129,123 +134,227 @@ fn handle_table_output(pms: Vec<pm::PmInfo>, all: bool, tree: bool) {
 
 /// Handles the check command for package manager health analysis.
 pub(super) fn handle_check_command(verbose: u8, broken: bool, outdated: bool) {
+    // Handle special check modes
+    match (broken, outdated) {
+        (false, false) => { /* fall through to verbosity handling */ },
+        _ => {
+            // For --broken and --outdated, we need all PMs first
+            let all_pms: Vec<pm::PmInfo> = pm::all_package_managers()
+                .into_par_iter()
+                .flat_map(|detector| detector.find())
+                .collect();
+
+            if all_pms.is_empty() {
+                println!("No package managers found.");
+                return;
+            }
+
+            match (broken, outdated) {
+                (true, false) => {
+                    if handle_broken_check(&all_pms) {
+                        std::process::exit(1);
+                    }
+                },
+                (false, true) => handle_outdated_check(&all_pms),
+                (true, true) => {
+                    let has_broken = handle_broken_check(&all_pms);
+                    println!();
+                    handle_outdated_check(&all_pms);
+                    if has_broken {
+                        std::process::exit(1);
+                    }
+                },
+                _ => unreachable!(),
+            }
+            return;
+        },
+    }
+
+    // Regular check with verbosity
+    println!("Checking package manager health...\n");
+
+    match Verbosity::from(verbose) {
+        Verbosity::Quiet => handle_quiet_check(),
+        Verbosity::Normal => handle_normal_check(),
+        Verbosity::Verbose => handle_verbose_check(),
+    }
+}
+
+fn handle_quiet_check() {
     let all_pms: Vec<pm::PmInfo> = pm::all_package_managers()
         .into_par_iter()
         .flat_map(|detector| detector.find())
         .collect();
 
-    if all_pms.is_empty() {
-        println!("No package managers found.");
-        return;
+    display_summary(&all_pms);
+}
+
+fn handle_normal_check() {
+    let (tx, rx) = mpsc::channel();
+    let detectors = pm::all_package_managers();
+
+    let handle = thread::spawn(move || {
+        detectors.into_par_iter().for_each(|detector| {
+            let results = detector.find();
+            for pm in results {
+                let _ = tx.send(pm);
+            }
+        });
+    });
+
+    let mut all_pms = Vec::new();
+    for pm in rx {
+        display_pm_progress(&pm);
+        all_pms.push(pm);
     }
 
-    match (broken, outdated) {
-        (true, false) => handle_broken_check(&all_pms),
-        (false, true) => handle_outdated_check(&all_pms),
-        (false, false) => handle_overview_check(&all_pms, Verbosity::from(verbose)),
-        (true, true) => {
-            eprintln!("Error: Cannot use --broken and --outdated together");
-            std::process::exit(1);
-        },
+    handle.join().unwrap();
+    println!();
+    display_summary(&all_pms);
+}
+
+fn handle_verbose_check() {
+    // Simple solution: collect all, then display by category
+    // This is NOT progressive, but it's CORRECT and SIMPLE
+    let all_pms: Vec<pm::PmInfo> = pm::all_package_managers()
+        .into_par_iter()
+        .flat_map(|detector| detector.find())
+        .collect();
+
+    // Build category map
+    let category_map: std::collections::HashMap<String, Category> = pm::all_package_managers()
+        .into_iter()
+        .map(|d| (d.name().to_string(), d.category()))
+        .collect();
+
+    // Group by category
+    let mut by_category: std::collections::HashMap<Category, Vec<&pm::PmInfo>> =
+        std::collections::HashMap::new();
+    for pm in &all_pms {
+        let category = category_map
+            .get(&pm.name)
+            .copied()
+            .unwrap_or(Category::System);
+        by_category.entry(category).or_default().push(pm);
+    }
+
+    // Display in proper order
+    for category in Category::all() {
+        if let Some(pms) = by_category.get(category) {
+            println!("{}:", color::bold(category.name()));
+            for pm in pms {
+                display_pm_verbose(pm);
+            }
+            println!();
+        }
+    }
+
+    display_summary(&all_pms);
+}
+
+fn display_pm_verbose(pm: &pm::PmInfo) {
+    if pm.version.trim().is_empty() {
+        println!(
+            "  {} {} (broken) at {}",
+            color::cross_mark(),
+            pm.name,
+            color::dim(&pm.path)
+        );
+    } else {
+        // Check if outdated
+        let detector = pm::all_package_managers()
+            .into_iter()
+            .find(|d| d.name() == pm.name);
+
+        if let Some(d) = detector
+            && let Some(bump) = d.check_bump(&pm.version)
+            && bump.latest != pm.version
+        {
+            println!(
+                "  {} {} ({}) [outdated: {}] at {}",
+                color::check_mark(),
+                pm.name,
+                pm.version,
+                color::warning(&bump.latest),
+                color::dim(&pm.path)
+            );
+            return;
+        }
+
+        println!(
+            "  {} {} ({}) at {}",
+            color::check_mark(),
+            pm.name,
+            pm.version,
+            color::dim(&pm.path)
+        );
     }
 }
 
-/// Shows overview dashboard of all package managers
-fn handle_overview_check(all_pms: &[pm::PmInfo], verbosity: Verbosity) {
-    use std::collections::HashMap;
+fn display_pm_progress(pm: &pm::PmInfo) {
+    print!("Checking {}... ", pm.name);
 
-    println!("Checking package manager health...\n");
+    if pm.version.trim().is_empty() {
+        println!("{} broken", color::cross_mark());
+    } else {
+        // Check if outdated
+        let detector = pm::all_package_managers()
+            .into_iter()
+            .find(|d| d.name() == pm.name);
 
-    // Find broken PMs
-    let broken_pms: Vec<_> = all_pms
+        if let Some(d) = detector
+            && let Some(bump) = d.check_bump(&pm.version)
+            && bump.latest != pm.version
+        {
+            println!(
+                "{} {} [outdated: {}]",
+                color::check_mark(),
+                pm.version,
+                color::warning(&bump.latest)
+            );
+            return;
+        }
+
+        println!("{} {}", color::check_mark(), pm.version);
+    }
+}
+
+fn display_summary(all_pms: &[pm::PmInfo]) {
+    // Count broken and outdated
+    let broken_count = all_pms
         .iter()
         .filter(|pm| pm.version.trim().is_empty())
-        .collect();
+        .count();
 
-    // Check for outdated PMs
-    let outdated_map: HashMap<String, String> = all_pms
+    let outdated_count = all_pms
         .iter()
-        .filter_map(|pm| {
-            if pm.version.trim().is_empty() {
-                return None;
-            }
-
-            let detector = pm::all_package_managers()
+        .filter(|pm| !pm.version.trim().is_empty())
+        .filter(|pm| {
+            pm::all_package_managers()
                 .into_iter()
-                .find(|d| d.name() == pm.name)?;
-
-            if let Some(bump) = detector.check_bump(&pm.version)
-                && bump.latest != pm.version
-            {
-                return Some((format!("{}:{}", pm.name, pm.path), bump.latest));
-            }
-            None
+                .find(|d| d.name() == pm.name)
+                .and_then(|d| d.check_bump(&pm.version))
+                .map(|bump| bump.latest != pm.version)
+                .unwrap_or(false)
         })
-        .collect();
+        .count();
 
-    match verbosity {
-        Verbosity::Quiet => {
-            // Just show summary
-        },
-        Verbosity::Normal => {
-            // Simple progress list
-            for pm in all_pms {
-                if pm.version.trim().is_empty() {
-                    println!("✗ {} (broken)", pm.name);
-                } else if let Some(latest) = outdated_map.get(&format!("{}:{}", pm.name, pm.path)) {
-                    println!("✓ {} ({}) [outdated: {}]", pm.name, pm.version, latest);
-                } else {
-                    println!("✓ {} ({})", pm.name, pm.version);
-                }
-            }
-            println!();
-        },
-        Verbosity::Verbose => {
-            // Full categorized details
-            let mut by_category: HashMap<Category, Vec<&pm::PmInfo>> = HashMap::new();
-            for pm in all_pms {
-                let category = pm::all_package_managers()
-                    .into_iter()
-                    .find(|d| d.name() == pm.name)
-                    .map(|d| d.category())
-                    .unwrap_or(Category::System);
-                by_category.entry(category).or_default().push(pm);
-            }
-
-            for category in Category::all() {
-                if let Some(pms) = by_category.get(category) {
-                    println!("{}:", category.name());
-                    for pm in pms {
-                        if pm.version.trim().is_empty() {
-                            println!("  ✗ {} (broken) at {}", pm.name, pm.path);
-                        } else if let Some(latest) =
-                            outdated_map.get(&format!("{}:{}", pm.name, pm.path))
-                        {
-                            println!(
-                                "  ✓ {} ({}) [outdated: {}] at {}",
-                                pm.name, pm.version, latest, pm.path
-                            );
-                        } else {
-                            println!("  ✓ {} ({}) at {}", pm.name, pm.version, pm.path);
-                        }
-                    }
-                    println!();
-                }
-            }
-        },
-    }
-
-    // Summary
-    let broken_count = broken_pms.len();
-    let outdated_count = outdated_map.len();
     let healthy_count = all_pms.len() - broken_count - outdated_count;
 
     println!(
-        "\nSummary: {} total, {} healthy, {} broken, {} outdated",
+        "Summary: {} total, {} healthy, {} broken, {} outdated",
         all_pms.len(),
-        healthy_count,
-        broken_count,
-        outdated_count
+        color::success(&healthy_count.to_string()),
+        if broken_count > 0 {
+            color::error(&broken_count.to_string())
+        } else {
+            broken_count.to_string()
+        },
+        if outdated_count > 0 {
+            color::warning(&outdated_count.to_string())
+        } else {
+            outdated_count.to_string()
+        }
     );
 
     if broken_count > 0 || outdated_count > 0 {
@@ -263,22 +372,31 @@ fn handle_overview_check(all_pms: &[pm::PmInfo], verbosity: Verbosity) {
     }
 }
 
-/// Shows detailed diagnostics for broken package managers
-fn handle_broken_check(all_pms: &[pm::PmInfo]) {
+/// Shows detailed diagnostics for broken package managers.
+/// Returns true if any broken PMs were found.
+fn handle_broken_check(all_pms: &[pm::PmInfo]) -> bool {
     let broken_pms: Vec<_> = all_pms
         .iter()
         .filter(|pm| pm.version.trim().is_empty())
         .collect();
 
     if broken_pms.is_empty() {
-        println!("No broken package managers found.");
-        std::process::exit(0);
+        println!("{} No broken package managers found.", color::check_mark());
+        return false;
     }
 
-    println!("Broken package managers detected:\n");
+    println!(
+        "{} Broken package managers detected:\n",
+        color::cross_mark()
+    );
 
     for pm in &broken_pms {
-        println!("BROKEN: {} at {}", pm.name, pm.path);
+        println!(
+            "{} {} at {}",
+            color::error("BROKEN:"),
+            color::bold(&pm.name),
+            color::dim(&pm.path)
+        );
 
         // Show diagnostics
         if !std::path::Path::new(&pm.path).exists() {
@@ -308,7 +426,7 @@ fn handle_broken_check(all_pms: &[pm::PmInfo]) {
     }
 
     println!("Total broken: {}", broken_pms.len());
-    std::process::exit(1);
+    !broken_pms.is_empty()
 }
 
 /// Shows update information for outdated package managers
@@ -334,19 +452,30 @@ fn handle_outdated_check(all_pms: &[pm::PmInfo]) {
         .collect();
 
     if outdated_pms.is_empty() {
-        println!("All package managers are up to date.");
+        println!(
+            "{} All package managers are up to date.",
+            color::check_mark()
+        );
         std::process::exit(0);
     }
 
-    println!("Outdated package managers:\n");
+    println!("{} Outdated package managers:\n", color::warning_mark());
 
     for (pm, bump) in &outdated_pms {
-        println!("{}: {} → {}", pm.name, pm.version, bump.latest);
-        println!("  Update: {}", bump.cmd);
+        println!(
+            "{}: {} → {}",
+            color::bold(&pm.name),
+            color::dim(&pm.version),
+            color::success(&bump.latest)
+        );
+        println!("  {} {}", color::bold("Update:"), bump.cmd);
         println!();
     }
 
-    println!("Total outdated: {}", outdated_pms.len());
+    println!(
+        "Total outdated: {}",
+        color::warning(&outdated_pms.len().to_string())
+    );
 }
 
 /// Parses category string into Category enum, supporting aliases.
