@@ -38,22 +38,20 @@ pub(super) fn handle_show_command(
     json: bool,
     csv: bool,
 ) {
-    // Determine target categories, either specific or all
-    let target_categories = if let Some(ref category_str) = category {
-        let target_category = match parse_category(category_str) {
-            Some(cat) => cat,
+    // Determine target categories
+    let target_categories = match category.as_ref() {
+        Some(cat_str) => match parse_category(cat_str) {
+            Some(cat) => vec![cat],
             None => {
-                print_category_help(category_str);
+                print_category_help(cat_str);
                 return;
             },
-        };
-        vec![target_category]
-    } else {
-        Category::all().to_vec()
+        },
+        None => Category::all().to_vec(),
     };
 
-    // Filter detectors by target categories, then parallelize their execution
-    let filtered_pms: Vec<_> = pm::all_package_managers()
+    // Discover package managers for target categories
+    let filtered_pms: Vec<pm::PmInfo> = pm::all_package_managers()
         .into_iter()
         .filter(|detector| {
             target_categories
@@ -72,52 +70,59 @@ pub(super) fn handle_show_command(
         return;
     }
 
-    let format = OutputFormat::from_flags(json, csv);
+    match OutputFormat::from_flags(json, csv) {
+        OutputFormat::Json => handle_json_output(filtered_pms, all),
+        OutputFormat::Csv => handle_csv_output(filtered_pms, all),
+        OutputFormat::Table => handle_table_output(filtered_pms, all, tree),
+    }
+}
 
-    match format {
-        OutputFormat::Json => {
-            if all {
-                if let Err(e) = output_json(&filtered_pms) {
-                    eprintln!("Error outputting JSON: {}", e);
-                }
-            } else {
-                let grouped = group_pm_instances(filtered_pms);
-                if let Err(e) = output_grouped_json(&grouped) {
-                    eprintln!("Error outputting JSON: {}", e);
-                }
-            }
+/// Handles JSON output format
+fn handle_json_output(pms: Vec<pm::PmInfo>, all: bool) {
+    if all {
+        if let Err(e) = output_json(&pms) {
+            eprintln!("Error outputting JSON: {}", e);
+        }
+    } else {
+        let grouped = group_pm_instances(pms);
+        if let Err(e) = output_grouped_json(&grouped) {
+            eprintln!("Error outputting JSON: {}", e);
+        }
+    }
+}
+
+/// Handles CSV output format
+fn handle_csv_output(pms: Vec<pm::PmInfo>, all: bool) {
+    if all {
+        output_csv(&pms);
+    } else {
+        let grouped = group_pm_instances(pms);
+        output_grouped_csv(&grouped);
+    }
+}
+
+/// Handles table/tree output format
+fn handle_table_output(pms: Vec<pm::PmInfo>, all: bool, tree: bool) {
+    match (all, tree) {
+        (false, false) => {
+            // Default: grouped table
+            let mut table = Table::new(group_pm_instances(pms));
+            println!("{}", table.with(Style::modern()));
+            println!("\nTip: Use --all to see all the other locations");
         },
-        OutputFormat::Csv => {
-            if all {
-                output_csv(&filtered_pms);
-            } else {
-                let grouped = group_pm_instances(filtered_pms);
-                output_grouped_csv(&grouped);
-            }
+        (true, false) => {
+            // All instances table
+            let mut table = Table::new(pms);
+            println!("{}", table.with(Style::modern()));
         },
-        OutputFormat::Table => {
-            match (all, tree) {
-                (false, false) => {
-                    // Default: grouped table
-                    let mut table = Table::new(group_pm_instances(filtered_pms));
-                    println!("{}", table.with(Style::modern()));
-                    println!("\nTip: Use --all to see all the other locations");
-                },
-                (true, false) => {
-                    // All instances table
-                    let mut table = Table::new(filtered_pms);
-                    println!("{}", table.with(Style::modern()));
-                },
-                (false, true) => {
-                    // Grouped tree
-                    display_grouped_tree(group_pm_instances(filtered_pms));
-                    println!("\nTip: Use --all to see all the other locations");
-                },
-                (true, true) => {
-                    // All instances tree
-                    display_tree(filtered_pms);
-                },
-            }
+        (false, true) => {
+            // Grouped tree
+            display_grouped_tree(group_pm_instances(pms));
+            println!("\nTip: Use --all to see all the other locations");
+        },
+        (true, true) => {
+            // All instances tree
+            display_tree(pms);
         },
     }
 }
