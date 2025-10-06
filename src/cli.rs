@@ -9,8 +9,9 @@ use tabled::{Table, Tabled, settings::Style};
 use crate::{
     color,
     display::{
-        OutputFormat, display_grouped_tree, display_tree, group_pm_instances, output_csv,
-        output_grouped_csv, output_grouped_json, output_json,
+        OutputFormat, display_check_normal, display_check_summary, display_check_verbose,
+        display_grouped_tree, display_tree, group_pm_instances, output_csv, output_grouped_csv,
+        output_grouped_json, output_json,
     },
 };
 
@@ -186,7 +187,7 @@ fn handle_quiet_check() {
         .flat_map(|detector| detector.find())
         .collect();
 
-    display_summary(&all_pms);
+    display_check_summary(&all_pms);
 }
 
 fn handle_normal_check() {
@@ -204,13 +205,13 @@ fn handle_normal_check() {
 
     let mut all_pms = Vec::new();
     for pm in rx {
-        display_pm_progress(&pm);
+        display_check_normal(&pm);
         all_pms.push(pm);
     }
 
     handle.join().unwrap();
     println!();
-    display_summary(&all_pms);
+    display_check_summary(&all_pms);
 }
 
 fn handle_verbose_check() {
@@ -243,133 +244,13 @@ fn handle_verbose_check() {
         if let Some(pms) = by_category.get(category) {
             println!("{}:", color::bold(category.name()));
             for pm in pms {
-                display_pm_verbose(pm);
+                display_check_verbose(pm);
             }
             println!();
         }
     }
 
-    display_summary(&all_pms);
-}
-
-fn display_pm_verbose(pm: &pm::PmInfo) {
-    if pm.version.trim().is_empty() {
-        println!(
-            "  {} {} (broken) at {}",
-            color::cross_mark(),
-            pm.name,
-            color::dim(&pm.path)
-        );
-    } else {
-        // Check if outdated
-        let detector = pm::all_package_managers()
-            .into_iter()
-            .find(|d| d.name() == pm.name);
-
-        if let Some(d) = detector
-            && let Some(bump) = d.check_bump(&pm.version)
-            && bump.latest != pm.version
-        {
-            println!(
-                "  {} {} ({}) [outdated: {}] at {}",
-                color::check_mark(),
-                pm.name,
-                pm.version,
-                color::warning(&bump.latest),
-                color::dim(&pm.path)
-            );
-            return;
-        }
-
-        println!(
-            "  {} {} ({}) at {}",
-            color::check_mark(),
-            pm.name,
-            pm.version,
-            color::dim(&pm.path)
-        );
-    }
-}
-
-fn display_pm_progress(pm: &pm::PmInfo) {
-    print!("Checking {}... ", pm.name);
-
-    if pm.version.trim().is_empty() {
-        println!("{} broken", color::cross_mark());
-    } else {
-        // Check if outdated
-        let detector = pm::all_package_managers()
-            .into_iter()
-            .find(|d| d.name() == pm.name);
-
-        if let Some(d) = detector
-            && let Some(bump) = d.check_bump(&pm.version)
-            && bump.latest != pm.version
-        {
-            println!(
-                "{} {} [outdated: {}]",
-                color::check_mark(),
-                pm.version,
-                color::warning(&bump.latest)
-            );
-            return;
-        }
-
-        println!("{} {}", color::check_mark(), pm.version);
-    }
-}
-
-fn display_summary(all_pms: &[pm::PmInfo]) {
-    // Count broken and outdated
-    let broken_count = all_pms
-        .iter()
-        .filter(|pm| pm.version.trim().is_empty())
-        .count();
-
-    let outdated_count = all_pms
-        .iter()
-        .filter(|pm| !pm.version.trim().is_empty())
-        .filter(|pm| {
-            pm::all_package_managers()
-                .into_iter()
-                .find(|d| d.name() == pm.name)
-                .and_then(|d| d.check_bump(&pm.version))
-                .map(|bump| bump.latest != pm.version)
-                .unwrap_or(false)
-        })
-        .count();
-
-    let healthy_count = all_pms.len() - broken_count - outdated_count;
-
-    println!(
-        "Summary: {} total, {} healthy, {} broken, {} outdated",
-        all_pms.len(),
-        color::success(&healthy_count.to_string()),
-        if broken_count > 0 {
-            color::error(&broken_count.to_string())
-        } else {
-            broken_count.to_string()
-        },
-        if outdated_count > 0 {
-            color::warning(&outdated_count.to_string())
-        } else {
-            outdated_count.to_string()
-        }
-    );
-
-    if broken_count > 0 || outdated_count > 0 {
-        println!();
-        if broken_count > 0 {
-            println!("Run 'bole check -b' for broken PM diagnostics");
-        }
-        if outdated_count > 0 {
-            println!("Run 'bole check -o' for update information");
-        }
-    }
-
-    if broken_count > 0 {
-        std::process::exit(1);
-    }
+    display_check_summary(&all_pms);
 }
 
 /// Shows detailed diagnostics for broken package managers.

@@ -2,7 +2,9 @@
 
 use std::collections::HashMap;
 
-use bole::pm::{GroupedPmInfo, PmInfo};
+use bole::pm::{self, GroupedPmInfo, PmInfo};
+
+use crate::color;
 
 /// Output formats for package manager information.
 #[derive(Debug, Clone, Copy)]
@@ -172,5 +174,128 @@ fn escape_csv(field: &str) -> String {
         format!("\"{}\"", field.replace('"', "\"\""))
     } else {
         field.to_string()
+    }
+}
+
+/// Display detailed PM info with location for check -vv mode.
+pub(crate) fn display_check_verbose(pm: &PmInfo) {
+    if pm.version.trim().is_empty() {
+        println!(
+            "  {} {} (broken) at {}",
+            color::cross_mark(),
+            pm.name,
+            color::dim(&pm.path)
+        );
+    } else {
+        // Check if outdated
+        let detector = pm::all_package_managers()
+            .into_iter()
+            .find(|d| d.name() == pm.name);
+
+        if let Some(d) = detector
+            && let Some(bump) = d.check_bump(&pm.version)
+            && bump.latest != pm.version
+        {
+            println!(
+                "  {} {} ({}) [outdated: {}] at {}",
+                color::check_mark(),
+                pm.name,
+                pm.version,
+                color::warning(&bump.latest),
+                color::dim(&pm.path)
+            );
+            return;
+        }
+
+        println!(
+            "  {} {} ({}) at {}",
+            color::check_mark(),
+            pm.name,
+            pm.version,
+            color::dim(&pm.path)
+        );
+    }
+}
+
+/// Display checking progress with status for check -v mode.
+pub(crate) fn display_check_normal(pm: &PmInfo) {
+    print!("Checking {}... ", pm.name);
+
+    if pm.version.trim().is_empty() {
+        println!("{} broken", color::cross_mark());
+    } else {
+        // Check if outdated
+        let detector = pm::all_package_managers()
+            .into_iter()
+            .find(|d| d.name() == pm.name);
+
+        if let Some(d) = detector
+            && let Some(bump) = d.check_bump(&pm.version)
+            && bump.latest != pm.version
+        {
+            println!(
+                "{} {} [outdated: {}]",
+                color::check_mark(),
+                pm.version,
+                color::warning(&bump.latest)
+            );
+            return;
+        }
+
+        println!("{} {}", color::check_mark(), pm.version);
+    }
+}
+
+/// Display health summary report for check command.
+pub(crate) fn display_check_summary(all_pms: &[PmInfo]) {
+    // Count broken and outdated
+    let broken_count = all_pms
+        .iter()
+        .filter(|pm| pm.version.trim().is_empty())
+        .count();
+
+    let outdated_count = all_pms
+        .iter()
+        .filter(|pm| !pm.version.trim().is_empty())
+        .filter(|pm| {
+            pm::all_package_managers()
+                .into_iter()
+                .find(|d| d.name() == pm.name)
+                .and_then(|d| d.check_bump(&pm.version))
+                .map(|bump| bump.latest != pm.version)
+                .unwrap_or(false)
+        })
+        .count();
+
+    let healthy_count = all_pms.len() - broken_count - outdated_count;
+
+    println!(
+        "Summary: {} total, {} healthy, {} broken, {} outdated",
+        all_pms.len(),
+        color::success(&healthy_count.to_string()),
+        if broken_count > 0 {
+            color::error(&broken_count.to_string())
+        } else {
+            broken_count.to_string()
+        },
+        if outdated_count > 0 {
+            color::warning(&outdated_count.to_string())
+        } else {
+            outdated_count.to_string()
+        }
+    );
+
+    if broken_count > 0 || outdated_count > 0 {
+        println!();
+        if broken_count > 0 {
+            println!("Run 'bole check -b' for broken PM diagnostics");
+        }
+        if outdated_count > 0 {
+            println!("Run 'bole check -o' for update information");
+        }
+    }
+
+    if broken_count > 0 {
+        std::process::exit(1);
     }
 }
