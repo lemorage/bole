@@ -247,7 +247,7 @@ pub(crate) fn display_check_normal(pm: &PmInfo) {
 }
 
 /// Display health summary report for check command.
-pub(crate) fn display_check_summary(all_pms: &[PmInfo]) {
+pub(crate) fn display_check_summary(all_pms: &[PmInfo], spinner: Option<indicatif::ProgressBar>) {
     // Count broken and outdated
     let broken_count = all_pms
         .iter()
@@ -268,6 +268,11 @@ pub(crate) fn display_check_summary(all_pms: &[PmInfo]) {
         .count();
 
     let healthy_count = all_pms.len() - broken_count - outdated_count;
+
+    // Clear spinner if present
+    if let Some(spinner) = spinner {
+        spinner.finish_and_clear();
+    }
 
     println!(
         "Summary: {} total, {} healthy, {} broken, {} outdated",

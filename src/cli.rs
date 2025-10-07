@@ -172,22 +172,44 @@ pub(super) fn handle_check_command(verbose: u8, broken: bool, outdated: bool) {
     }
 
     // Regular check with verbosity
-    println!("Checking package manager health...\n");
-
     match Verbosity::from(verbose) {
         Verbosity::Quiet => handle_quiet_check(),
-        Verbosity::Normal => handle_normal_check(),
-        Verbosity::Verbose => handle_verbose_check(),
+        Verbosity::Normal => {
+            println!("Checking package manager health...\n");
+            handle_normal_check()
+        },
+        Verbosity::Verbose => {
+            println!("Checking package manager health...\n");
+            handle_verbose_check()
+        },
     }
 }
 
 fn handle_quiet_check() {
+    let spinner = indicatif::ProgressBar::new_spinner();
+    spinner.set_style(
+        indicatif::ProgressStyle::default_spinner()
+            .template("{spinner:.green} {msg}")
+            .unwrap(),
+    );
+    spinner.set_message("Discovering package managers...");
+    spinner.enable_steady_tick(std::time::Duration::from_millis(80));
+
+    // Discovery phase
     let all_pms: Vec<pm::PmInfo> = pm::all_package_managers()
         .into_par_iter()
         .flat_map(|detector| detector.find())
         .collect();
 
-    display_check_summary(&all_pms);
+    if all_pms.is_empty() {
+        spinner.finish_and_clear();
+        println!("No package managers found.");
+        return;
+    }
+
+    spinner.set_message("Checking for updates...");
+
+    display_check_summary(&all_pms, Some(spinner));
 }
 
 fn handle_normal_check() {
@@ -211,12 +233,11 @@ fn handle_normal_check() {
 
     handle.join().unwrap();
     println!();
-    display_check_summary(&all_pms);
+    display_check_summary(&all_pms, None);
 }
 
 fn handle_verbose_check() {
-    // Simple solution: collect all, then display by category
-    // This is NOT progressive, but it's CORRECT and SIMPLE
+    // Collect all, then display by category
     let all_pms: Vec<pm::PmInfo> = pm::all_package_managers()
         .into_par_iter()
         .flat_map(|detector| detector.find())
@@ -250,7 +271,7 @@ fn handle_verbose_check() {
         }
     }
 
-    display_check_summary(&all_pms);
+    display_check_summary(&all_pms, None);
 }
 
 /// Shows detailed diagnostics for broken package managers.
