@@ -2,6 +2,8 @@
 //!
 //! Provides standardized discovery interface for all package managers.
 
+use crate::pm::PmInfo;
+
 /// Available version bump information.
 #[derive(Debug, Clone)]
 pub struct Bump {
@@ -27,7 +29,7 @@ pub trait Find {
     fn find(&self) -> Vec<Self::Output>;
     /// Check if a version bump is available.
     /// Returns Some(Bump) if outdated, None if up-to-date or unknown.
-    fn check_bump(&self, _current_version: &str) -> Option<Bump> {
+    fn check_bump(&self, _pm_info: &PmInfo) -> Option<Bump> {
         None
     }
 }
@@ -44,8 +46,8 @@ impl<T: Find + ?Sized> Find for &T {
     fn find(&self) -> Vec<Self::Output> {
         (**self).find()
     }
-    fn check_bump(&self, current_version: &str) -> Option<Bump> {
-        (**self).check_bump(current_version)
+    fn check_bump(&self, pm_info: &PmInfo) -> Option<Bump> {
+        (**self).check_bump(pm_info)
     }
 }
 
@@ -60,8 +62,8 @@ impl<T: Find + ?Sized> Find for Box<T> {
     fn find(&self) -> Vec<Self::Output> {
         (**self).find()
     }
-    fn check_bump(&self, current_version: &str) -> Option<Bump> {
-        (**self).check_bump(current_version)
+    fn check_bump(&self, pm_info: &PmInfo) -> Option<Bump> {
+        (**self).check_bump(pm_info)
     }
 }
 

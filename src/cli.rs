@@ -344,7 +344,7 @@ fn handle_outdated_check(all_pms: &[pm::PmInfo]) {
                 .into_iter()
                 .find(|d| d.name() == pm.name)?;
 
-            if let Some(bump) = detector.check_bump(&pm.version)
+            if let Some(bump) = detector.check_bump(pm)
                 && bump.latest != pm.version
             {
                 return Some((pm, bump));

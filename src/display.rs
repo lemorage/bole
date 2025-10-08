@@ -193,7 +193,7 @@ pub(crate) fn display_check_verbose(pm: &PmInfo) {
             .find(|d| d.name() == pm.name);
 
         if let Some(d) = detector
-            && let Some(bump) = d.check_bump(&pm.version)
+            && let Some(bump) = d.check_bump(pm)
             && bump.latest != pm.version
         {
             println!(
@@ -230,7 +230,7 @@ pub(crate) fn display_check_normal(pm: &PmInfo) {
             .find(|d| d.name() == pm.name);
 
         if let Some(d) = detector
-            && let Some(bump) = d.check_bump(&pm.version)
+            && let Some(bump) = d.check_bump(pm)
             && bump.latest != pm.version
         {
             println!(
@@ -261,7 +261,7 @@ pub(crate) fn display_check_summary(all_pms: &[PmInfo], spinner: Option<indicati
             pm::all_package_managers()
                 .into_iter()
                 .find(|d| d.name() == pm.name)
-                .and_then(|d| d.check_bump(&pm.version))
+                .and_then(|d| d.check_bump(pm))
                 .map(|bump| bump.latest != pm.version)
                 .unwrap_or(false)
         })
