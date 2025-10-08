@@ -32,7 +32,7 @@ pub use ruby::{Bundle, Bundler, Gem, Rbenv, Rvm};
 pub use rust::Cargo;
 pub use system::{Homebrew, Macports, Nix};
 pub use types::{Categorizable, Category, Detector, GroupedPmInfo, InstallMethod, PmInfo};
-use which::which;
+use which::which_all;
 pub use wrappers::{Asdf, Corepack, Mise, Phpbrew, Pyenv, Volta};
 pub use zig::Zig;
 
@@ -89,12 +89,16 @@ fn find_all_installations(name: &str, version_args: &[&str]) -> Vec<PmInfo> {
     let mut seen_canonical_paths = HashSet::new();
 
     // PATH discovery
-    if let Ok(path) = which(name)
-        && let Some(pm_info) = try_detect_at_path(&path, name, version_args)
-        && let Ok(canonical) = std::fs::canonicalize(&path)
-    {
-        seen_canonical_paths.insert(canonical);
-        instances.push(pm_info);
+    if let Ok(paths) = which_all(name) {
+        for path in paths {
+            if let Some(pm_info) = try_detect_at_path(&path, name, version_args)
+                && let Ok(canonical) = std::fs::canonicalize(&path)
+                && !seen_canonical_paths.contains(&canonical)
+            {
+                seen_canonical_paths.insert(canonical);
+                instances.push(pm_info);
+            }
+        }
     }
 
     // Known installation locations
