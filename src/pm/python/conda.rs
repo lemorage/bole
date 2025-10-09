@@ -19,10 +19,23 @@ impl Find for Conda {
 
     fn search_paths(&self) -> &'static [&'static str] {
         &[
+            // Home installs
             "~/miniconda3/bin/conda",
             "~/anaconda3/bin/conda",
+            "~/miniconda/bin/conda",
+            "~/anaconda/bin/conda",
+            "~/miniforge3/bin/conda",
+            "~/mambaforge/bin/conda",
+            // /opt installs
             "/opt/miniconda3/bin/conda",
             "/opt/anaconda3/bin/conda",
+            "/opt/miniforge3/bin/conda",
+            "/opt/mambaforge/bin/conda",
+            // /usr/local installs
+            "/usr/local/miniconda3/bin/conda",
+            "/usr/local/anaconda3/bin/conda",
+            "/usr/local/miniforge3/bin/conda",
+            "/usr/local/mambaforge/bin/conda",
         ]
     }
 

@@ -16,15 +16,18 @@ pub struct Bump {
 /// Package manager discovery interface.
 ///
 /// Implementations should return instances in priority order:
-/// - First: active PATH-resolved instance
-/// - Rest: additional locations, deduplicated by canonical path
+/// - First: active PATH-resolved instances
+/// - Rest: additional tool-specific paths, deduplicated by canonical path
 pub trait Find {
     /// Discovery result type.
     type Output;
     /// Package manager name.
     fn name(&self) -> &'static str;
-    /// Search path templates for this package manager.
-    fn search_paths(&self) -> &'static [&'static str];
+    /// Additional search paths outside PATH.
+    /// Only include tool-specific directories, not standard bins.
+    fn search_paths(&self) -> &'static [&'static str] {
+        &[] // Most PMs are found via PATH
+    }
     /// Find all instances (PATH-first, deduplicated).
     fn find(&self) -> Vec<Self::Output>;
     /// Check if a version bump is available.

@@ -18,11 +18,7 @@ impl Find for Rbenv {
     }
 
     fn search_paths(&self) -> &'static [&'static str] {
-        &[
-            "~/.rbenv/bin/rbenv",
-            "/opt/homebrew/bin/rbenv",
-            "/usr/local/bin/rbenv",
-        ]
+        &["~/.rbenv/bin/rbenv"]
     }
 
     fn find(&self) -> Vec<PmInfo> {

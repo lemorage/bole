@@ -17,15 +17,6 @@ impl Find for Ni {
         Self::NAME
     }
 
-    fn search_paths(&self) -> &'static [&'static str] {
-        &[
-            "~/.local/bin/ni",
-            "/opt/homebrew/bin/ni",
-            "/usr/local/bin/ni",
-            "/usr/bin/ni",
-        ]
-    }
-
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
     }

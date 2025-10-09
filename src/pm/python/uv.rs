@@ -17,15 +17,6 @@ impl Find for Uv {
         Self::NAME
     }
 
-    fn search_paths(&self) -> &'static [&'static str] {
-        &[
-            "~/.local/bin/uv",
-            "~/.cargo/bin/uv",
-            "/opt/homebrew/bin/uv",
-            "/usr/local/bin/uv",
-        ]
-    }
-
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
             .into_iter()

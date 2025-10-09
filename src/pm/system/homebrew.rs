@@ -27,7 +27,12 @@ impl Find for Homebrew {
     }
 
     fn search_paths(&self) -> &'static [&'static str] {
-        &["/opt/homebrew/bin/brew", "/usr/local/bin/brew"]
+        &[
+            "/opt/homebrew/bin/brew",
+            "/usr/local/bin/brew",
+            "~/.linuxbrew/bin/brew",
+            "/home/linuxbrew/.linuxbrew/bin/brew",
+        ]
     }
 
     fn find(&self) -> Vec<PmInfo> {

@@ -18,11 +18,7 @@ impl Find for Stack {
     }
 
     fn search_paths(&self) -> &'static [&'static str] {
-        &[
-            "~/.local/bin/stack",
-            "/opt/homebrew/bin/stack",
-            "/usr/local/bin/stack",
-        ]
+        &["~/.ghcup/bin/stack"]
     }
 
     fn find(&self) -> Vec<PmInfo> {

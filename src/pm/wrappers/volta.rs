@@ -30,11 +30,7 @@ impl Find for Volta {
     }
 
     fn search_paths(&self) -> &'static [&'static str] {
-        &[
-            "~/.volta/bin/volta",
-            "/opt/homebrew/bin/volta",
-            "/usr/local/bin/volta",
-        ]
+        &["~/.volta/bin/volta"]
     }
 
     fn find(&self) -> Vec<PmInfo> {

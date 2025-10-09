@@ -18,12 +18,7 @@ impl Find for Poetry {
     }
 
     fn search_paths(&self) -> &'static [&'static str] {
-        &[
-            "~/.local/bin/poetry",
-            "~/.poetry/bin/poetry",
-            "/opt/homebrew/bin/poetry",
-            "/usr/local/bin/poetry",
-        ]
+        &["~/.poetry/bin/poetry"]
     }
 
     fn find(&self) -> Vec<PmInfo> {

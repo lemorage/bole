@@ -18,11 +18,7 @@ impl Find for Pyenv {
     }
 
     fn search_paths(&self) -> &'static [&'static str] {
-        &[
-            "~/.pyenv/bin/pyenv",
-            "/opt/homebrew/bin/pyenv",
-            "/usr/local/bin/pyenv",
-        ]
+        &["~/.pyenv/bin/pyenv"]
     }
 
     fn find(&self) -> Vec<PmInfo> {

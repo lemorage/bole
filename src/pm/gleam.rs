@@ -18,12 +18,7 @@ impl Find for Gleam {
     }
 
     fn search_paths(&self) -> &'static [&'static str] {
-        &[
-            "~/.local/bin/gleam",
-            "~/.cargo/bin/gleam",
-            "/opt/homebrew/bin/gleam",
-            "/usr/local/bin/gleam",
-        ]
+        &["~/.cargo/bin/gleam"]
     }
 
     fn find(&self) -> Vec<PmInfo> {

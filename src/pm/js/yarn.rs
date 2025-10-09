@@ -19,11 +19,9 @@ impl Find for Yarn {
 
     fn search_paths(&self) -> &'static [&'static str] {
         &[
-            "~/.npm/bin/yarn",
             "~/.yarn/bin/yarn",
-            "/opt/homebrew/bin/yarn",
-            "/usr/local/bin/yarn",
-            "/usr/bin/yarn",
+            "~/.volta/bin/yarn",
+            "~/.asdf/shims/yarn",
         ]
     }
 

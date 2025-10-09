@@ -18,11 +18,7 @@ impl Find for Deno {
     }
 
     fn search_paths(&self) -> &'static [&'static str] {
-        &[
-            "~/.deno/bin/deno",
-            "/opt/homebrew/bin/deno",
-            "/usr/local/bin/deno",
-        ]
+        &["~/.deno/bin/deno"]
     }
 
     fn find(&self) -> Vec<PmInfo> {

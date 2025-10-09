@@ -20,9 +20,9 @@ impl Find for Go {
     fn search_paths(&self) -> &'static [&'static str] {
         &[
             "/usr/local/go/bin/go",
-            "~/.local/bin/go",
-            "/opt/homebrew/bin/go",
-            "/usr/bin/go",
+            "/opt/homebrew/opt/go/libexec/bin/go",
+            "/usr/local/opt/go/libexec/bin/go",
+            "/home/linuxbrew/.linuxbrew/opt/go/libexec/bin/go",
         ]
     }
 

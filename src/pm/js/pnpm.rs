@@ -19,11 +19,10 @@ impl Find for Pnpm {
 
     fn search_paths(&self) -> &'static [&'static str] {
         &[
-            "~/.npm/bin/pnpm",
             "~/.local/share/pnpm/pnpm",
-            "/opt/homebrew/bin/pnpm",
-            "/usr/local/bin/pnpm",
-            "/usr/bin/pnpm",
+            "~/Library/pnpm/pnpm",
+            "~/.volta/bin/pnpm",
+            "~/.asdf/shims/pnpm",
         ]
     }
 

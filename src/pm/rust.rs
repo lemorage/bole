@@ -31,12 +31,7 @@ impl Find for Cargo {
     }
 
     fn search_paths(&self) -> &'static [&'static str] {
-        &[
-            "~/.cargo/bin/cargo",
-            "/opt/homebrew/bin/cargo",
-            "/usr/local/bin/cargo",
-            "/usr/bin/cargo",
-        ]
+        &["~/.cargo/bin/cargo"]
     }
 
     fn find(&self) -> Vec<PmInfo> {

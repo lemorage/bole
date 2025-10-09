@@ -30,12 +30,7 @@ impl Find for Mise {
     }
 
     fn search_paths(&self) -> &'static [&'static str] {
-        &[
-            "~/.local/bin/mise",
-            "~/.cargo/bin/mise",
-            "/opt/homebrew/bin/mise",
-            "/usr/local/bin/mise",
-        ]
+        &["~/.cargo/bin/mise"]
     }
 
     fn find(&self) -> Vec<PmInfo> {

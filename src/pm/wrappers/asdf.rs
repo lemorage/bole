@@ -31,11 +31,7 @@ impl Find for Asdf {
     }
 
     fn search_paths(&self) -> &'static [&'static str] {
-        &[
-            "~/.asdf/bin/asdf",
-            "/opt/homebrew/bin/asdf",
-            "/usr/local/bin/asdf",
-        ]
+        &["~/.asdf/bin/asdf"]
     }
 
     fn find(&self) -> Vec<PmInfo> {

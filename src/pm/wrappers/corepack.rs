@@ -30,11 +30,7 @@ impl Find for Corepack {
     }
 
     fn search_paths(&self) -> &'static [&'static str] {
-        &[
-            "/opt/homebrew/bin/corepack",
-            "/usr/local/bin/corepack",
-            "~/.nvm/current/bin/corepack",
-        ]
+        &["~/.volta/bin/corepack", "~/.asdf/shims/corepack"]
     }
 
     fn find(&self) -> Vec<PmInfo> {

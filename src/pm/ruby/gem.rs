@@ -19,11 +19,9 @@ impl Find for Gem {
 
     fn search_paths(&self) -> &'static [&'static str] {
         &[
-            "/usr/bin/gem",
-            "/opt/homebrew/bin/gem",
-            "/usr/local/bin/gem",
             "~/.rbenv/shims/gem",
-            "~/.rvm/rubies/default/bin/gem",
+            "~/.rvm/wrappers/default/gem",
+            "~/.asdf/shims/gem",
         ]
     }
 

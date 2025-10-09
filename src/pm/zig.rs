@@ -17,15 +17,6 @@ impl Find for Zig {
         Self::NAME
     }
 
-    fn search_paths(&self) -> &'static [&'static str] {
-        &[
-            "~/.local/bin/zig",
-            "/opt/homebrew/bin/zig",
-            "/usr/local/bin/zig",
-            "/usr/bin/zig",
-        ]
-    }
-
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms_with_args(Self::NAME, &["version"])
     }

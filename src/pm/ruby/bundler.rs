@@ -19,11 +19,9 @@ impl Find for Bundler {
 
     fn search_paths(&self) -> &'static [&'static str] {
         &[
-            "/usr/bin/bundler",
-            "/opt/homebrew/bin/bundler",
-            "/usr/local/bin/bundler",
             "~/.rbenv/shims/bundler",
-            "~/.rvm/rubies/default/bin/bundler",
+            "~/.rvm/wrappers/default/bundler",
+            "~/.asdf/shims/bundler",
         ]
     }
 

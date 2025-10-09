@@ -18,12 +18,7 @@ impl Find for Cabal {
     }
 
     fn search_paths(&self) -> &'static [&'static str] {
-        &[
-            "~/.cabal/bin/cabal",
-            "~/.local/bin/cabal",
-            "/opt/homebrew/bin/cabal",
-            "/usr/local/bin/cabal",
-        ]
+        &["~/.cabal/bin/cabal", "~/.ghcup/bin/cabal"]
     }
 
     fn find(&self) -> Vec<PmInfo> {

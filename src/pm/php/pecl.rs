@@ -19,9 +19,9 @@ impl Find for Pecl {
 
     fn search_paths(&self) -> &'static [&'static str] {
         &[
-            "/opt/homebrew/bin/pecl",
-            "/usr/local/bin/pecl",
-            "/usr/bin/pecl",
+            "/opt/homebrew/opt/php/bin/pecl",
+            "/usr/local/opt/php/bin/pecl",
+            "/home/linuxbrew/.linuxbrew/opt/php/bin/pecl",
         ]
     }
 

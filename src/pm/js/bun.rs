@@ -18,11 +18,7 @@ impl Find for Bun {
     }
 
     fn search_paths(&self) -> &'static [&'static str] {
-        &[
-            "~/.bun/bin/bun",
-            "/opt/homebrew/bin/bun",
-            "/usr/local/bin/bun",
-        ]
+        &["~/.bun/bin/bun"]
     }
 
     fn find(&self) -> Vec<PmInfo> {

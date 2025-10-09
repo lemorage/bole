@@ -18,11 +18,7 @@ impl Find for Rvm {
     }
 
     fn search_paths(&self) -> &'static [&'static str] {
-        &[
-            "~/.rvm/bin/rvm",
-            "~/.rvm/scripts/rvm",
-            "/usr/local/rvm/bin/rvm",
-        ]
+        &["~/.rvm/bin/rvm"]
     }
 
     fn find(&self) -> Vec<PmInfo> {
