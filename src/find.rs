@@ -94,7 +94,7 @@ mod tests {
         }
 
         fn search_paths(&self) -> &'static [&'static str] {
-            &["/usr/bin/test", "/usr/local/bin/test"]
+            &["~/.volta/bin/test", "~/.asdf/shims/test"]
         }
 
         fn find(&self) -> Vec<Self::Output> {
@@ -214,7 +214,7 @@ mod tests {
         let paths = <&MockFinder as Find>::search_paths(&finder_ref);
 
         // Assert
-        assert_eq!(paths, &["/usr/bin/test", "/usr/local/bin/test"]);
+        assert_eq!(paths, &["~/.volta/bin/test", "~/.asdf/shims/test"]);
     }
 
     #[test]
@@ -227,6 +227,46 @@ mod tests {
         let paths = <Box<MockFinder> as Find>::search_paths(&finder_box);
 
         // Assert
-        assert_eq!(paths, &["/usr/bin/test", "/usr/local/bin/test"]);
+        assert_eq!(paths, &["~/.volta/bin/test", "~/.asdf/shims/test"]);
+    }
+
+    #[test]
+    fn default_check_bump_is_none() {
+        // Arrange
+        let finder = MockFinder::new("test", vec![]);
+        let pm = test_pm_info();
+
+        // Act
+        let bump = <MockFinder as Find>::check_bump(&finder, &pm);
+
+        // Assert
+        assert!(bump.is_none());
+    }
+
+    #[test]
+    fn blanket_impl_reference_check_bump_none() {
+        // Arrange
+        let finder = MockFinder::new("test", vec![]);
+        let finder_ref: &MockFinder = &finder;
+        let pm = test_pm_info();
+
+        // Act
+        let bump = <&MockFinder as Find>::check_bump(&finder_ref, &pm);
+
+        // Assert
+        assert!(bump.is_none());
+    }
+
+    #[test]
+    fn blanket_impl_box_check_bump_none() {
+        // Arrange
+        let finder: Box<MockFinder> = Box::new(MockFinder::new("test", vec![]));
+        let pm = test_pm_info();
+
+        // Act
+        let bump = <Box<MockFinder> as Find>::check_bump(&finder, &pm);
+
+        // Assert
+        assert!(bump.is_none());
     }
 }
