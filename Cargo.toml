@@ -2,7 +2,6 @@
 name = "bole"
 version = "0.2.3"
 edition = "2024"
-rust-version = "1.89"
 authors = ["Glenn Miao (lemorage) <one.lemorage@gmail.com>"]
 documentation = "https://docs.rs/bole"
 description = "Manage all package managers on your system"
