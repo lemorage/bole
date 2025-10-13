@@ -1,6 +1,11 @@
+use std::process::Command;
+
 use crate::{
-    find::Find,
-    pm::{Categorizable, Category, PmInfo, find_all_pms},
+    find::{Bump, Find},
+    pm::{
+        Categorizable, Category, PmInfo, find_all_pms,
+        types::{InstallMethod, Origin},
+    },
 };
 
 /// poetry - Python dependency management and packaging
@@ -34,6 +39,58 @@ impl Find for Poetry {
                 pm_info
             })
             .collect()
+    }
+
+    fn check_bump(&self, pm_info: &PmInfo) -> Option<Bump> {
+        let output = Command::new("curl")
+            .args([
+                "-s",
+                "https://api.github.com/repos/python-poetry/poetry/releases/latest",
+            ])
+            .output()
+            .ok()?;
+
+        if !output.status.success() {
+            return None;
+        }
+
+        let json = String::from_utf8(output.stdout).ok()?;
+
+        // Looking for: "tag_name": "2.2.1" or "v2.2.1"
+        let latest = json
+            .lines()
+            .find(|line| line.contains("\"tag_name\""))
+            .and_then(|line| {
+                line.split(':').nth(1).map(|s| {
+                    let trimmed = s.trim().trim_end_matches(',').trim_matches('"');
+                    // Remove "v" prefix if present
+                    if let Some(stripped) = trimmed.strip_prefix('v') {
+                        stripped.to_string()
+                    } else {
+                        trimmed.to_string()
+                    }
+                })
+            })?;
+
+        // Determine update command based on installation method
+        let cmd = match &pm_info.install_method {
+            InstallMethod::Chain(origins) => {
+                // Check the first origin in the chain
+                if let Some(first) = origins.first() {
+                    match first {
+                        Origin::PackageManager("Homebrew") => "brew upgrade poetry",
+                        Origin::PackageManager("pip") => "pip install --upgrade poetry",
+                        Origin::PackageManager("pipx") => "pipx upgrade poetry",
+                        _ => "poetry self update",
+                    }
+                } else {
+                    "poetry self update"
+                }
+            },
+            _ => "poetry self update",
+        };
+
+        Some(Bump { latest, cmd })
     }
 }
 

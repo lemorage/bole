@@ -1,11 +1,14 @@
 use std::process::Command;
 
+use serde_json::Value;
+
 use crate::{
-    find::Find,
+    find::{Bump, Find},
     pm::{
         Categorizable, Category, PmInfo,
         attribution::query::{Querier, Tool},
         find_all_pms,
+        types::{InstallMethod, Origin},
     },
 };
 
@@ -35,6 +38,47 @@ impl Find for Pip {
                 pm_info
             })
             .collect()
+    }
+
+    fn check_bump(&self, pm_info: &PmInfo) -> Option<Bump> {
+        // Use PEP 691 JSON Simple API
+        let output = Command::new("curl")
+            .args([
+                "-s",
+                "-H",
+                "Accept: application/vnd.pypi.simple.v1+json",
+                "https://pypi.org/simple/pip/",
+            ])
+            .output()
+            .ok()?;
+
+        if !output.status.success() {
+            return None;
+        }
+        let parsed: Value = serde_json::from_slice(&output.stdout).ok()?;
+        let versions = parsed["versions"].as_array()?;
+        let latest = versions.last()?.as_str()?.to_string();
+
+        // Determine update command based on installation method
+        let cmd = match &pm_info.install_method {
+            InstallMethod::Chain(origins) => {
+                // Check the first origin in the chain
+                if let Some(first) = origins.first() {
+                    match first {
+                        Origin::PackageManager("Homebrew") => "brew upgrade python",
+                        Origin::PackageManager("MacPorts") => "sudo port upgrade python",
+                        Origin::Wrapper("Pyenv") => "pyenv install --skip-existing",
+                        Origin::Wrapper("Asdf") => "asdf install python latest",
+                        _ => "python -m pip install --upgrade pip",
+                    }
+                } else {
+                    "python -m pip install --upgrade pip"
+                }
+            },
+            _ => "python -m pip install --upgrade pip",
+        };
+
+        Some(Bump { latest, cmd })
     }
 }
 
