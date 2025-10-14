@@ -1,10 +1,9 @@
-use std::process::Command;
-
 use crate::{
     find::{Bump, Find},
     pm::{
         Categorizable, Category, PmInfo, find_all_pms,
         types::{InstallMethod, Origin},
+        upstream::Upstream,
     },
 };
 
@@ -35,22 +34,8 @@ impl Find for Yarn {
     }
 
     fn check_bump(&self, pm_info: &PmInfo) -> Option<Bump> {
-        let output = Command::new("curl")
-            .args(["-s", "https://registry.npmjs.org/-/package/yarn/dist-tags"])
-            .output()
-            .ok()?;
-
-        if !output.status.success() {
-            return None;
-        }
-
-        let json = String::from_utf8(output.stdout).ok()?;
-        let latest = json
-            .split("\"latest\":\"")
-            .nth(1)?
-            .split('"')
-            .next()?
-            .to_string();
+        let http = ureq::agent();
+        let latest = Upstream::Npm("yarn").latest(&http).ok()?;
 
         // Determine update command based on installation method
         let cmd = match &pm_info.install_method {

@@ -1,7 +1,5 @@
 use std::process::Command;
 
-use serde_json::Value;
-
 use crate::{
     find::{Bump, Find},
     pm::{
@@ -9,6 +7,7 @@ use crate::{
         attribution::query::{Querier, Tool},
         find_all_pms,
         types::{InstallMethod, Origin},
+        upstream::Upstream,
     },
 };
 
@@ -41,23 +40,8 @@ impl Find for Pip {
     }
 
     fn check_bump(&self, pm_info: &PmInfo) -> Option<Bump> {
-        // Use PEP 691 JSON Simple API
-        let output = Command::new("curl")
-            .args([
-                "-s",
-                "-H",
-                "Accept: application/vnd.pypi.simple.v1+json",
-                "https://pypi.org/simple/pip/",
-            ])
-            .output()
-            .ok()?;
-
-        if !output.status.success() {
-            return None;
-        }
-        let parsed: Value = serde_json::from_slice(&output.stdout).ok()?;
-        let versions = parsed["versions"].as_array()?;
-        let latest = versions.last()?.as_str()?.to_string();
+        let http = ureq::agent();
+        let latest = Upstream::PyPI("pip").latest(&http).ok()?;
 
         // Determine update command based on installation method
         let cmd = match &pm_info.install_method {

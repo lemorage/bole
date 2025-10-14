@@ -1,10 +1,9 @@
-use std::process::Command;
-
 use crate::{
     find::{Bump, Find},
     pm::{
         Categorizable, Category, PmInfo, find_all_pms,
         types::{InstallMethod, Origin},
+        upstream::Upstream,
     },
 };
 
@@ -37,35 +36,12 @@ impl Find for Pipenv {
     }
 
     fn check_bump(&self, pm_info: &PmInfo) -> Option<Bump> {
-        let output = Command::new("curl")
-            .args([
-                "-s",
-                "https://api.github.com/repos/pypa/pipenv/releases/latest",
-            ])
-            .output()
-            .ok()?;
-
-        if !output.status.success() {
-            return None;
-        }
-
-        let json = String::from_utf8(output.stdout).ok()?;
-
-        // Looking for: "tag_name": "v2025.0.4"
-        let latest = json
-            .lines()
-            .find(|line| line.contains("\"tag_name\""))
-            .and_then(|line| {
-                line.split(':').nth(1).map(|s| {
-                    let trimmed = s.trim().trim_end_matches(',').trim_matches('"');
-                    // Remove "v" prefix if present
-                    if let Some(stripped) = trimmed.strip_prefix('v') {
-                        stripped.to_string()
-                    } else {
-                        trimmed.to_string()
-                    }
-                })
-            })?;
+        let upstream = Upstream::GitHub {
+            owner: "pypa",
+            repo: "pipenv",
+        };
+        let http = ureq::agent();
+        let latest = upstream.latest(&http).ok()?;
 
         // Determine update command based on installation method
         let cmd = match &pm_info.install_method {
