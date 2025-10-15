@@ -1,6 +1,10 @@
 use crate::{
-    find::Find,
-    pm::{Categorizable, Category, PmInfo, find_all_pms},
+    find::{Bump, Find},
+    pm::{
+        Categorizable, Category, PmInfo, find_all_pms,
+        types::{InstallMethod, Origin},
+        upstream::Upstream,
+    },
 };
 
 /// cabal - Haskell package manager and build tool
@@ -33,6 +37,35 @@ impl Find for Cabal {
                 pm_info
             })
             .collect()
+    }
+
+    fn check_bump(&self, pm_info: &PmInfo) -> Option<Bump> {
+        let upstream = Upstream::GitHub {
+            owner: "haskell",
+            repo: "cabal",
+        };
+        let http = ureq::agent();
+        let latest = upstream.latest(&http).ok()?;
+
+        // Determine update command based on installation method
+        let cmd = match &pm_info.install_method {
+            InstallMethod::Chain(origins) => {
+                // Check the first origin in the chain
+                if let Some(first) = origins.first() {
+                    match first {
+                        Origin::PackageManager("Homebrew") => "brew upgrade cabal-install",
+                        Origin::PackageManager("MacPorts") => "sudo port upgrade cabal",
+                        Origin::Wrapper("Ghcup") => "ghcup install cabal latest",
+                        _ => "cabal install cabal-install",
+                    }
+                } else {
+                    "cabal install cabal-install"
+                }
+            },
+            _ => "cabal install cabal-install",
+        };
+
+        Some(Bump { latest, cmd })
     }
 }
 

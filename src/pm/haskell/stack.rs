@@ -1,6 +1,10 @@
 use crate::{
-    find::Find,
-    pm::{Categorizable, Category, PmInfo, find_all_pms},
+    find::{Bump, Find},
+    pm::{
+        Categorizable, Category, PmInfo, find_all_pms,
+        types::{InstallMethod, Origin},
+        upstream::Upstream,
+    },
 };
 
 /// stack - Haskell build tool and package manager
@@ -34,6 +38,35 @@ impl Find for Stack {
                 pm_info
             })
             .collect()
+    }
+
+    fn check_bump(&self, pm_info: &PmInfo) -> Option<Bump> {
+        let upstream = Upstream::GitHub {
+            owner: "commercialhaskell",
+            repo: "stack",
+        };
+        let http = ureq::agent();
+        let latest = upstream.latest(&http).ok()?;
+
+        // Determine update command based on installation method
+        let cmd = match &pm_info.install_method {
+            InstallMethod::Chain(origins) => {
+                // Check the first origin in the chain
+                if let Some(first) = origins.first() {
+                    match first {
+                        Origin::PackageManager("Homebrew") => "brew upgrade haskell-stack",
+                        Origin::PackageManager("MacPorts") => "sudo port upgrade stack",
+                        Origin::Wrapper("Ghcup") => "ghcup install stack latest",
+                        _ => "stack upgrade",
+                    }
+                } else {
+                    "stack upgrade"
+                }
+            },
+            _ => "stack upgrade",
+        };
+
+        Some(Bump { latest, cmd })
     }
 }
 

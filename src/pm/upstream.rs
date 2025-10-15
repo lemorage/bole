@@ -80,11 +80,19 @@ impl Upstream {
                 let json = fetch_json(http, &url, Some(&headers))?;
                 let tag = json["tag_name"].as_str().ok_or(FetchErr::Missing)?;
 
-                // Strip "{repo}-v" prefix (e.g., "bun-v1.0" -> "1.0")
-                let version = tag
-                    .strip_prefix(&format!("{}-v", repo))
-                    .or_else(|| tag.strip_prefix('v'))
-                    .unwrap_or(tag);
+                // Strip various prefixes:
+                // - "cabal-install-v" for cabal
+                // - "{repo}-v" for bun-like repos
+                // - "v" for standard repos
+                let version = if *repo == "cabal" {
+                    tag.strip_prefix("cabal-install-v")
+                        .or_else(|| tag.strip_prefix('v'))
+                        .unwrap_or(tag)
+                } else {
+                    tag.strip_prefix(&format!("{}-v", repo))
+                        .or_else(|| tag.strip_prefix('v'))
+                        .unwrap_or(tag)
+                };
 
                 Ok(version.to_string())
             },
@@ -156,6 +164,11 @@ fn fetch_json(
         }
         if url.contains("missing-tag") {
             return Ok(serde_json::from_str(r#"{"name": "Release"}"#)?);
+        }
+        if url.contains("cabal") {
+            return Ok(serde_json::from_str(
+                r#"{"tag_name": "cabal-install-v3.12.1.0"}"#,
+            )?);
         }
     }
 
@@ -241,6 +254,13 @@ mod tests {
             repo: "missing-tag",
         };
         assert!(matches!(upstream.latest(&agent), Err(FetchErr::Missing)));
+
+        // Act & Assert (cabal-install-v prefix)
+        let upstream = Upstream::GitHub {
+            owner: "haskell",
+            repo: "cabal",
+        };
+        assert_eq!(upstream.latest(&agent).unwrap(), "3.12.1.0");
     }
 
     #[test]
