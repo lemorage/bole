@@ -52,6 +52,13 @@ pub(crate) enum Upstream {
         owner: &'static str,
         repo: &'static str,
     },
+    /// Packagist (PHP package repository).
+    Packagist {
+        vendor: &'static str,
+        package: &'static str,
+    },
+    /// PEAR (PHP Extension and Application Repository).
+    Pear(&'static str),
     /// Python Package Index (uses Simple API with JSON accept header).
     PyPI(&'static str),
 }
@@ -110,6 +117,31 @@ impl Upstream {
                     .ok_or(FetchErr::Missing)
                     .map(String::from)
             },
+            Upstream::Packagist { vendor, package } => {
+                let url = format!("https://packagist.org/p2/{}/{}.json", vendor, package);
+                let json = fetch_json(http, &url, None)?;
+
+                // Packagist returns nested structure: packages -> vendor/package -> array of
+                // versions We want the first element which is the latest stable
+                // version
+                json["packages"]
+                    .get(format!("{}/{}", vendor, package))
+                    .and_then(|versions| versions.as_array())
+                    .and_then(|arr| arr.first())
+                    .and_then(|v| v["version"].as_str())
+                    .ok_or(FetchErr::Missing)
+                    .map(String::from)
+            },
+            Upstream::Pear(package) => {
+                // PEAR has a simple text API that returns just the version
+                // We use fetch_json but expect a plain string wrapped in JSON
+                let url = format!("https://pear.php.net/rest/r/{}/latest.txt", package);
+                let json = fetch_json(http, &url, None)?;
+
+                json.as_str()
+                    .ok_or(FetchErr::Missing)
+                    .map(|s| s.trim().to_string())
+            },
         }
     }
 }
@@ -128,6 +160,14 @@ fn fetch_json(
         }
     }
     let response = req.call()?;
+
+    // Special case for PEAR plain text responses
+    if url.contains("pear.php.net") && url.ends_with(".txt") {
+        let mut body = response.into_body();
+        let text = body.read_to_string()?;
+        return Ok(Value::String(text.trim().to_string()));
+    }
+
     let reader = response
         .into_body()
         .into_with_config()
@@ -185,6 +225,28 @@ fn fetch_json(
         }
         if url.contains("invalid-versions") {
             return Ok(serde_json::from_str(r#"{"versions": [123, 456]}"#)?);
+        }
+    }
+
+    // Packagist mocks
+    if url.contains("packagist.org") {
+        if url.contains("composer/composer") {
+            return Ok(serde_json::from_str(
+                r#"{"packages": {"composer/composer": [{"version": "2.8.1"}]}}"#,
+            )?);
+        }
+        if url.contains("missing-package") {
+            return Ok(serde_json::from_str(r#"{"packages": {}}"#)?);
+        }
+    }
+
+    // PEAR mocks (returns plain text wrapped in JSON string)
+    if url.contains("pear.php.net") {
+        if url.contains("/pear/") {
+            return Ok(Value::String("1.10.16".to_string()));
+        }
+        if url.contains("/missing/") {
+            return Err(FetchErr::Missing);
         }
     }
 
@@ -286,6 +348,40 @@ mod tests {
     }
 
     #[test]
+    fn test_packagist_latest() {
+        // Arrange
+        let agent = ureq::agent();
+
+        // Act & Assert (success)
+        let upstream = Upstream::Packagist {
+            vendor: "composer",
+            package: "composer",
+        };
+        assert_eq!(upstream.latest(&agent).unwrap(), "2.8.1");
+
+        // Act & Assert (missing package)
+        let upstream = Upstream::Packagist {
+            vendor: "missing",
+            package: "missing-package",
+        };
+        assert!(matches!(upstream.latest(&agent), Err(FetchErr::Missing)));
+    }
+
+    #[test]
+    fn test_pear_latest() {
+        // Arrange
+        let agent = ureq::agent();
+
+        // Act & Assert (success)
+        let upstream = Upstream::Pear("pear");
+        assert_eq!(upstream.latest(&agent).unwrap(), "1.10.16");
+
+        // Act & Assert (missing package)
+        let upstream = Upstream::Pear("missing");
+        assert!(matches!(upstream.latest(&agent), Err(FetchErr::Missing)));
+    }
+
+    #[test]
     fn test_json_error() {
         // Arrange
         let agent = ureq::agent();
@@ -340,11 +436,40 @@ mod tests {
             owner: "o",
             repo: "r",
         };
+        let packagist = Upstream::Packagist {
+            vendor: "v",
+            package: "p",
+        };
+        let pear = Upstream::Pear("test");
 
         // Act & Assert
         let npm2 = npm.clone();
         match (npm, npm2) {
             (Upstream::Npm(a), Upstream::Npm(b)) => assert_eq!(a, b),
+            _ => panic!("Clone failed"),
+        }
+
+        let packagist2 = packagist.clone();
+        match (packagist, packagist2) {
+            (
+                Upstream::Packagist {
+                    vendor: v1,
+                    package: p1,
+                },
+                Upstream::Packagist {
+                    vendor: v2,
+                    package: p2,
+                },
+            ) => {
+                assert_eq!(v1, v2);
+                assert_eq!(p1, p2);
+            },
+            _ => panic!("Clone failed"),
+        }
+
+        let pear2 = pear.clone();
+        match (pear, pear2) {
+            (Upstream::Pear(a), Upstream::Pear(b)) => assert_eq!(a, b),
             _ => panic!("Clone failed"),
         }
 

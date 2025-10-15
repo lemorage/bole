@@ -1,6 +1,10 @@
 use crate::{
-    find::Find,
-    pm::{Categorizable, Category, PmInfo, find_all_pms_with_args},
+    find::{Bump, Find},
+    pm::{
+        Categorizable, Category, PmInfo, find_all_pms_with_args,
+        types::{InstallMethod, Origin},
+        upstream::Upstream,
+    },
 };
 
 /// pecl - PHP extension manager
@@ -39,6 +43,31 @@ impl Find for Pecl {
                 pm_info
             })
             .collect()
+    }
+
+    fn check_bump(&self, pm_info: &PmInfo) -> Option<Bump> {
+        // PECL is part of PEAR, so we check PEAR version
+        let upstream = Upstream::Pear("pear");
+        let http = ureq::agent();
+        let latest = upstream.latest(&http).ok()?;
+
+        // Determine update command based on installation method
+        let cmd = match &pm_info.install_method {
+            InstallMethod::Chain(origins) => {
+                if let Some(first) = origins.first() {
+                    match first {
+                        Origin::PackageManager("Homebrew") => "brew upgrade php",
+                        Origin::PackageManager("MacPorts") => "sudo port upgrade php +pear",
+                        _ => "pecl channel-update pecl.php.net",
+                    }
+                } else {
+                    "pecl channel-update pecl.php.net"
+                }
+            },
+            _ => "pecl channel-update pecl.php.net",
+        };
+
+        Some(Bump { latest, cmd })
     }
 }
 
