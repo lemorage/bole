@@ -15,6 +15,7 @@ mod rust;
 mod search_paths;
 mod system;
 mod types;
+mod updater;
 mod upstream;
 mod wrappers;
 mod zig;
