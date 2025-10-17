@@ -87,16 +87,24 @@ pub(crate) fn display_tree(instances: Vec<PmInfo>) {
             } else {
                 "├──"
             };
-            let indicator = if j == 0 { "*" } else { "-" };
+            // First instance is the active one (first in PATH)
+            let is_active = j == 0;
+            let indicator = if is_active { "✓" } else { "-" };
+
+            // Green for active, dim for inactive
+            let path_info = format!(
+                "{} v{} [{}]",
+                instance.path, instance.version, instance.install_method
+            );
+            let formatted_path = if is_active {
+                color::success(&path_info)
+            } else {
+                color::dim(&path_info)
+            };
 
             println!(
-                "{} {} {} {} v{} [{}]",
-                continuation,
-                instance_prefix,
-                indicator,
-                instance.path,
-                instance.version,
-                instance.install_method
+                "{} {} {} {}",
+                continuation, instance_prefix, indicator, formatted_path
             );
         }
     }
@@ -109,13 +117,13 @@ pub(crate) fn display_grouped_tree(grouped: Vec<GroupedPmInfo>) {
         let prefix = if is_last { "└──" } else { "├──" };
 
         println!(
-            "{} {} v{} [{}]",
-            prefix, group.name, group.version, group.install_method
+            "{} {} v{} {} [{}]",
+            prefix, group.name, group.version, group.primary_path, group.install_method
         );
 
         if group.alternatives != "-" {
             let continuation = if is_last { "    " } else { "│   " };
-            println!("{}└── {}", continuation, group.alternatives);
+            println!("{}└── {}", continuation, color::dim(&group.alternatives));
         }
     }
 }
@@ -150,7 +158,7 @@ pub(crate) fn output_csv(instances: &[PmInfo]) {
 
 /// Output grouped package manager instances in CSV format.
 pub(crate) fn output_grouped_csv(grouped: &[GroupedPmInfo]) {
-    println!("Name,Version,Path,Via,Others");
+    println!("Name,Version,Active Path,Via,Others");
     for pm in grouped {
         let others = if pm.alternative_paths.is_empty() {
             String::new()

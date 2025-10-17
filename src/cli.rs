@@ -111,10 +111,10 @@ fn handle_csv_output(pms: Vec<pm::PmInfo>, all: bool) {
 fn handle_table_output(pms: Vec<pm::PmInfo>, all: bool, tree: bool) {
     match (all, tree) {
         (false, false) => {
-            // Default: grouped table
+            // Default: grouped table showing active installations
+            println!("Showing active package managers (use --all-paths to see duplicates)\n");
             let mut table = Table::new(group_pm_instances(pms));
             println!("{}", table.with(Style::modern()));
-            println!("\nTip: Use --all to see all the other locations");
         },
         (true, false) => {
             // All instances table
@@ -122,9 +122,9 @@ fn handle_table_output(pms: Vec<pm::PmInfo>, all: bool, tree: bool) {
             println!("{}", table.with(Style::modern()));
         },
         (false, true) => {
-            // Grouped tree
+            // Grouped tree showing active installations
+            println!("Showing active package managers (use --all-paths to see duplicates)\n");
             display_grouped_tree(group_pm_instances(pms));
-            println!("\nTip: Use --all to see all the other locations");
         },
         (true, true) => {
             // All instances tree

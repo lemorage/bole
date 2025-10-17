@@ -199,7 +199,7 @@ pub struct GroupedPmInfo {
     pub name: String,
     #[tabled(rename = "Version")]
     pub version: String,
-    #[tabled(rename = "Path")]
+    #[tabled(rename = "Active Path")]
     pub primary_path: String,
     #[tabled(rename = "Via")]
     pub install_method: InstallMethod,

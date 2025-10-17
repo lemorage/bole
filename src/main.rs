@@ -26,8 +26,14 @@ enum Commands {
         /// Category to show (system, language-specific, tools)
         category: Option<String>,
 
-        /// Show all package manager instances
-        #[arg(short, long, help = "Show all individual package manager instances")]
+        /// Show all matching executables in PATH (including inactive
+        /// duplicates)
+        #[arg(
+            short = 'a',
+            long = "all-paths",
+            visible_alias = "all",
+            help = "Show all matching executables in PATH"
+        )]
         all: bool,
 
         /// Display output in tree format
