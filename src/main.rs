@@ -50,6 +50,19 @@ enum Commands {
     },
     /// Check package manager health and status
     Check {
+        /// Category to check (system, language-specific, tools)
+        category: Option<String>,
+
+        /// Check all matching executables in PATH (including inactive
+        /// duplicates)
+        #[arg(
+            short = 'a',
+            long = "all-paths",
+            visible_alias = "all",
+            help = "Check all matching executables in PATH"
+        )]
+        all: bool,
+
         /// Increase verbosity level (use -v for categories, -vv for detailed)
         #[arg(short, long, action = clap::ArgAction::Count, help = "Increase verbosity")]
         verbose: u8,
@@ -97,11 +110,13 @@ fn main() {
             handle_show_command(category, all, tree, json, csv);
         },
         Some(Commands::Check {
+            category,
+            all,
             verbose,
             broken,
             outdated,
         }) => {
-            handle_check_command(verbose, broken, outdated);
+            handle_check_command(category, all, verbose, broken, outdated);
         },
         None => {
             show_help_and_exit(1);

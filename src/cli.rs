@@ -56,18 +56,7 @@ pub(super) fn handle_show_command(
         None => Category::all().to_vec(),
     };
 
-    // Discover package managers for target categories
-    let filtered_pms: Vec<pm::PmInfo> = pm::all_package_managers()
-        .into_iter()
-        .filter(|detector| {
-            target_categories
-                .iter()
-                .any(|&cat| detector.category() == cat)
-        })
-        .collect::<Vec<_>>()
-        .par_iter()
-        .flat_map(|detector| detector.find())
-        .collect();
+    let filtered_pms = discover_package_managers(&target_categories, true);
 
     if filtered_pms.is_empty() {
         if let Some(cat_str) = category {
@@ -134,16 +123,30 @@ fn handle_table_output(pms: Vec<pm::PmInfo>, all: bool, tree: bool) {
 }
 
 /// Handles the check command for package manager health analysis.
-pub(super) fn handle_check_command(verbose: u8, broken: bool, outdated: bool) {
+pub(super) fn handle_check_command(
+    category: Option<String>,
+    all: bool,
+    verbose: u8,
+    broken: bool,
+    outdated: bool,
+) {
+    // Determine target categories
+    let target_categories = match category.as_ref() {
+        Some(cat_str) => match parse_category(cat_str) {
+            Some(cat) => vec![cat],
+            None => {
+                print_category_help(cat_str);
+                return;
+            },
+        },
+        None => Category::all().to_vec(),
+    };
+
     // Handle special check modes
     match (broken, outdated) {
         (false, false) => { /* fall through to verbosity handling */ },
         _ => {
-            // For --broken and --outdated, we need all PMs first
-            let all_pms: Vec<pm::PmInfo> = pm::all_package_managers()
-                .into_par_iter()
-                .flat_map(|detector| detector.find())
-                .collect();
+            let all_pms = discover_package_managers(&target_categories, all);
 
             if all_pms.is_empty() {
                 println!("No package managers found.");
@@ -173,19 +176,19 @@ pub(super) fn handle_check_command(verbose: u8, broken: bool, outdated: bool) {
 
     // Regular check with verbosity
     match Verbosity::from(verbose) {
-        Verbosity::Quiet => handle_quiet_check(),
+        Verbosity::Quiet => handle_quiet_check(target_categories, all),
         Verbosity::Normal => {
             println!("Checking package manager health...\n");
-            handle_normal_check()
+            handle_normal_check(target_categories, all)
         },
         Verbosity::Verbose => {
             println!("Checking package manager health...\n");
-            handle_verbose_check()
+            handle_verbose_check(target_categories, all)
         },
     }
 }
 
-fn handle_quiet_check() {
+fn handle_quiet_check(target_categories: Vec<Category>, all: bool) {
     let spinner = indicatif::ProgressBar::new_spinner();
     spinner.set_style(
         indicatif::ProgressStyle::default_spinner()
@@ -195,11 +198,7 @@ fn handle_quiet_check() {
     spinner.set_message("Discovering package managers...");
     spinner.enable_steady_tick(std::time::Duration::from_millis(80));
 
-    // Discovery phase
-    let all_pms: Vec<pm::PmInfo> = pm::all_package_managers()
-        .into_par_iter()
-        .flat_map(|detector| detector.find())
-        .collect();
+    let all_pms = discover_package_managers(&target_categories, all);
 
     if all_pms.is_empty() {
         spinner.finish_and_clear();
@@ -212,36 +211,65 @@ fn handle_quiet_check() {
     display_check_summary(&all_pms, Some(spinner));
 }
 
-fn handle_normal_check() {
+fn handle_normal_check(target_categories: Vec<Category>, all: bool) {
     let (tx, rx) = mpsc::channel();
     let detectors = pm::all_package_managers();
 
     let handle = thread::spawn(move || {
-        detectors.into_par_iter().for_each(|detector| {
-            let results = detector.find();
-            for pm in results {
-                let _ = tx.send(pm);
-            }
-        });
+        detectors
+            .into_iter()
+            .filter(|detector| {
+                target_categories
+                    .iter()
+                    .any(|&cat| detector.category() == cat)
+            })
+            .collect::<Vec<_>>()
+            .into_par_iter()
+            .for_each(|detector| {
+                let results = detector.find();
+                for pm in results {
+                    let _ = tx.send(pm);
+                }
+            });
     });
 
-    let mut all_pms = Vec::new();
+    let mut collected_pms = Vec::new();
     for pm in rx {
-        display_check_normal(&pm);
-        all_pms.push(pm);
+        collected_pms.push(pm);
     }
-
     handle.join().unwrap();
+
+    // Apply grouping if needed
+    let all_pms = if all {
+        for pm in &collected_pms {
+            display_check_normal(pm);
+        }
+        collected_pms
+    } else {
+        let grouped = group_pm_instances(collected_pms);
+        let pms: Vec<pm::PmInfo> = grouped
+            .into_iter()
+            .map(|g| {
+                let pm = pm::PmInfo {
+                    name: g.name.clone(),
+                    version: g.version.clone(),
+                    path: g.primary_path.clone(),
+                    install_method: g.install_method.clone(),
+                    latest_version: None,
+                };
+                display_check_normal(&pm);
+                pm
+            })
+            .collect();
+        pms
+    };
+
     println!();
     display_check_summary(&all_pms, None);
 }
 
-fn handle_verbose_check() {
-    // Collect all, then display by category
-    let all_pms: Vec<pm::PmInfo> = pm::all_package_managers()
-        .into_par_iter()
-        .flat_map(|detector| detector.find())
-        .collect();
+fn handle_verbose_check(target_categories: Vec<Category>, all: bool) {
+    let all_pms = discover_package_managers(&target_categories, all);
 
     // Build category map
     let category_map: std::collections::HashMap<String, Category> = pm::all_package_managers()
@@ -378,6 +406,44 @@ fn handle_outdated_check(all_pms: &[pm::PmInfo]) {
         "Total outdated: {}",
         color::warning(&outdated_pms.len().to_string())
     );
+}
+
+/// Discovers and filters package managers based on categories.
+/// Returns either all instances or just active ones based on the all flag.
+fn discover_package_managers(
+    target_categories: &[Category],
+    show_all_instances: bool,
+) -> Vec<pm::PmInfo> {
+    // Filter by category
+    let filtered_pms: Vec<pm::PmInfo> = pm::all_package_managers()
+        .into_iter()
+        .filter(|detector| {
+            target_categories
+                .iter()
+                .any(|&cat| detector.category() == cat)
+        })
+        .collect::<Vec<_>>()
+        .into_par_iter()
+        .flat_map(|detector| detector.find())
+        .collect();
+
+    // Return all instances or just active ones
+    if show_all_instances {
+        filtered_pms
+    } else {
+        // Group and extract only the active instance
+        let grouped = group_pm_instances(filtered_pms);
+        grouped
+            .into_iter()
+            .map(|g| pm::PmInfo {
+                name: g.name,
+                version: g.version,
+                path: g.primary_path,
+                install_method: g.install_method,
+                latest_version: None,
+            })
+            .collect()
+    }
 }
 
 /// Parses category string into Category enum, supporting aliases.
