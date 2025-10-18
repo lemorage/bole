@@ -1,10 +1,6 @@
 use crate::{
     find::{Bump, Find},
-    pm::{
-        Categorizable, Category, PmInfo, find_all_pms,
-        types::{InstallMethod, Origin},
-        upstream::Upstream,
-    },
+    pm::{Categorizable, Category, PmInfo, find_all_pms, updater::update_cmd, upstream::Upstream},
 };
 
 /// poetry - Python dependency management and packaging
@@ -44,25 +40,7 @@ impl Find for Poetry {
         let upstream = Upstream::PyPI("poetry");
         let http = ureq::agent();
         let latest = upstream.latest(&http).ok()?;
-
-        // Determine update command based on installation method
-        let cmd = match &pm_info.install_method {
-            InstallMethod::Chain(origins) => {
-                // Check the first origin in the chain
-                if let Some(first) = origins.first() {
-                    match first {
-                        Origin::PackageManager("Homebrew") => "brew upgrade poetry",
-                        Origin::PackageManager("pip") => "pip install --upgrade poetry",
-                        Origin::PackageManager("pipx") => "pipx upgrade poetry",
-                        _ => "poetry self update",
-                    }
-                } else {
-                    "poetry self update"
-                }
-            },
-            _ => "poetry self update",
-        };
-
+        let cmd = update_cmd(Self::NAME, &pm_info.install_method);
         Some(Bump { latest, cmd })
     }
 }

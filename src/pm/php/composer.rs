@@ -1,10 +1,6 @@
 use crate::{
     find::{Bump, Find},
-    pm::{
-        Categorizable, Category, PmInfo, find_all_pms,
-        types::{InstallMethod, Origin},
-        upstream::Upstream,
-    },
+    pm::{Categorizable, Category, PmInfo, find_all_pms, updater::update_cmd, upstream::Upstream},
 };
 
 /// composer - PHP dependency manager
@@ -42,23 +38,7 @@ impl Find for Composer {
         };
         let http = ureq::agent();
         let latest = upstream.latest(&http).ok()?;
-
-        // Determine update command based on installation method
-        let cmd = match &pm_info.install_method {
-            InstallMethod::Chain(origins) => {
-                if let Some(first) = origins.first() {
-                    match first {
-                        Origin::PackageManager("Homebrew") => "brew upgrade composer",
-                        Origin::PackageManager("MacPorts") => "sudo port upgrade composer",
-                        _ => "composer self-update",
-                    }
-                } else {
-                    "composer self-update"
-                }
-            },
-            _ => "composer self-update",
-        };
-
+        let cmd = update_cmd(Self::NAME, &pm_info.install_method);
         Some(Bump { latest, cmd })
     }
 }

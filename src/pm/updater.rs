@@ -73,6 +73,15 @@ pub(crate) fn update_cmd(pm_name: &str, method: &InstallMethod) -> &'static str 
         ("pdm", Some(Origin::PackageManager("pipx"))) => "pipx upgrade pdm",
         ("pdm", _) => "pdm self update",
 
+        // PHP ecosystem
+        ("composer", Some(Origin::PackageManager("Homebrew"))) => "brew upgrade composer",
+        ("composer", Some(Origin::PackageManager("MacPorts"))) => "sudo port upgrade composer",
+        ("composer", _) => "composer self-update",
+
+        ("pecl", Some(Origin::PackageManager("Homebrew"))) => "brew upgrade php",
+        ("pecl", Some(Origin::PackageManager("MacPorts"))) => "sudo port upgrade php +pear",
+        ("pecl", _) => "pecl channel-update pecl.php.net",
+
         // Haskell ecosystem
         ("cabal", Some(Origin::PackageManager("Homebrew"))) => "brew upgrade cabal-install",
         ("cabal", Some(Origin::PackageManager("MacPorts"))) => "sudo port upgrade cabal",

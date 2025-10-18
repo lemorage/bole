@@ -1,10 +1,6 @@
 use crate::{
     find::{Bump, Find},
-    pm::{
-        Categorizable, Category, PmInfo, find_all_pms,
-        types::{InstallMethod, Origin},
-        upstream::Upstream,
-    },
+    pm::{Categorizable, Category, PmInfo, find_all_pms, updater::update_cmd, upstream::Upstream},
 };
 
 /// pdm - Modern Python dependency manager
@@ -42,25 +38,7 @@ impl Find for Pdm {
         };
         let http = ureq::agent();
         let latest = upstream.latest(&http).ok()?;
-
-        // Determine update command based on installation method
-        let cmd = match &pm_info.install_method {
-            InstallMethod::Chain(origins) => {
-                // Check the first origin in the chain
-                if let Some(first) = origins.first() {
-                    match first {
-                        Origin::PackageManager("Homebrew") => "brew upgrade pdm",
-                        Origin::PackageManager("pip") => "pip install --upgrade pdm",
-                        Origin::PackageManager("pipx") => "pipx upgrade pdm",
-                        _ => "pdm self update",
-                    }
-                } else {
-                    "pdm self update"
-                }
-            },
-            _ => "pdm self update",
-        };
-
+        let cmd = update_cmd(Self::NAME, &pm_info.install_method);
         Some(Bump { latest, cmd })
     }
 }

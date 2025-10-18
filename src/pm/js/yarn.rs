@@ -1,10 +1,6 @@
 use crate::{
     find::{Bump, Find},
-    pm::{
-        Categorizable, Category, PmInfo, find_all_pms,
-        types::{InstallMethod, Origin},
-        upstream::Upstream,
-    },
+    pm::{Categorizable, Category, PmInfo, find_all_pms, updater::update_cmd, upstream::Upstream},
 };
 
 /// yarn - JavaScript package manager
@@ -36,28 +32,7 @@ impl Find for Yarn {
     fn check_bump(&self, pm_info: &PmInfo) -> Option<Bump> {
         let http = ureq::agent();
         let latest = Upstream::Npm("yarn").latest(&http).ok()?;
-
-        // Determine update command based on installation method
-        let cmd = match &pm_info.install_method {
-            InstallMethod::Chain(origins) => {
-                // Check the first origin in the chain
-                if let Some(first) = origins.first() {
-                    match first {
-                        Origin::PackageManager("Homebrew") => "brew upgrade yarn",
-                        Origin::PackageManager("MacPorts") => "sudo port upgrade yarn",
-                        Origin::PackageManager("npm") => "npm install -g yarn@latest",
-                        Origin::Wrapper("Volta") => "volta install yarn@latest",
-                        Origin::Wrapper("Asdf") => "asdf install yarn latest",
-                        Origin::Direct(_) => "npm install -g yarn@latest",
-                        _ => "npm install -g yarn@latest",
-                    }
-                } else {
-                    "npm install -g yarn@latest"
-                }
-            },
-            _ => "npm install -g yarn@latest", // System or Unknown
-        };
-
+        let cmd = update_cmd(Self::NAME, &pm_info.install_method);
         Some(Bump { latest, cmd })
     }
 }

@@ -1,10 +1,6 @@
 use crate::{
     find::{Bump, Find},
-    pm::{
-        Categorizable, Category, PmInfo, find_all_pms,
-        types::{InstallMethod, Origin},
-        upstream::Upstream,
-    },
+    pm::{Categorizable, Category, PmInfo, find_all_pms, updater::update_cmd, upstream::Upstream},
 };
 
 /// conda - Package and environment manager
@@ -64,24 +60,7 @@ impl Find for Conda {
         };
         let http = ureq::agent();
         let latest = upstream.latest(&http).ok()?;
-
-        // Determine update command based on installation method
-        let cmd = match &pm_info.install_method {
-            InstallMethod::Chain(origins) => {
-                // Check the first origin in the chain
-                if let Some(first) = origins.first() {
-                    match first {
-                        Origin::PackageManager("Homebrew") => "brew upgrade miniconda",
-                        Origin::Direct(_) => "conda update -n base conda",
-                        _ => "conda update -n base conda",
-                    }
-                } else {
-                    "conda update -n base conda"
-                }
-            },
-            _ => "conda update -n base conda",
-        };
-
+        let cmd = update_cmd(Self::NAME, &pm_info.install_method);
         Some(Bump { latest, cmd })
     }
 }

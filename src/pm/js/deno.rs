@@ -1,8 +1,7 @@
 use crate::{
     find::{Bump, Find},
     pm::{
-        Categorizable, Category, PmInfo, find_all_pms_with_args,
-        types::{InstallMethod, Origin},
+        Categorizable, Category, PmInfo, find_all_pms_with_args, updater::update_cmd,
         upstream::Upstream,
     },
 };
@@ -47,26 +46,7 @@ impl Find for Deno {
         }
         .latest(&http)
         .ok()?;
-
-        // Determine update command based on installation method
-        let cmd = match &pm_info.install_method {
-            InstallMethod::Chain(origins) => {
-                // Check the first origin in the chain
-                if let Some(first) = origins.first() {
-                    match first {
-                        Origin::PackageManager("Homebrew") => "brew upgrade deno",
-                        Origin::PackageManager("MacPorts") => "sudo port upgrade deno",
-                        Origin::PackageManager("npm") => "npm install -g deno@latest",
-                        Origin::Direct(_) => "deno upgrade",
-                        _ => "deno upgrade",
-                    }
-                } else {
-                    "deno upgrade"
-                }
-            },
-            _ => "deno upgrade", // System or Unknown
-        };
-
+        let cmd = update_cmd(Self::NAME, &pm_info.install_method);
         Some(Bump { latest, cmd })
     }
 }

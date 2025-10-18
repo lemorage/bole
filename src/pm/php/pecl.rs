@@ -1,8 +1,7 @@
 use crate::{
     find::{Bump, Find},
     pm::{
-        Categorizable, Category, PmInfo, find_all_pms_with_args,
-        types::{InstallMethod, Origin},
+        Categorizable, Category, PmInfo, find_all_pms_with_args, updater::update_cmd,
         upstream::Upstream,
     },
 };
@@ -50,23 +49,7 @@ impl Find for Pecl {
         let upstream = Upstream::Pear("pear");
         let http = ureq::agent();
         let latest = upstream.latest(&http).ok()?;
-
-        // Determine update command based on installation method
-        let cmd = match &pm_info.install_method {
-            InstallMethod::Chain(origins) => {
-                if let Some(first) = origins.first() {
-                    match first {
-                        Origin::PackageManager("Homebrew") => "brew upgrade php",
-                        Origin::PackageManager("MacPorts") => "sudo port upgrade php +pear",
-                        _ => "pecl channel-update pecl.php.net",
-                    }
-                } else {
-                    "pecl channel-update pecl.php.net"
-                }
-            },
-            _ => "pecl channel-update pecl.php.net",
-        };
-
+        let cmd = update_cmd(Self::NAME, &pm_info.install_method);
         Some(Bump { latest, cmd })
     }
 }

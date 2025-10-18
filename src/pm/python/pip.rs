@@ -6,7 +6,7 @@ use crate::{
         Categorizable, Category, PmInfo,
         attribution::query::{Querier, Tool},
         find_all_pms,
-        types::{InstallMethod, Origin},
+        updater::update_cmd,
         upstream::Upstream,
     },
 };
@@ -42,26 +42,7 @@ impl Find for Pip {
     fn check_bump(&self, pm_info: &PmInfo) -> Option<Bump> {
         let http = ureq::agent();
         let latest = Upstream::PyPI("pip").latest(&http).ok()?;
-
-        // Determine update command based on installation method
-        let cmd = match &pm_info.install_method {
-            InstallMethod::Chain(origins) => {
-                // Check the first origin in the chain
-                if let Some(first) = origins.first() {
-                    match first {
-                        Origin::PackageManager("Homebrew") => "brew upgrade python",
-                        Origin::PackageManager("MacPorts") => "sudo port upgrade python",
-                        Origin::Wrapper("Pyenv") => "pyenv install --skip-existing",
-                        Origin::Wrapper("Asdf") => "asdf install python latest",
-                        _ => "python -m pip install --upgrade pip",
-                    }
-                } else {
-                    "python -m pip install --upgrade pip"
-                }
-            },
-            _ => "python -m pip install --upgrade pip",
-        };
-
+        let cmd = update_cmd(Self::NAME, &pm_info.install_method);
         Some(Bump { latest, cmd })
     }
 }
