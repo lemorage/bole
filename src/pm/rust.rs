@@ -1,12 +1,14 @@
 use std::process::Command;
 
 use crate::{
-    find::Find,
+    find::{Bump, Find},
     pm::{
         Categorizable, Category, PmInfo,
         attribution::query::{Querier, Tool},
         find_all_pms_with_args,
         types::{AsOrigin, Origin},
+        updater::update_cmd,
+        upstream::Upstream,
     },
 };
 
@@ -46,6 +48,18 @@ impl Find for Cargo {
                 pm_info
             })
             .collect()
+    }
+
+    fn check_bump(&self, pm_info: &PmInfo) -> Option<Bump> {
+        let http = ureq::agent();
+        let latest = Upstream::GitHub {
+            owner: "rust-lang",
+            repo: "rust",
+        }
+        .latest(&http)
+        .ok()?;
+        let cmd = update_cmd(Self::NAME, &pm_info.install_method);
+        Some(Bump { latest, cmd })
     }
 }
 

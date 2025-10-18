@@ -93,6 +93,43 @@ pub(crate) fn update_cmd(pm_name: &str, method: &InstallMethod) -> &'static str 
         ("stack", Some(Origin::Wrapper("Ghcup"))) => "ghcup install stack latest",
         ("stack", _) => "stack upgrade",
 
+        // Go ecosystem
+        ("go", Some(Origin::PackageManager("Homebrew"))) => "brew upgrade go",
+        ("go", Some(Origin::PackageManager("MacPorts"))) => "sudo port upgrade go",
+        ("go", Some(Origin::Wrapper("g"))) => "g install latest",
+        ("go", Some(Origin::Wrapper("gvm"))) => "# gvm requires version: gvm install goX.Y.Z",
+        ("go", Some(Origin::Wrapper("Asdf"))) => {
+            "asdf install golang latest && asdf global golang latest"
+        },
+        ("go", _) => "# Go binary updates require manual installation",
+
+        // Rust ecosystem
+        ("cargo", Some(Origin::PackageManager("Homebrew"))) => "brew upgrade rust",
+        ("cargo", Some(Origin::PackageManager("MacPorts"))) => "sudo port upgrade rust",
+        ("cargo", Some(Origin::Toolchain("Rustup"))) => "rustup update",
+        ("cargo", Some(Origin::Wrapper("Asdf"))) => {
+            "asdf install rust latest && asdf global rust latest"
+        },
+        ("cargo", _) => "rustup update",
+
+        // Gleam ecosystem
+        ("gleam", Some(Origin::PackageManager("Homebrew"))) => "brew upgrade gleam",
+        ("gleam", Some(Origin::PackageManager("MacPorts"))) => "sudo port upgrade gleam",
+        ("gleam", Some(Origin::PackageManager("cargo"))) => "cargo install gleam --locked",
+        ("gleam", Some(Origin::Wrapper("Asdf"))) => {
+            "asdf install gleam latest && asdf global gleam latest"
+        },
+        ("gleam", _) => "cargo install gleam --locked",
+
+        // Zig ecosystem
+        ("zig", Some(Origin::PackageManager("Homebrew"))) => "brew upgrade zig",
+        ("zig", Some(Origin::PackageManager("MacPorts"))) => "sudo port upgrade zig",
+        ("zig", Some(Origin::Wrapper("Asdf"))) => {
+            "asdf install zig latest && asdf global zig latest"
+        },
+        ("zig", Some(Origin::Wrapper("zigup"))) => "zigup latest",
+        ("zig", _) => "# Zig binary updates require manual installation",
+
         // System package managers
         ("brew", _) => "brew update && brew upgrade",
         ("port", _) => "sudo port selfupdate && sudo port upgrade outdated",

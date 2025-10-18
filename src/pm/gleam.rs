@@ -1,6 +1,6 @@
 use crate::{
-    find::Find,
-    pm::{Categorizable, Category, PmInfo, find_all_pms},
+    find::{Bump, Find},
+    pm::{Categorizable, Category, PmInfo, find_all_pms, updater::update_cmd, upstream::Upstream},
 };
 
 /// gleam - Gleam build tool and package manager
@@ -33,6 +33,18 @@ impl Find for Gleam {
                 pm_info
             })
             .collect()
+    }
+
+    fn check_bump(&self, pm_info: &PmInfo) -> Option<Bump> {
+        let http = ureq::agent();
+        let latest = Upstream::GitHub {
+            owner: "gleam-lang",
+            repo: "gleam",
+        }
+        .latest(&http)
+        .ok()?;
+        let cmd = update_cmd(Self::NAME, &pm_info.install_method);
+        Some(Bump { latest, cmd })
     }
 }
 
