@@ -95,6 +95,8 @@ pub(crate) fn update_cmd(pm_name: &str, method: &InstallMethod) -> &'static str 
 
         // System package managers
         ("brew", _) => "brew update && brew upgrade",
+        ("port", _) => "sudo port selfupdate && sudo port upgrade outdated",
+        ("nix", _) => "nix-channel --update && nix-env --upgrade",
 
         // Default fallback
         _ => "# No update command available",

@@ -1,6 +1,6 @@
 use crate::{
-    find::Find,
-    pm::{Categorizable, Category, PmInfo, find_all_pms},
+    find::{Bump, Find},
+    pm::{Categorizable, Category, PmInfo, find_all_pms, updater::update_cmd, upstream::Upstream},
 };
 
 /// port - MacPorts package manager for macOS
@@ -33,6 +33,18 @@ impl Find for Macports {
                 pm_info
             })
             .collect()
+    }
+
+    fn check_bump(&self, pm_info: &PmInfo) -> Option<Bump> {
+        let http = ureq::agent();
+        let latest = Upstream::GitHub {
+            owner: "macports",
+            repo: "macports-base",
+        }
+        .latest(&http)
+        .ok()?;
+        let cmd = update_cmd(Self::NAME, &pm_info.install_method);
+        Some(Bump { latest, cmd })
     }
 }
 

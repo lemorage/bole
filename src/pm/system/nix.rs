@@ -1,6 +1,6 @@
 use crate::{
-    find::Find,
-    pm::{Categorizable, Category, PmInfo, find_all_pms},
+    find::{Bump, Find},
+    pm::{Categorizable, Category, PmInfo, find_all_pms, updater::update_cmd, upstream::Upstream},
 };
 
 /// nix - Functional package manager
@@ -14,7 +14,7 @@ impl Find for Nix {
     type Output = PmInfo;
 
     fn name(&self) -> &'static str {
-        "nix"
+        Self::NAME
     }
 
     fn search_paths(&self) -> &'static [&'static str] {
@@ -36,6 +36,18 @@ impl Find for Nix {
                 pm_info
             })
             .collect()
+    }
+
+    fn check_bump(&self, pm_info: &PmInfo) -> Option<Bump> {
+        let http = ureq::agent();
+        let latest = Upstream::GitHub {
+            owner: "NixOS",
+            repo: "nix",
+        }
+        .latest(&http)
+        .ok()?;
+        let cmd = update_cmd(Self::NAME, &pm_info.install_method);
+        Some(Bump { latest, cmd })
     }
 }
 
