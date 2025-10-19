@@ -6,9 +6,118 @@ on:
       - "v*.*.*"
 
 jobs:
+  build-binaries:
+    name: Build release binaries (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust toolchain (from rust-toolchain.toml)
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry and dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Build (release)
+        run: cargo build --locked --release
+
+      - name: Package artifact (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          BIN_PATH="target/release/bole"
+          if [ ! -f "$BIN_PATH" ]; then
+            echo "::error::Binary not found at $BIN_PATH"
+            exit 1
+          fi
+          OS_LOWER=$(echo "${{ runner.os }}" | tr '[:upper:]' '[:lower:]')
+          ARCH=$(uname -m)
+          case "$ARCH" in
+            "x86_64") ARCH="x86_64" ;;
+            "aarch64" | "arm64") ARCH="aarch64" ;;
+            *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
+          esac
+          ARCHIVE="dist/bole-${{ github.ref_name }}-${OS_LOWER}-${ARCH}.tar.gz"
+          cp "$BIN_PATH" bole
+          FILES="bole"
+          [ -f "LICENSE" ] && FILES="$FILES LICENSE"
+          [ -f "README.md" ] && FILES="$FILES README.md"
+          tar -czf "$ARCHIVE" $FILES
+          echo "Created $ARCHIVE"
+
+      - name: Package artifact (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $bin = "target/release/bole.exe"
+          if (!(Test-Path $bin)) { throw "Binary not found at $bin" }
+          Copy-Item $bin -Destination "bole.exe"
+          $os = "windows"
+          $arch = switch ($env:PROCESSOR_ARCHITECTURE) {
+            "AMD64" { "x86_64" }
+            "ARM64" { "aarch64" }
+            default { throw "Unsupported architecture: $env:PROCESSOR_ARCHITECTURE" }
+          }
+          $archive = "dist/bole-${{ github.ref_name }}-$os-$arch.zip"
+          $files = @("bole.exe")
+          if (Test-Path "LICENSE") { $files += "LICENSE" }
+          if (Test-Path "README.md") { $files += "README.md" }
+          Compress-Archive -Path $files -DestinationPath $archive
+          Write-Output "Created $archive"
+
+      - name: Upload packaged artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: packaged-${{ matrix.os }}
+          path: dist/*
+
+  attach-assets:
+    name: Attach binaries to GitHub Release
+    runs-on: ubuntu-latest
+    needs: build-binaries
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Upload assets to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/**
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   publish-crate:
     name: Publish to crates.io
     runs-on: ubuntu-latest
+    needs: attach-assets
     permissions:
       contents: write # for creating GitHub Releases
 
@@ -218,115 +327,5 @@ jobs:
           generate_release_notes: ${{ github.event.pull_request != null }}
           name: v${{ steps.version_check.outputs.version }}
           body_path: ${{ github.event.pull_request == null && 'changelog.md' || '' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  build-binaries:
-    name: Build release binaries (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install Rust toolchain (from rust-toolchain.toml)
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: nightly
-          components: rustfmt, clippy
-
-      - name: Cache cargo registry and dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
-
-      - name: Build (release)
-        run: cargo build --locked --release
-
-      - name: Package artifact (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p dist
-          BIN_PATH="target/release/bole"
-          if [ ! -f "$BIN_PATH" ]; then
-            echo "::error::Binary not found at $BIN_PATH"
-            exit 1
-          fi
-          OS_LOWER=$(echo "${{ runner.os }}" | tr '[:upper:]' '[:lower:]')
-          ARCH=$(uname -m)
-          # Normalize architecture names
-          case "$ARCH" in
-            "x86_64") ARCH="x86_64" ;;
-            "aarch64" | "arm64") ARCH="aarch64" ;;
-            *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
-          esac
-          ARCHIVE="dist/bole-${{ github.ref_name }}-${OS_LOWER}-${ARCH}.tar.gz"
-          cp "$BIN_PATH" bole
-          FILES="bole"
-          [ -f "LICENSE" ] && FILES="$FILES LICENSE"
-          [ -f "README.md" ] && FILES="$FILES README.md"
-          tar -czf "$ARCHIVE" $FILES
-          echo "Created $ARCHIVE"
-
-      - name: Package artifact (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          New-Item -ItemType Directory -Force -Path dist | Out-Null
-          $bin = "target/release/bole.exe"
-          if (!(Test-Path $bin)) { throw "Binary not found at $bin" }
-          Copy-Item $bin -Destination "bole.exe"
-          $os = "windows"
-          # Normalize Windows architecture to match Unix naming
-          $arch = switch ($env:PROCESSOR_ARCHITECTURE) {
-            "AMD64" { "x86_64" }
-            "ARM64" { "aarch64" }
-            default { throw "Unsupported architecture: $env:PROCESSOR_ARCHITECTURE" }
-          }
-          $archive = "dist/bole-${{ github.ref_name }}-$os-$arch.zip"
-          $files = @("bole.exe")
-          if (Test-Path "LICENSE") { $files += "LICENSE" }
-          if (Test-Path "README.md") { $files += "README.md" }
-          Compress-Archive -Path $files -DestinationPath $archive
-          Write-Output "Created $archive"
-
-      - name: Upload packaged artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: packaged-${{ matrix.os }}
-          path: dist/*
-
-  attach-assets:
-    name: Attach binaries to GitHub Release
-    runs-on: ubuntu-latest
-    needs: [publish-crate, build-binaries]
-    permissions:
-      contents: write
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: dist
-          merge-multiple: true
-
-      - name: Upload assets to Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: dist/**
-          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
