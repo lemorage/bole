@@ -1,6 +1,6 @@
 # Use nightly to support Rust 2024 edition and rustfmt unstable options
 [toolchain]
-channel = "nightly-2025-10-08"
+channel = "nightly"
 
 # Components needed for development
 components = [
