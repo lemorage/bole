@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use bole::pm::{GroupedPmInfo, PmInfo};
 
-use crate::format::Formatter;
+use crate::{color, format::Formatter};
 
 /// Tree formatter implementation.
 pub(super) struct TreeFormatter;
@@ -31,11 +31,11 @@ impl Formatter for TreeFormatter {
             let is_last = i == sorted.len() - 1;
             let prefix = if is_last { "└──" } else { "├──" };
 
-            // Only show instance count for duplicates
+            // Show instance count
             let count = if instances.len() == 1 {
-                String::new()
+                format!(" (1 installation)")
             } else {
-                format!(" ({} instances)", instances.len())
+                format!(" ({} installations)", instances.len())
             };
 
             out.push_str(&format!("{} {}{}\n", prefix, name, count));
@@ -51,23 +51,21 @@ impl Formatter for TreeFormatter {
                     "├──"
                 };
 
-                let status = if pm.version.is_empty() {
-                    "broken"
+                // First instance is active (first in PATH)
+                let is_active = j == 0;
+                let indicator = if is_active { "✓" } else { "-" };
+
+                // Format path info with colors
+                let path_info = format!("{} v{} [{}]", pm.path, pm.version, pm.install_method);
+                let formatted_path = if is_active {
+                    color::success(&path_info)
                 } else {
-                    "✓"
+                    color::dim(&path_info)
                 };
 
                 out.push_str(&format!(
-                    "{}{} {} v{} at {}\n",
-                    continuation,
-                    child_prefix,
-                    status,
-                    if pm.version.is_empty() {
-                        "?"
-                    } else {
-                        &pm.version
-                    },
-                    pm.path
+                    "{} {} {} {}\n",
+                    continuation, child_prefix, indicator, formatted_path
                 ));
             }
         }
@@ -80,7 +78,8 @@ impl Formatter for TreeFormatter {
             return String::from("No package managers found.");
         }
 
-        let mut out = String::new();
+        let mut out =
+            String::from("Showing active package managers (use --all-paths to see duplicates)\n\n");
 
         for (i, g) in grouped.iter().enumerate() {
             let is_last = i == grouped.len() - 1;
@@ -91,10 +90,14 @@ impl Formatter for TreeFormatter {
                 prefix, g.name, g.version, g.primary_path, g.install_method
             ));
 
-            // Show duplicate paths as a sub-item
+            // Show count of alternatives as a sub-item
             if g.alternatives != "-" {
                 let continuation = if is_last { "    " } else { "│   " };
-                out.push_str(&format!("{}└── {}\n", continuation, g.alternatives));
+                out.push_str(&format!(
+                    "{}└── {}\n",
+                    continuation,
+                    color::dim(&g.alternatives)
+                ));
             }
         }
 
