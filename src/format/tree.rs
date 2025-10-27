@@ -33,7 +33,7 @@ impl Formatter for TreeFormatter {
 
             // Show instance count
             let count = if instances.len() == 1 {
-                format!(" (1 installation)")
+                " (1 installation)".to_string()
             } else {
                 format!(" ({} installations)", instances.len())
             };
