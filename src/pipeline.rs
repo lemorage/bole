@@ -20,6 +20,7 @@ impl<T> Pipeline<T> {
     }
 
     /// Apply a transformation only if the condition is true.
+    #[allow(dead_code)]
     pub(crate) fn apply_if<F>(self, condition: bool, f: F) -> Pipeline<T>
     where
         F: FnOnce(T) -> T,

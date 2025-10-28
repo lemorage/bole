@@ -1,11 +1,14 @@
 mod banner;
-mod cli;
 mod color;
-mod display;
+mod commands;
+mod discovery;
+mod filters;
+mod format;
+mod pipeline;
 
 use banner::stream_banner;
 use clap::{CommandFactory, Parser, Subcommand};
-use cli::{handle_check_command, handle_show_command};
+use commands::{CheckCommand, ShowCommand};
 
 /// A CLI to manage your package managers.
 #[derive(Parser, Debug)]
@@ -77,14 +80,6 @@ enum Commands {
     },
 }
 
-#[inline]
-fn show_help_and_exit(exit_code: i32) -> ! {
-    let mut app = Bole::command();
-    app.print_help().unwrap();
-    println!();
-    std::process::exit(exit_code);
-}
-
 fn main() {
     let raw_args: Vec<String> = std::env::args().skip(1).collect();
 
@@ -94,7 +89,10 @@ fn main() {
         // Bare `bole` or explicit top-level help
         stream_banner();
         println!();
-        show_help_and_exit(if raw_args.is_empty() { 1 } else { 0 });
+        if raw_args.is_empty() {
+            Bole::command().print_help().unwrap();
+            std::process::exit(1);
+        }
     }
 
     let args = Bole::parse();
@@ -107,7 +105,7 @@ fn main() {
             json,
             csv,
         }) => {
-            handle_show_command(category, all, tree, json, csv);
+            ShowCommand::from_args(category, all, tree, json, csv).execute();
         },
         Some(Commands::Check {
             category,
@@ -116,10 +114,10 @@ fn main() {
             broken,
             outdated,
         }) => {
-            handle_check_command(category, all, verbose, broken, outdated);
+            CheckCommand::from_args(category, all, verbose, broken, outdated).execute();
         },
         None => {
-            show_help_and_exit(1);
+            Bole::command().print_help().unwrap();
         },
     }
 }
