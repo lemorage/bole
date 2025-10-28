@@ -200,7 +200,7 @@ pub struct GroupedPmInfo {
     #[tabled(rename = "Version")]
     pub version: String,
     #[tabled(rename = "Active Path")]
-    pub primary_path: String,
+    pub active_path: String,
     #[tabled(rename = "Via")]
     pub install_method: InstallMethod,
     #[tabled(rename = "Others")]
@@ -233,7 +233,7 @@ impl GroupedPmInfo {
         Self {
             name,
             version: primary.version.clone(),
-            primary_path: primary.path.clone(),
+            active_path: primary.path.clone(),
             install_method: primary.install_method.clone(),
             alternatives,
             alternative_paths,
@@ -433,7 +433,7 @@ mod tests {
         // Assert
         assert_eq!(grouped.name, "npm");
         assert_eq!(grouped.version, "8.19.2");
-        assert_eq!(grouped.primary_path, "/usr/bin/npm");
+        assert_eq!(grouped.active_path, "/usr/bin/npm");
         assert_eq!(format!("{}", grouped.install_method), "Homebrew");
         assert_eq!(grouped.alternatives, "-");
     }
@@ -457,7 +457,7 @@ mod tests {
         // Assert
         assert_eq!(grouped.name, "npm");
         assert_eq!(grouped.version, "8.19.2"); // Primary version
-        assert_eq!(grouped.primary_path, "/usr/bin/npm"); // Primary path
+        assert_eq!(grouped.active_path, "/usr/bin/npm"); // Active path
         assert_eq!(format!("{}", grouped.install_method), "System Provided");
         assert_eq!(grouped.alternatives, "1 other location");
     }
@@ -487,7 +487,7 @@ mod tests {
         // Assert
         assert_eq!(grouped.name, "pip");
         assert_eq!(grouped.version, "22.3.1"); // Primary version (first in list)
-        assert_eq!(grouped.primary_path, "/usr/bin/pip"); // Primary path
+        assert_eq!(grouped.active_path, "/usr/bin/pip"); // Active path
         assert_eq!(format!("{}", grouped.install_method), "System Provided");
         assert_eq!(grouped.alternatives, "2 other locations");
     }

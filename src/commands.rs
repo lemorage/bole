@@ -36,10 +36,11 @@ impl ShowCommand {
     pub(crate) fn execute(self) {
         // Bail early on invalid category
         if let Some(ref cat) = self.category
-            && !Discovery::is_valid_category(cat) {
-                print_category_help(cat);
-                return;
-            }
+            && !Discovery::is_valid_category(cat)
+        {
+            print_category_help(cat);
+            return;
+        }
 
         // Pipeline: discover -> sort -> format -> output
         let result = pipe(Discovery::from_optional_category(self.category))
@@ -123,10 +124,11 @@ impl CheckCommand {
     pub(crate) fn execute(self) -> bool {
         // Validate category if provided
         if let Some(ref cat) = self.category
-            && !Discovery::is_valid_category(cat) {
-                print_category_help(cat);
-                return false;
-            }
+            && !Discovery::is_valid_category(cat)
+        {
+            print_category_help(cat);
+            return false;
+        }
 
         // Discover package managers
         let pms = Discovery::from_optional_category(self.category.clone()).discover();

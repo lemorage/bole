@@ -81,7 +81,7 @@ impl Grouper {
             .map(|g| PmInfo {
                 name: g.name,
                 version: g.version,
-                path: g.primary_path,
+                path: g.active_path,
                 install_method: g.install_method,
                 latest_version: None, // Not preserved during grouping
             })
@@ -380,7 +380,7 @@ mod tests {
         assert_eq!(grouped.len(), 1);
         assert_eq!(grouped[0].name, "npm");
         assert_eq!(grouped[0].version, "8.0.0");
-        assert_eq!(grouped[0].primary_path, "/usr/bin/npm");
+        assert_eq!(grouped[0].active_path, "/usr/bin/npm");
     }
 
     #[test]

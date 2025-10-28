@@ -87,7 +87,7 @@ impl Formatter for TreeFormatter {
 
             out.push_str(&format!(
                 "{} {} v{} {} [{}]\n",
-                prefix, g.name, g.version, g.primary_path, g.install_method
+                prefix, g.name, g.version, g.active_path, g.install_method
             ));
 
             // Show count of alternatives as a sub-item

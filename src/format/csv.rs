@@ -49,7 +49,7 @@ impl Formatter for CsvFormatter {
                 "{},{},{},\"{}\",\"{}\"\n",
                 Self::escape(&g.name),
                 Self::escape(&g.version),
-                Self::escape(&g.primary_path),
+                Self::escape(&g.active_path),
                 g.install_method,
                 others
             ));
