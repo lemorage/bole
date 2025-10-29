@@ -4,6 +4,7 @@ mod commands;
 mod discovery;
 mod filters;
 mod format;
+mod network;
 mod pipeline;
 
 use banner::stream_banner;

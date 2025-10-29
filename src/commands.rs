@@ -6,6 +6,7 @@ use crate::{
     discovery::Discovery,
     filters::{Filter, Grouper, Sorter},
     format::{Format, Formatter},
+    network::{NetworkStatus, check_network_status},
     pipeline::pipe,
 };
 
@@ -163,16 +164,27 @@ impl CheckCommand {
 
         use indicatif::{ProgressBar, ProgressStyle};
 
+        // Check network first with spinner
+        let network = check_network_with_spinner();
+
+        // Now check package managers
         let spinner = ProgressBar::new_spinner();
         spinner.set_style(
             ProgressStyle::default_spinner()
                 .template("{spinner:.green} {msg}")
                 .unwrap(),
         );
-        spinner.set_message("Checking package managers...");
         spinner.enable_steady_tick(Duration::from_millis(80));
 
-        let stats = compute_stats(pms);
+        // Set message based on network status
+        let message = match &network {
+            NetworkStatus::Good => "Checking package managers...",
+            NetworkStatus::Slow(_) => "Checking package managers (slow network)...",
+            NetworkStatus::Offline => "Checking package managers (offline)...",
+        };
+        spinner.set_message(message);
+
+        let stats = compute_stats(pms, &network);
         spinner.finish_and_clear();
 
         print_stats(&stats);
@@ -181,6 +193,8 @@ impl CheckCommand {
 
     /// Execute normal check (with progress).
     fn check_with_progress(&self, pms: &[PmInfo]) -> bool {
+        let network = check_network_with_spinner();
+
         println!("Checking package manager health...\n");
 
         // Display progress for each PM
@@ -189,6 +203,12 @@ impl CheckCommand {
 
             if pm.version.trim().is_empty() {
                 println!("{} broken", crate::color::cross_mark());
+            } else if matches!(network, NetworkStatus::Offline) {
+                println!(
+                    "{} {} (version check skipped)",
+                    crate::color::check_mark(),
+                    pm.version
+                );
             } else if let Some(bump) = get_bump_info(pm) {
                 if bump.latest != pm.version {
                     println!(
@@ -206,7 +226,7 @@ impl CheckCommand {
         }
 
         println!();
-        let stats = compute_stats(pms);
+        let stats = compute_stats(pms, &network);
         print_stats(&stats);
         stats.broken > 0
     }
@@ -214,6 +234,9 @@ impl CheckCommand {
     /// Execute verbose check (detailed output).
     fn check_detailed(&self, pms: &[PmInfo]) -> bool {
         use std::collections::HashMap;
+
+        // Check network first with spinner
+        let network = check_network_with_spinner();
 
         println!("Checking package manager health...\n");
 
@@ -235,7 +258,7 @@ impl CheckCommand {
             }
         }
 
-        let stats = compute_stats(pms);
+        let stats = compute_stats(pms, &network);
         print_stats(&stats);
         stats.broken > 0
     }
@@ -275,6 +298,13 @@ impl CheckCommand {
 
     /// Display outdated package managers.
     fn check_outdated_only(&self, pms: &[PmInfo]) {
+        let network = check_network_with_spinner();
+
+        // Exit if offline
+        if matches!(network, NetworkStatus::Offline) {
+            return;
+        }
+
         let outdated = Filter::outdated(pms.to_vec());
 
         // Get outdated with bump info
@@ -315,6 +345,50 @@ impl CheckCommand {
     }
 }
 
+/// Check network with spinner feedback.
+/// Shows spinner during check, updates message based on result.
+fn check_network_with_spinner() -> NetworkStatus {
+    use std::time::Duration;
+
+    use indicatif::{ProgressBar, ProgressStyle};
+
+    let spinner = ProgressBar::new_spinner();
+    spinner.set_style(
+        ProgressStyle::default_spinner()
+            .template("{spinner:.green} {msg}")
+            .unwrap(),
+    );
+    spinner.enable_steady_tick(Duration::from_millis(80));
+
+    // Check network
+    spinner.set_message("Checking network connectivity...");
+    let network = check_network_status();
+
+    // Update based on result
+    match &network {
+        NetworkStatus::Good => {
+            spinner.finish_and_clear(); // Clear spinner, no message
+        },
+        NetworkStatus::Slow(duration) => {
+            spinner.finish_and_clear();
+            println!(
+                "{} Network slow ({:.1}s)",
+                crate::color::warning_mark(),
+                duration.as_secs_f32()
+            );
+        },
+        NetworkStatus::Offline => {
+            spinner.finish_and_clear();
+            println!(
+                "{} Version checks will be skipped because you're offline.",
+                crate::color::warning_mark()
+            );
+        },
+    }
+
+    network
+}
+
 /// Check result statistics.
 struct Stats {
     total: usize,
@@ -324,20 +398,24 @@ struct Stats {
 }
 
 /// Compute statistics for package managers.
-fn compute_stats(pms: &[PmInfo]) -> Stats {
+/// Handles offline mode by skipping version checks.
+fn compute_stats(pms: &[PmInfo], network: &NetworkStatus) -> Stats {
     // Count broken (no version)
     let broken = pms.iter().filter(|pm| pm.version.trim().is_empty()).count();
 
     // Count outdated (version differs from latest)
-    let outdated = pms
-        .iter()
-        .filter(|pm| !pm.version.trim().is_empty())
-        .filter(|pm| {
-            get_bump_info(pm)
-                .map(|bump| bump.latest != pm.version)
-                .unwrap_or(false)
-        })
-        .count();
+    let outdated = if matches!(network, NetworkStatus::Offline) {
+        0 // Can't check updates when offline
+    } else {
+        pms.iter()
+            .filter(|pm| !pm.version.trim().is_empty())
+            .filter(|pm| {
+                get_bump_info(pm)
+                    .map(|bump| bump.latest != pm.version)
+                    .unwrap_or(false)
+            })
+            .count()
+    };
 
     Stats {
         total: pms.len(),
