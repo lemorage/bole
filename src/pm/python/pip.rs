@@ -3,11 +3,13 @@ use std::process::Command;
 use crate::{
     find::{Bump, Find},
     pm::{
-        Categorizable, Category, PmInfo,
-        attribution::query::{Querier, Tool},
+        core::{
+            attribution::query::{Querier, Tool},
+            types::{Categorizable, Category, PmInfo},
+            updater::update_cmd,
+            upstream::Upstream,
+        },
         find_all_pms,
-        updater::update_cmd,
-        upstream::Upstream,
     },
 };
 

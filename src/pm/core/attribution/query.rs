@@ -1,9 +1,9 @@
 use std::{collections::HashMap, path::Path};
 
 use crate::pm::{
+    core::types::{AsOrigin, InstallMethod},
     python::{Pip, Pipx},
     rust::Cargo,
-    types::{AsOrigin, InstallMethod},
 };
 
 /// Trait for package manager queriers that can authoritatively identify
@@ -24,6 +24,7 @@ pub trait Querier {
 
 /// Information about a tool managed by a package manager
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // TODO: Tool details (version, path, manager) will be used in future attribution features
 pub struct Tool {
     pub name: String,
     pub version: String,
@@ -57,6 +58,7 @@ impl Resolver {
     }
 
     /// Get all tools managed by all available package managers
+    #[allow(dead_code)] // TODO: Will be used for "list all managed tools" feature
     pub fn scan(&self) -> HashMap<String, Vec<Tool>> {
         let mut all_tools = HashMap::new();
 

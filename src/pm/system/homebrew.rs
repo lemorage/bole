@@ -1,10 +1,13 @@
 use crate::{
     find::{Bump, Find},
     pm::{
-        Categorizable, Category, PmInfo, find_all_pms,
-        types::{AsOrigin, Origin},
-        updater::update_cmd,
-        upstream::Upstream,
+        PmInfo,
+        core::{
+            types::{AsOrigin, Categorizable, Category, Origin},
+            updater::update_cmd,
+            upstream::Upstream,
+        },
+        find_all_pms,
     },
 };
 

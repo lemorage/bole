@@ -1,8 +1,9 @@
 use crate::{
     find::{Bump, Find},
     pm::{
-        Categorizable, Category, PmInfo, find_all_pms_with_args, updater::update_cmd,
-        upstream::Upstream,
+        Categorizable, Category, PmInfo,
+        core::{updater::update_cmd, upstream::Upstream},
+        find_all_pms_with_args,
     },
 };
 

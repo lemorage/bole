@@ -72,8 +72,8 @@ pub(crate) fn check_network_status() -> NetworkStatus {
 #[cfg(test)]
 mod tests {
     use std::{
-        io::{BufRead, BufReader, Read, Write},
-        net::{TcpListener, TcpStream},
+        io::{BufRead, BufReader, Write},
+        net::TcpListener,
         sync::Mutex,
         thread,
     };

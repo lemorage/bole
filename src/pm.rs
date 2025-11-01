@@ -3,7 +3,7 @@
 //! Core registry of supported package managers with installation source
 //! detection.
 
-mod attribution;
+mod core;
 mod gleam;
 mod go;
 mod haskell;
@@ -12,17 +12,14 @@ mod php;
 mod python;
 mod ruby;
 mod rust;
-mod search_paths;
 mod system;
-mod types;
-mod updater;
-mod upstream;
 mod wrappers;
 mod zig;
 
+pub(crate) use core::search_paths::{get_search_locations, scan_common_directories};
+pub use core::types::{Categorizable, Category, Detector, GroupedPmInfo, InstallMethod, PmInfo};
 use std::{collections::HashSet, hash::Hash, path::Path, process::Command};
 
-pub use attribution::query::{Querier, Resolver, Tool};
 use dashmap::DashMap;
 pub use gleam::Gleam;
 pub use go::Go;
@@ -33,12 +30,9 @@ pub use python::{Conda, Pdm, Pip, Pipenv, Pipx, Poetry, Uv};
 pub use ruby::{Bundle, Bundler, Gem, Rbenv, Rvm};
 pub use rust::Cargo;
 pub use system::{Homebrew, Macports, Nix};
-pub use types::{Categorizable, Category, Detector, GroupedPmInfo, InstallMethod, PmInfo};
 use which::which_all;
 pub use wrappers::{Asdf, Corepack, Mise, Phpbrew, Pyenv, Volta};
 pub use zig::Zig;
-
-use crate::pm::search_paths::{get_search_locations, scan_common_directories};
 
 /// Cache key for discovery results.
 #[derive(Hash, Eq, PartialEq, Clone)]
@@ -62,7 +56,7 @@ static PM_DISCOVERY_CACHE: std::sync::OnceLock<DashMap<CacheKey, Vec<PmInfo>>> =
 /// Determine how a package manager was installed.
 #[inline]
 pub fn determine_install_method(path: &Path) -> InstallMethod {
-    attribution::determine(path)
+    core::attribution::determine(path)
 }
 
 /// Find all package manager instances.

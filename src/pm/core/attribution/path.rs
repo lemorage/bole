@@ -1,8 +1,8 @@
 use std::{fs, path::Path};
 
 use crate::pm::{
+    core::types::{AsOrigin, InstallMethod, Origin},
     system::Homebrew,
-    types::{AsOrigin, InstallMethod, Origin},
     wrappers::{Asdf, Corepack, Mise, Volta},
 };
 

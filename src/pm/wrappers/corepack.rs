@@ -1,8 +1,9 @@
 use crate::{
     find::Find,
     pm::{
-        Categorizable, Category, PmInfo, find_all_pms,
-        types::{AsOrigin, Origin},
+        Categorizable, Category, PmInfo,
+        core::types::{AsOrigin, Origin},
+        find_all_pms,
     },
 };
 

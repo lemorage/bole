@@ -1,6 +1,9 @@
 use crate::{
     find::Find,
-    pm::{Categorizable, Category, PmInfo, find_all_pms},
+    pm::{
+        core::types::{Categorizable, Category, PmInfo},
+        find_all_pms,
+    },
 };
 
 /// pyenv - Python version manager

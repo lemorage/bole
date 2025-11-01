@@ -8,7 +8,7 @@ pub mod query;
 
 use std::path::Path;
 
-use crate::pm::types::InstallMethod;
+use crate::pm::core::types::InstallMethod;
 
 /// Determines installation source using query-first, path-fallback strategy.
 pub fn determine(path: &Path) -> InstallMethod {

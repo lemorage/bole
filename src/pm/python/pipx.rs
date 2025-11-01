@@ -1,9 +1,8 @@
 use std::process::Command;
 
-use crate::pm::{
-    Categorizable, Category,
+use crate::pm::core::{
     attribution::query::{Querier, Tool},
-    types::{AsOrigin, Origin},
+    types::{AsOrigin, Categorizable, Category, Origin},
 };
 
 /// Pipx - Python application installer and manager

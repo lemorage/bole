@@ -1,6 +1,6 @@
 use std::{collections::HashSet, path::PathBuf};
 
-use crate::pm::{PmInfo, try_detect_at_path};
+use crate::pm::{core::types::PmInfo, try_detect_at_path};
 
 /// Standard fallback patterns for unknown package managers.
 const FALLBACK_PATTERNS: &[&str] = &[
@@ -26,7 +26,7 @@ fn expand_home(path: &str) -> PathBuf {
 }
 
 /// Find detector by name, fallback to generic paths.
-pub(super) fn get_search_locations(name: &str) -> Vec<PathBuf> {
+pub(crate) fn get_search_locations(name: &str) -> Vec<PathBuf> {
     // Try to find the detector by name (O(n))
     if let Some(detector) = crate::pm::all_package_managers()
         .iter()
@@ -49,7 +49,7 @@ pub(super) fn get_search_locations(name: &str) -> Vec<PathBuf> {
 /// Scan common directories for `name` and detect installations.
 ///
 /// Skips paths already present in `seen_paths` (by canonical path).
-pub(super) fn scan_common_directories(
+pub(crate) fn scan_common_directories(
     name: &str,
     seen_paths: &mut HashSet<PathBuf>,
 ) -> Vec<PmInfo> {

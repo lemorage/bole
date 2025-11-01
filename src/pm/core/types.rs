@@ -112,11 +112,9 @@ TODO: Comprehensive support for all package managers and toolchains
 When adding new PM support, implement AsOrigin trait with appropriate category:
 
 Package Managers to support:
-- Homebrew, MacPorts, Nix (macOS/Linux system)
 - Apt, Dnf, Pacman (Linux system)
 - Scoop, Winget, Chocolatey (Windows)
 - Snap, Flatpak (Universal Linux)
-- Pipx, Conda (Python ecosystem)
 
 Toolchains to support:
 - Rustup (Rust), Nvm (Node.js), Ghcup (Haskell)
