@@ -61,6 +61,8 @@ pub(crate) enum Upstream {
     Pear(&'static str),
     /// Python Package Index (uses Simple API with JSON accept header).
     PyPI(&'static str),
+    /// RubyGems repository.
+    RubyGems(&'static str),
 }
 
 impl Upstream {
@@ -141,6 +143,14 @@ impl Upstream {
                 json.as_str()
                     .ok_or(FetchErr::Missing)
                     .map(|s| s.trim().to_string())
+            },
+            Upstream::RubyGems(gem) => {
+                let url = format!("https://rubygems.org/api/v1/versions/{}/latest.json", gem);
+                let json = fetch_json(http, &url, None)?;
+                json["version"]
+                    .as_str()
+                    .ok_or(FetchErr::Missing)
+                    .map(String::from)
             },
         }
     }
@@ -247,6 +257,19 @@ fn fetch_json(
         }
         if url.contains("/missing/") {
             return Err(FetchErr::Missing);
+        }
+    }
+
+    // RubyGems mocks
+    if url.contains("rubygems.org") {
+        if url.contains("rubygems-update") {
+            return Ok(serde_json::from_str(r#"{"version": "3.5.0"}"#)?);
+        }
+        if url.contains("bundler") {
+            return Ok(serde_json::from_str(r#"{"version": "2.5.0"}"#)?);
+        }
+        if url.contains("missing-gem") {
+            return Ok(serde_json::from_str(r#"{"name": "missing"}"#)?);
         }
     }
 
@@ -382,6 +405,23 @@ mod tests {
     }
 
     #[test]
+    fn test_rubygems_latest() {
+        // Arrange
+        let agent = ureq::agent();
+
+        // Act & Assert (success)
+        let upstream = Upstream::RubyGems("rubygems-update");
+        assert_eq!(upstream.latest(&agent).unwrap(), "3.5.0");
+
+        let upstream = Upstream::RubyGems("bundler");
+        assert_eq!(upstream.latest(&agent).unwrap(), "2.5.0");
+
+        // Act & Assert (missing field)
+        let upstream = Upstream::RubyGems("missing-gem");
+        assert!(matches!(upstream.latest(&agent), Err(FetchErr::Missing)));
+    }
+
+    #[test]
     fn test_json_error() {
         // Arrange
         let agent = ureq::agent();
@@ -441,6 +481,7 @@ mod tests {
             package: "p",
         };
         let pear = Upstream::Pear("test");
+        let rubygems = Upstream::RubyGems("test");
 
         // Act & Assert
         let npm2 = npm.clone();
@@ -470,6 +511,12 @@ mod tests {
         let pear2 = pear.clone();
         match (pear, pear2) {
             (Upstream::Pear(a), Upstream::Pear(b)) => assert_eq!(a, b),
+            _ => panic!("Clone failed"),
+        }
+
+        let rubygems2 = rubygems.clone();
+        match (rubygems, rubygems2) {
+            (Upstream::RubyGems(a), Upstream::RubyGems(b)) => assert_eq!(a, b),
             _ => panic!("Clone failed"),
         }
 

@@ -1,6 +1,6 @@
 use crate::{
-    find::Find,
-    pm::{Categorizable, Category, PmInfo, find_all_pms},
+    find::{Bump, Find},
+    pm::{Categorizable, Category, PmInfo, find_all_pms, updater::update_cmd, upstream::Upstream},
 };
 
 /// gem - Ruby package manager
@@ -27,6 +27,13 @@ impl Find for Gem {
 
     fn find(&self) -> Vec<PmInfo> {
         find_all_pms(Self::NAME)
+    }
+
+    fn check_bump(&self, pm_info: &PmInfo) -> Option<Bump> {
+        let http = ureq::agent();
+        let latest = Upstream::RubyGems("rubygems-update").latest(&http).ok()?;
+        let cmd = update_cmd(Self::NAME, &pm_info.install_method);
+        Some(Bump { latest, cmd })
     }
 }
 
