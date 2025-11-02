@@ -9,7 +9,7 @@ mod pipeline;
 
 use banner::stream_banner;
 use clap::{CommandFactory, Parser, Subcommand};
-use commands::{CheckCommand, ShowCommand};
+use commands::{CheckCommand, ListCommand, ShowCommand};
 
 /// A CLI to manage your package managers.
 #[derive(Parser, Debug)]
@@ -79,6 +79,24 @@ enum Commands {
         #[arg(short, long, help = "Show only outdated package managers")]
         outdated: bool,
     },
+    /// List installed packages/tools managed by package managers
+    #[command(alias = "ls")]
+    List {
+        /// Package manager to filter by (e.g., pip, cargo, npm)
+        pm: Option<String>,
+
+        /// Display output in tree format
+        #[arg(short, long, help = "Display output in tree format")]
+        tree: bool,
+
+        /// Output in JSON format
+        #[arg(long, conflicts_with = "csv", help = "Output in JSON format")]
+        json: bool,
+
+        /// Output in CSV format
+        #[arg(long, conflicts_with = "json", help = "Output in CSV format")]
+        csv: bool,
+    },
 }
 
 fn main() {
@@ -116,6 +134,14 @@ fn main() {
             outdated,
         }) => {
             CheckCommand::from_args(category, all, verbose, broken, outdated).execute();
+        },
+        Some(Commands::List {
+            pm,
+            tree,
+            json,
+            csv,
+        }) => {
+            ListCommand::from_args(pm, tree, json, csv).execute();
         },
         None => {
             Bole::command().print_help().unwrap();

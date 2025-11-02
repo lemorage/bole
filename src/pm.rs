@@ -17,7 +17,10 @@ mod wrappers;
 mod zig;
 
 pub(crate) use core::search_paths::{get_search_locations, scan_common_directories};
-pub use core::types::{Categorizable, Category, Detector, GroupedPmInfo, InstallMethod, PmInfo};
+pub use core::{
+    attribution::query::Tool,
+    types::{Categorizable, Category, Detector, GroupedPmInfo, InstallMethod, PmInfo},
+};
 use std::{collections::HashSet, hash::Hash, path::Path, process::Command};
 
 use dashmap::DashMap;
@@ -139,6 +142,14 @@ fn try_detect_at_path(path: &std::path::Path, name: &str, version_args: &[&str])
         path: path.display().to_string(),
         latest_version: None,
     })
+}
+
+/// Scan all tools managed by all package managers.
+/// Returns a map of package manager name to list of tools it manages.
+pub fn scan_managed_tools() -> std::collections::HashMap<String, Vec<Tool>> {
+    use core::attribution::query::Resolver;
+    let resolver = Resolver::new();
+    resolver.scan()
 }
 
 /// Get package manager names by category.

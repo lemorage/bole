@@ -1,6 +1,8 @@
 //! CSV output formatter (RFC 4180 compliant).
 
-use bole::pm::{GroupedPmInfo, PmInfo};
+use std::collections::HashMap;
+
+use bole::pm::{GroupedPmInfo, PmInfo, Tool};
 
 use crate::format::Formatter;
 
@@ -53,6 +55,24 @@ impl Formatter for CsvFormatter {
                 g.install_method,
                 others
             ));
+        }
+
+        out
+    }
+
+    fn format_tools(&self, tools: &HashMap<String, Vec<Tool>>) -> String {
+        let mut out = String::from("Tool,Version,Manager,Path\n");
+
+        for (manager, tool_list) in tools {
+            for tool in tool_list {
+                out.push_str(&format!(
+                    "{},{},{},{}\n",
+                    Self::escape(&tool.name),
+                    Self::escape(&tool.version),
+                    Self::escape(manager),
+                    Self::escape(tool.path.as_deref().unwrap_or(""))
+                ));
+            }
         }
 
         out

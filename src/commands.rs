@@ -1,6 +1,8 @@
-//! Command implementations for show and check operations.
+//! Command implementations for show, check, and list operations.
 
-use bole::pm::{Category, PmInfo, all_package_managers};
+use std::collections::HashMap;
+
+use bole::pm::{Category, PmInfo, Tool, all_package_managers, scan_managed_tools};
 
 use crate::{
     discovery::Discovery,
@@ -512,6 +514,51 @@ fn display_pm_detailed(pm: &PmInfo) {
             pm.version,
             crate::color::dim(&pm.path)
         );
+    }
+}
+
+/// Configuration for the list command.
+/// Lists installed packages managed by package managers.
+pub(crate) struct ListCommand {
+    pm_filter: Option<String>,
+    format: Format,
+}
+
+impl ListCommand {
+    /// Create from CLI arguments.
+    pub(crate) fn from_args(pm: Option<String>, tree: bool, json: bool, csv: bool) -> Self {
+        Self {
+            pm_filter: pm,
+            format: Format::from_flags(json, csv, tree),
+        }
+    }
+
+    /// Execute the list command.
+    pub(crate) fn execute(self) {
+        // Scan all managed tools
+        let all_tools = scan_managed_tools();
+
+        // Apply PM filter if specified
+        let tools_to_show: HashMap<String, Vec<Tool>> = if let Some(ref pm_name) = self.pm_filter {
+            all_tools
+                .into_iter()
+                .filter(|(name, _)| name.eq_ignore_ascii_case(pm_name))
+                .collect()
+        } else {
+            all_tools
+        };
+
+        // Check if we found anything
+        if tools_to_show.is_empty() {
+            if let Some(pm) = self.pm_filter {
+                println!("No tools found managed by '{}'", pm);
+            } else {
+                println!("No managed tools found on this system");
+            }
+            return;
+        }
+
+        print!("{}", self.format.format_tools(&tools_to_show));
     }
 }
 

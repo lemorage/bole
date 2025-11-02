@@ -1,6 +1,8 @@
 //! Output formatting.
 
-use bole::pm::{GroupedPmInfo, PmInfo};
+use std::collections::HashMap;
+
+use bole::pm::{GroupedPmInfo, PmInfo, Tool};
 
 pub(crate) mod csv;
 pub(crate) mod json;
@@ -23,6 +25,9 @@ pub(crate) trait Formatter {
 
     /// Format grouped package managers.
     fn format_grouped(&self, grouped: &[GroupedPmInfo]) -> String;
+
+    /// Format installed tools grouped by package manager.
+    fn format_tools(&self, tools: &HashMap<String, Vec<Tool>>) -> String;
 }
 
 impl Format {
@@ -53,6 +58,15 @@ impl Formatter for Format {
             Self::Csv => csv::CsvFormatter.format_grouped(grouped),
             Self::Table => table::TableFormatter.format_grouped(grouped),
             Self::Tree => tree::TreeFormatter.format_grouped(grouped),
+        }
+    }
+
+    fn format_tools(&self, tools: &HashMap<String, Vec<Tool>>) -> String {
+        match self {
+            Self::Json => json::JsonFormatter.format_tools(tools),
+            Self::Csv => csv::CsvFormatter.format_tools(tools),
+            Self::Table => table::TableFormatter.format_tools(tools),
+            Self::Tree => tree::TreeFormatter.format_tools(tools),
         }
     }
 }

@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use bole::pm::{GroupedPmInfo, PmInfo};
+use bole::pm::{GroupedPmInfo, PmInfo, Tool};
 
 use crate::{color, format::Formatter};
 
@@ -97,6 +97,50 @@ impl Formatter for TreeFormatter {
                     "{}└── {}\n",
                     continuation,
                     color::dim(&g.alternatives)
+                ));
+            }
+        }
+
+        out
+    }
+
+    fn format_tools(&self, tools: &HashMap<String, Vec<Tool>>) -> String {
+        if tools.is_empty() {
+            return String::from("No installed tools found.");
+        }
+
+        let mut out = String::new();
+
+        // Sort managers for consistent output
+        let mut sorted: Vec<_> = tools.iter().collect();
+        sorted.sort_by(|a, b| a.0.cmp(b.0));
+
+        for (i, (manager, tool_list)) in sorted.iter().enumerate() {
+            let is_last = i == sorted.len() - 1;
+            let prefix = if is_last { "└──" } else { "├──" };
+
+            // Show manager with tool count
+            let count = if tool_list.len() == 1 {
+                " (1 tool)".to_string()
+            } else {
+                format!(" ({} tools)", tool_list.len())
+            };
+
+            out.push_str(&format!("{} {}{}\n", prefix, manager, count));
+
+            // Render each tool as a child node
+            for (j, tool) in tool_list.iter().enumerate() {
+                let is_last_child = j == tool_list.len() - 1;
+                let continuation = if is_last { "    " } else { "│   " };
+                let child_prefix = if is_last_child {
+                    "└──"
+                } else {
+                    "├──"
+                };
+
+                out.push_str(&format!(
+                    "{} {} {} v{}\n",
+                    continuation, child_prefix, tool.name, tool.version
                 ));
             }
         }
