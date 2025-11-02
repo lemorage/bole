@@ -27,11 +27,11 @@ pub use haskell::{Cabal, Stack};
 pub use js::{Bun, Deno, Ni, Npm, Pnpm, Yarn};
 pub use php::{Composer, Pecl};
 pub use python::{Conda, Pdm, Pip, Pipenv, Pipx, Poetry, Uv};
-pub use ruby::{Bundle, Bundler, Gem, Rbenv, Rvm};
+pub use ruby::{Bundle, Bundler, Gem};
 pub use rust::Cargo;
 pub use system::{Homebrew, Macports, Nix};
 use which::which_all;
-pub use wrappers::{Asdf, Corepack, Mise, Phpbrew, Pyenv, Volta};
+pub use wrappers::{Asdf, Corepack, Mise, Phpbrew, Pyenv, Rbenv, Rvm, Volta};
 pub use zig::Zig;
 
 /// Cache key for discovery results.
