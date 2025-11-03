@@ -88,7 +88,6 @@ pub fn resolve(tool_name: &str, path: &Path) -> Option<InstallMethod> {
         // Use the AsOrigin trait to get proper origin representation
         let origin = match manager.as_str() {
             "pipx" => Pipx::as_origin(),
-            "pip" => Pipx::as_origin(), // pip installs often via pipx
             "cargo" => Cargo::as_origin(),
             _ => return Some(InstallMethod::Unknown),
         };
