@@ -5,7 +5,7 @@ use crate::{
     pm::{
         core::{
             attribution::query::{Querier, Tool},
-            types::{AsOrigin, Categorizable, Category, Origin, PmInfo},
+            types::{Categorizable, Category, ChainLink, Origin, PmInfo},
             updater::update_cmd,
             upstream::Upstream,
         },
@@ -20,9 +20,9 @@ impl Cargo {
     const NAME: &'static str = "cargo";
 }
 
-impl AsOrigin for Cargo {
+impl ChainLink for Cargo {
     fn as_origin() -> Origin {
-        Origin::Toolchain("Rustup") // Cargo normally comes from Rustup toolchain
+        Origin::PackageManager("Cargo")
     }
 }
 

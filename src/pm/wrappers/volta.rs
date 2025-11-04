@@ -2,7 +2,7 @@ use crate::{
     find::Find,
     pm::{
         Categorizable, Category, PmInfo,
-        core::types::{AsOrigin, Origin},
+        core::types::{ChainLink, Origin},
         find_all_pms,
     },
 };
@@ -17,7 +17,7 @@ impl Volta {
     const NAME: &'static str = "volta";
 }
 
-impl AsOrigin for Volta {
+impl ChainLink for Volta {
     fn as_origin() -> Origin {
         Origin::Wrapper("Volta")
     }

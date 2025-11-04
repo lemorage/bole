@@ -3,7 +3,7 @@ use crate::{
     pm::{
         PmInfo,
         core::{
-            types::{AsOrigin, Categorizable, Category, Origin},
+            types::{Categorizable, Category, ChainLink, Origin},
             updater::update_cmd,
             upstream::Upstream,
         },
@@ -18,7 +18,7 @@ impl Homebrew {
     const NAME: &'static str = "brew";
 }
 
-impl AsOrigin for Homebrew {
+impl ChainLink for Homebrew {
     fn as_origin() -> Origin {
         Origin::PackageManager("Homebrew")
     }

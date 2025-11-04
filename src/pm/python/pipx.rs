@@ -2,7 +2,7 @@ use std::process::Command;
 
 use crate::pm::core::{
     attribution::query::{Querier, Tool},
-    types::{AsOrigin, Categorizable, Category, Origin},
+    types::{Categorizable, Category, ChainLink, Origin},
 };
 
 /// Pipx - Python application installer and manager
@@ -16,7 +16,7 @@ impl Pipx {
     const NAME: &'static str = "pipx";
 }
 
-impl AsOrigin for Pipx {
+impl ChainLink for Pipx {
     fn as_origin() -> Origin {
         Origin::PackageManager("Pipx")
     }

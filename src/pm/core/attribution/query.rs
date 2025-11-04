@@ -3,24 +3,24 @@ use std::{collections::HashMap, path::Path};
 use serde::Serialize;
 
 use crate::pm::{
-    core::types::{AsOrigin, InstallMethod},
+    core::types::{ChainLink, InstallMethod},
     python::{Pip, Pipx},
     rust::Cargo,
 };
 
-/// Trait for package manager queriers that can authoritatively identify
-/// which tools they manage
+/// Package managers that can list their installed executables.
+/// Provides authoritative tool ownership information.
 pub trait Querier {
-    /// Name of the package manager this querier can query (e.g., "pipx", "rye")
+    /// Package manager name (e.g., "pipx", "cargo").
     fn name(&self) -> &'static str;
 
-    /// Check if this package manager is available on the system
+    /// Check if this package manager is available on the system.
     fn is_available(&self) -> bool;
 
-    /// Get all tools managed by this package manager
+    /// List all tools managed by this package manager.
     fn list(&self) -> Vec<Tool>;
 
-    /// Check if this package manager owns a specific tool
+    /// Check if this package manager owns a specific tool.
     fn owns(&self, tool_name: &str) -> Option<Tool>;
 }
 
@@ -85,7 +85,7 @@ impl Default for Resolver {
 pub fn resolve(tool_name: &str, path: &Path) -> Option<InstallMethod> {
     let resolver = Resolver::new();
     if let Some(manager) = resolver.resolve(tool_name, path) {
-        // Use the AsOrigin trait to get proper origin representation
+        // Use the ChainLink trait to get proper origin representation
         let origin = match manager.as_str() {
             "pipx" => Pipx::as_origin(),
             "cargo" => Cargo::as_origin(),

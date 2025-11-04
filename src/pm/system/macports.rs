@@ -2,7 +2,7 @@ use crate::{
     find::{Bump, Find},
     pm::{
         core::{
-            types::{Categorizable, Category, PmInfo},
+            types::{Categorizable, Category, ChainLink, Origin, PmInfo},
             updater::update_cmd,
             upstream::Upstream,
         },
@@ -15,6 +15,12 @@ pub struct Macports;
 
 impl Macports {
     const NAME: &'static str = "port";
+}
+
+impl ChainLink for Macports {
+    fn as_origin() -> Origin {
+        Origin::PackageManager("MacPorts")
+    }
 }
 
 impl Find for Macports {

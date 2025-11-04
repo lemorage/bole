@@ -107,32 +107,10 @@ pub enum Origin {
     Wrapper(&'static str),
 }
 
-/*
-TODO: Comprehensive support for all package managers and toolchains
-When adding new PM support, implement AsOrigin trait with appropriate category:
-
-Package Managers to support:
-- Apt, Dnf, Pacman (Linux system)
-- Scoop, Winget, Chocolatey (Windows)
-- Snap, Flatpak (Universal Linux)
-
-Toolchains to support:
-- Rustup (Rust), Nvm (Node.js), Ghcup (Haskell)
-- Asdf, Sdkman (Multi-language)
-- Pyenv (Python), Go (Go toolchain)
-
-Implementation pattern:
-```rust
-impl AsOrigin for NewPM {
-    fn as_origin() -> Origin {
-        Origin::PackageManager("NewPM")  // or Toolchain/Wrapper
-    }
-}
-```
-*/
-
-/// Types that can represent themselves in an installation chain.
-pub trait AsOrigin {
+/// Package managers that install or manage other package managers.
+/// Forms a link in the installation chain.
+pub trait ChainLink {
+    /// Returns the Origin variant representing this chain link.
     fn as_origin() -> Origin;
 }
 

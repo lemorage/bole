@@ -2,7 +2,7 @@ use crate::{
     find::Find,
     pm::{
         Categorizable, Category, PmInfo,
-        core::types::{AsOrigin, Origin},
+        core::types::{ChainLink, Origin},
         find_all_pms,
     },
 };
@@ -18,7 +18,7 @@ impl Asdf {
     const NAME: &'static str = "asdf";
 }
 
-impl AsOrigin for Asdf {
+impl ChainLink for Asdf {
     fn as_origin() -> Origin {
         Origin::Wrapper("asdf")
     }

@@ -1,7 +1,7 @@
 use std::{fs, path::Path};
 
 use crate::pm::{
-    core::types::{AsOrigin, InstallMethod, Origin},
+    core::types::{ChainLink, InstallMethod, Origin},
     system::Homebrew,
     wrappers::{Asdf, Corepack, Mise, Volta},
 };
