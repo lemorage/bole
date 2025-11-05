@@ -1,7 +1,7 @@
 use std::process::Command;
 
 use crate::pm::core::{
-    attribution::query::{Querier, Tool},
+    tool_lister::{Tool, ToolLister},
     types::{Categorizable, Category},
 };
 
@@ -16,7 +16,7 @@ impl Pipx {
     const NAME: &'static str = "pipx";
 }
 
-impl Querier for Pipx {
+impl ToolLister for Pipx {
     fn name(&self) -> &'static str {
         Self::NAME
     }

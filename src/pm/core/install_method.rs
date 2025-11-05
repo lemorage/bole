@@ -57,6 +57,15 @@ fn check_toolchain_patterns(path_str: &str, home: &str) -> Option<InstallMethod>
     if path_str.contains(&format!("{}/.nvm/", home)) {
         return Some(InstallMethod::Chain(vec![Origin::Toolchain("NVM")]));
     }
+    if path_str.contains(&format!("{}/.fnm/", home)) {
+        return Some(InstallMethod::Chain(vec![Origin::Toolchain("fnm")]));
+    }
+    if path_str.contains(&format!("{}/.n/", home)) {
+        return Some(InstallMethod::Chain(vec![Origin::Toolchain("n")]));
+    }
+    if path_str.contains(&format!("{}/.nodenv/", home)) {
+        return Some(InstallMethod::Chain(vec![Origin::Toolchain("nodenv")]));
+    }
 
     // Haskell toolchain
     if path_str.contains(&format!("{}/.ghcup/", home)) {
@@ -76,9 +85,42 @@ fn check_toolchain_patterns(path_str: &str, home: &str) -> Option<InstallMethod>
         return Some(InstallMethod::Chain(vec![Origin::Toolchain("pyenv")]));
     }
 
+    // Go toolchains
+    if path_str.contains(&format!("{}/.g/", home)) {
+        return Some(InstallMethod::Chain(vec![Origin::Toolchain("g")]));
+    }
+    if path_str.contains(&format!("{}/.gvm/", home)) {
+        return Some(InstallMethod::Chain(vec![Origin::Toolchain("gvm")]));
+    }
+
     // PHP toolchain
     if path_str.contains(&format!("{}/.phpbrew/", home)) {
         return Some(InstallMethod::Chain(vec![Origin::Toolchain("phpbrew")]));
+    }
+
+    // OCaml toolchain
+    if path_str.contains(&format!("{}/.opam/", home)) {
+        return Some(InstallMethod::Chain(vec![Origin::Toolchain("opam")]));
+    }
+
+    // Perl toolchain
+    if path_str.contains(&format!("{}/.perlbrew/", home))
+        || path_str.contains(&format!("{}/perl5/perlbrew/", home))
+    {
+        return Some(InstallMethod::Chain(vec![Origin::Toolchain("perlbrew")]));
+    }
+
+    // Elixir toolchains
+    if path_str.contains(&format!("{}/.kiex/", home)) {
+        return Some(InstallMethod::Chain(vec![Origin::Toolchain("kiex")]));
+    }
+    if path_str.contains(&format!("{}/.exenv/", home)) {
+        return Some(InstallMethod::Chain(vec![Origin::Toolchain("exenv")]));
+    }
+
+    // Lua toolchain
+    if path_str.contains(&format!("{}/.luaver/", home)) {
+        return Some(InstallMethod::Chain(vec![Origin::Toolchain("luaver")]));
     }
 
     // Universal version managers
@@ -102,6 +144,19 @@ fn check_toolchain_patterns(path_str: &str, home: &str) -> Option<InstallMethod>
     }
     if path_str.contains(&format!("{}/.deno/", home)) {
         return Some(InstallMethod::Chain(vec![Origin::Direct(Some("Deno"))]));
+    }
+
+    // Conda environments
+    if path_str.contains(&format!("{}/.conda/", home))
+        || path_str.contains(&format!("{}/anaconda3/", home))
+        || path_str.contains(&format!("{}/miniconda3/", home))
+        || path_str.contains(&format!("{}/mambaforge/", home))
+        || path_str.contains(&format!("{}/miniforge/", home))
+        || path_str.contains("/opt/conda/")
+        || path_str.contains("/opt/anaconda/")
+        || path_str.contains("/opt/miniconda/")
+    {
+        return Some(InstallMethod::Chain(vec![Origin::PackageManager("Conda")]));
     }
 
     // Python package managers
@@ -133,8 +188,47 @@ fn check_system_patterns(path_str: &str) -> InstallMethod {
         return InstallMethod::Chain(vec![Origin::PackageManager("Nix")]);
     }
 
+    // MacPorts
+    if path_str.starts_with("/opt/local/") {
+        // Verify it's actually MacPorts by checking for MacPorts-specific paths
+        if std::path::Path::new("/opt/local/etc/macports").exists()
+            || std::path::Path::new("/opt/local/var/macports").exists()
+            || std::path::Path::new("/opt/local/libexec/macports").exists()
+        {
+            return InstallMethod::Chain(vec![Origin::PackageManager("MacPorts")]);
+        }
+        return InstallMethod::Chain(vec![Origin::Direct(Some("/opt/local"))]);
+    }
+
+    // Snap
+    if path_str.starts_with("/snap/") || path_str.contains("/var/lib/snapd/") {
+        return InstallMethod::Chain(vec![Origin::PackageManager("Snap")]);
+    }
+
+    // Flatpak
+    if path_str.contains("/var/lib/flatpak/") || path_str.contains("/.var/app/") {
+        return InstallMethod::Chain(vec![Origin::PackageManager("Flatpak")]);
+    }
+
+    // Scoop (Windows)
+    if path_str.contains("\\scoop\\apps\\") || path_str.contains("/scoop/apps/") {
+        return InstallMethod::Chain(vec![Origin::PackageManager("Scoop")]);
+    }
+
+    // Chocolatey (Windows)
+    if path_str.contains("\\ProgramData\\chocolatey\\")
+        || path_str.contains("/ProgramData/chocolatey/")
+    {
+        return InstallMethod::Chain(vec![Origin::PackageManager("Chocolatey")]);
+    }
+
     // System provided
-    if path_str.starts_with("/System/") || path_str.starts_with("/usr/bin/") {
+    if path_str.starts_with("/System/")
+        || path_str.starts_with("/usr/bin/")
+        || path_str.starts_with("/bin/")
+        || path_str.starts_with("/sbin/")
+        || path_str.starts_with("/usr/sbin/")
+    {
         return InstallMethod::System;
     }
 

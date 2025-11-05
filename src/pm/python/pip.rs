@@ -4,7 +4,7 @@ use crate::{
     find::{Bump, Find},
     pm::{
         core::{
-            attribution::query::{Querier, Tool},
+            tool_lister::{Tool, ToolLister},
             types::{Categorizable, Category, PmInfo},
             updater::update_cmd,
             upstream::Upstream,
@@ -49,7 +49,7 @@ impl Find for Pip {
     }
 }
 
-impl Querier for Pip {
+impl ToolLister for Pip {
     fn name(&self) -> &'static str {
         Self::NAME
     }

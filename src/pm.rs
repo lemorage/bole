@@ -18,7 +18,7 @@ mod zig;
 
 pub(crate) use core::search_paths::{get_search_locations, scan_common_directories};
 pub use core::{
-    attribution::query::Tool,
+    tool_lister::Tool,
     types::{Categorizable, Category, Detector, GroupedPmInfo, InstallMethod, PmInfo},
 };
 use std::{collections::HashSet, hash::Hash, path::Path, process::Command};
@@ -59,7 +59,7 @@ static PM_DISCOVERY_CACHE: std::sync::OnceLock<DashMap<CacheKey, Vec<PmInfo>>> =
 /// Determine how a package manager was installed.
 #[inline]
 pub fn determine_install_method(path: &Path) -> InstallMethod {
-    core::attribution::determine(path)
+    core::install_method::detect(path)
 }
 
 /// Find all package manager instances.
@@ -147,8 +147,7 @@ fn try_detect_at_path(path: &std::path::Path, name: &str, version_args: &[&str])
 /// Scan all tools managed by all package managers.
 /// Returns a map of package manager name to list of tools it manages.
 pub fn scan_managed_tools() -> std::collections::HashMap<String, Vec<Tool>> {
-    use core::attribution::query::Resolver;
-    let resolver = Resolver::new();
+    let resolver = core::tool_lister::Resolver::new();
     resolver.scan()
 }
 
