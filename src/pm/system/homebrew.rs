@@ -3,7 +3,7 @@ use crate::{
     pm::{
         PmInfo,
         core::{
-            types::{Categorizable, Category, ChainLink, Origin},
+            types::{Categorizable, Category},
             updater::update_cmd,
             upstream::Upstream,
         },
@@ -16,12 +16,6 @@ pub struct Homebrew;
 
 impl Homebrew {
     const NAME: &'static str = "brew";
-}
-
-impl ChainLink for Homebrew {
-    fn as_origin() -> Origin {
-        Origin::PackageManager("Homebrew")
-    }
 }
 
 impl Find for Homebrew {

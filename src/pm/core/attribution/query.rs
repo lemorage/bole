@@ -3,8 +3,8 @@ use std::{collections::HashMap, path::Path};
 use serde::Serialize;
 
 use crate::pm::{
-    core::types::{ChainLink, InstallMethod},
-    python::{Pip, Pipx},
+    core::types::{InstallMethod, Origin},
+    python::Pipx,
     rust::Cargo,
 };
 
@@ -42,7 +42,7 @@ pub struct Resolver {
 impl Resolver {
     pub fn new() -> Self {
         Self {
-            queriers: vec![Box::new(Pipx), Box::new(Pip), Box::new(Cargo)],
+            queriers: vec![Box::new(Pipx), Box::new(Cargo)],
         }
     }
 
@@ -81,14 +81,13 @@ impl Default for Resolver {
     }
 }
 
-/// Main entry point for query-based attribution
+/// Main entry point for query-based attribution.
 pub fn resolve(tool_name: &str, path: &Path) -> Option<InstallMethod> {
     let resolver = Resolver::new();
     if let Some(manager) = resolver.resolve(tool_name, path) {
-        // Use the ChainLink trait to get proper origin representation
         let origin = match manager.as_str() {
-            "pipx" => Pipx::as_origin(),
-            "cargo" => Cargo::as_origin(),
+            "pipx" => Origin::PackageManager("Pipx"),
+            "cargo" => Origin::PackageManager("Cargo"),
             _ => return Some(InstallMethod::Unknown),
         };
         return Some(InstallMethod::Chain(vec![origin]));

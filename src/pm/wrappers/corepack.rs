@@ -1,10 +1,6 @@
 use crate::{
     find::Find,
-    pm::{
-        Categorizable, Category, PmInfo,
-        core::types::{ChainLink, Origin},
-        find_all_pms,
-    },
+    pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
 /// Corepack - Node.js package manager wrapper
@@ -15,12 +11,6 @@ pub struct Corepack;
 
 impl Corepack {
     const NAME: &'static str = "corepack";
-}
-
-impl ChainLink for Corepack {
-    fn as_origin() -> Origin {
-        Origin::Wrapper("Corepack")
-    }
 }
 
 impl Find for Corepack {

@@ -5,7 +5,7 @@ use crate::{
     pm::{
         core::{
             attribution::query::{Querier, Tool},
-            types::{Categorizable, Category, ChainLink, Origin, PmInfo},
+            types::{Categorizable, Category, PmInfo},
             updater::update_cmd,
             upstream::Upstream,
         },
@@ -18,12 +18,6 @@ pub struct Cargo;
 
 impl Cargo {
     const NAME: &'static str = "cargo";
-}
-
-impl ChainLink for Cargo {
-    fn as_origin() -> Origin {
-        Origin::PackageManager("Cargo")
-    }
 }
 
 impl Find for Cargo {

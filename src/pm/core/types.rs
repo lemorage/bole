@@ -107,34 +107,6 @@ pub enum Origin {
     Wrapper(&'static str),
 }
 
-mod sealed {
-    /// Sealed: Only PMs that install other PMs can implement ChainLink.
-    pub trait Sealed {}
-
-    // System package managers that install other PMs
-    impl Sealed for crate::pm::system::Homebrew {}
-    impl Sealed for crate::pm::system::Macports {}
-    impl Sealed for crate::pm::system::Nix {}
-
-    // Language PMs that install PM tools
-    impl Sealed for crate::pm::python::Pipx {}
-    impl Sealed for crate::pm::python::Conda {}
-    impl Sealed for crate::pm::rust::Cargo {}
-
-    // Wrappers that manage other PMs
-    impl Sealed for crate::pm::wrappers::Asdf {}
-    impl Sealed for crate::pm::wrappers::Corepack {}
-    impl Sealed for crate::pm::wrappers::Mise {}
-    impl Sealed for crate::pm::wrappers::Volta {}
-}
-
-/// Package managers that install or manage other package managers.
-/// Forms a link in the installation chain.
-pub trait ChainLink: sealed::Sealed {
-    /// Returns the Origin variant for this chain link.
-    fn as_origin() -> Origin;
-}
-
 /// Package managers that can categorize themselves.
 pub trait Categorizable {
     fn category(&self) -> Category;

@@ -2,7 +2,7 @@ use crate::{
     find::{Bump, Find},
     pm::{
         core::{
-            types::{Categorizable, Category, ChainLink, Origin, PmInfo},
+            types::{Categorizable, Category, PmInfo},
             updater::update_cmd,
             upstream::Upstream,
         },
@@ -15,12 +15,6 @@ pub struct Nix;
 
 impl Nix {
     const NAME: &'static str = "nix";
-}
-
-impl ChainLink for Nix {
-    fn as_origin() -> Origin {
-        Origin::PackageManager("Nix")
-    }
 }
 
 impl Find for Nix {

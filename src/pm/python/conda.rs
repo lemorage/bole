@@ -2,7 +2,7 @@ use crate::{
     find::{Bump, Find},
     pm::{
         core::{
-            types::{Categorizable, Category, ChainLink, Origin, PmInfo},
+            types::{Categorizable, Category, PmInfo},
             updater::update_cmd,
             upstream::Upstream,
         },
@@ -15,12 +15,6 @@ pub struct Conda;
 
 impl Conda {
     const NAME: &'static str = "conda";
-}
-
-impl ChainLink for Conda {
-    fn as_origin() -> Origin {
-        Origin::PackageManager("Conda")
-    }
 }
 
 impl Find for Conda {

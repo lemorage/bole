@@ -1,10 +1,6 @@
 use crate::{
     find::Find,
-    pm::{
-        Categorizable, Category, PmInfo,
-        core::types::{ChainLink, Origin},
-        find_all_pms,
-    },
+    pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
 /// Volta - Node.js toolchain manager
@@ -15,12 +11,6 @@ pub struct Volta;
 
 impl Volta {
     const NAME: &'static str = "volta";
-}
-
-impl ChainLink for Volta {
-    fn as_origin() -> Origin {
-        Origin::Wrapper("Volta")
-    }
 }
 
 impl Find for Volta {

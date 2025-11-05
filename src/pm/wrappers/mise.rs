@@ -1,10 +1,6 @@
 use crate::{
     find::Find,
-    pm::{
-        Categorizable, Category, PmInfo,
-        core::types::{ChainLink, Origin},
-        find_all_pms,
-    },
+    pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
 /// mise - Modern asdf alternative
@@ -15,12 +11,6 @@ pub struct Mise;
 
 impl Mise {
     const NAME: &'static str = "mise";
-}
-
-impl ChainLink for Mise {
-    fn as_origin() -> Origin {
-        Origin::Wrapper("mise")
-    }
 }
 
 impl Find for Mise {

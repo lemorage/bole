@@ -1,10 +1,6 @@
 use crate::{
     find::Find,
-    pm::{
-        Categorizable, Category, PmInfo,
-        core::types::{ChainLink, Origin},
-        find_all_pms,
-    },
+    pm::{Categorizable, Category, PmInfo, find_all_pms},
 };
 
 /// asdf - Universal version manager
@@ -16,12 +12,6 @@ pub struct Asdf;
 
 impl Asdf {
     const NAME: &'static str = "asdf";
-}
-
-impl ChainLink for Asdf {
-    fn as_origin() -> Origin {
-        Origin::Wrapper("asdf")
-    }
 }
 
 impl Find for Asdf {

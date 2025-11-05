@@ -1,10 +1,6 @@
 use std::{fs, path::Path};
 
-use crate::pm::{
-    core::types::{ChainLink, InstallMethod, Origin},
-    system::Homebrew,
-    wrappers::{Asdf, Corepack, Mise, Volta},
-};
+use crate::pm::core::types::{InstallMethod, Origin};
 
 /// Path-based installation method detection
 pub fn detect(path: &Path) -> InstallMethod {
@@ -37,11 +33,13 @@ fn check_environment_patterns(path_str: &str) -> Option<InstallMethod> {
         // Check for more specific patterns
         if path_str.contains("/corepack/dist/") {
             return Some(InstallMethod::Chain(vec![
-                Homebrew::as_origin(),
-                Corepack::as_origin(),
+                Origin::PackageManager("Homebrew"),
+                Origin::Wrapper("Corepack"),
             ]));
         }
-        return Some(InstallMethod::Chain(vec![Homebrew::as_origin()]));
+        return Some(InstallMethod::Chain(vec![Origin::PackageManager(
+            "Homebrew",
+        )]));
     }
     None
 }
@@ -87,15 +85,15 @@ fn check_toolchain_patterns(path_str: &str, home: &str) -> Option<InstallMethod>
     // Note: Corepack uses different detection (filesystem symlinks),
     // while these use runtime PATH modification
     if path_str.contains(&format!("{}/.asdf/", home)) {
-        return Some(InstallMethod::Chain(vec![Asdf::as_origin()]));
+        return Some(InstallMethod::Chain(vec![Origin::Wrapper("asdf")]));
     }
     if path_str.contains(&format!("{}/.volta/", home)) {
-        return Some(InstallMethod::Chain(vec![Volta::as_origin()]));
+        return Some(InstallMethod::Chain(vec![Origin::Wrapper("Volta")]));
     }
     if path_str.contains(&format!("{}/.local/share/mise/", home))
         || path_str.contains(&format!("{}/.config/mise/", home))
     {
-        return Some(InstallMethod::Chain(vec![Mise::as_origin()]));
+        return Some(InstallMethod::Chain(vec![Origin::Wrapper("mise")]));
     }
 
     // JavaScript runtimes (official installers)
@@ -144,7 +142,10 @@ fn check_system_patterns(path_str: &str) -> InstallMethod {
     if path_str.starts_with("/usr/local/") {
         // Check for corepack first
         if path_str.contains("/corepack/dist/") {
-            return InstallMethod::Chain(vec![Origin::Toolchain("Node.js"), Corepack::as_origin()]);
+            return InstallMethod::Chain(vec![
+                Origin::Toolchain("Node.js"),
+                Origin::Wrapper("Corepack"),
+            ]);
         }
         return InstallMethod::Chain(vec![Origin::Direct(Some("Direct Install"))]);
     }
