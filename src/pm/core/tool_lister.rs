@@ -2,7 +2,11 @@ use std::collections::HashMap;
 
 use serde::Serialize;
 
-use crate::pm::{python::Pipx, rust::Cargo};
+use crate::pm::{
+    Go,
+    python::{Pip, Pipx},
+    rust::Cargo,
+};
 
 /// Package managers that can list their installed tools.
 pub trait ToolLister {
@@ -36,7 +40,15 @@ pub struct Resolver {
 impl Resolver {
     pub fn new() -> Self {
         Self {
-            listers: vec![Box::new(Pipx), Box::new(Cargo)],
+            listers: vec![
+                // Go
+                Box::new(Go),
+                // Python
+                Box::new(Pip),
+                Box::new(Pipx),
+                // Rust
+                Box::new(Cargo),
+            ],
         }
     }
 
