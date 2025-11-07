@@ -107,9 +107,33 @@ pub enum Origin {
     Wrapper(&'static str),
 }
 
+/// Information about a tool managed by a package manager.
+#[derive(Debug, Clone, Serialize)]
+pub struct Tool {
+    pub name: String,
+    pub version: String,
+    pub path: Option<String>,
+    pub manager: String,
+}
+
 /// Package managers that can categorize themselves.
 pub trait Categorizable {
     fn category(&self) -> Category;
+}
+
+/// Package managers that can list their installed tools.
+pub trait ToolLister {
+    /// Package manager name (e.g., "pipx", "cargo").
+    fn name(&self) -> &'static str;
+
+    /// Check if available on the system.
+    fn is_available(&self) -> bool;
+
+    /// List all installed tools.
+    fn list(&self) -> Vec<Tool>;
+
+    /// Check if owns a specific tool.
+    fn owns(&self, tool_name: &str) -> Option<Tool>;
 }
 
 /// Combined discovery and categorization trait for package managers.

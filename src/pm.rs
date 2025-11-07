@@ -21,8 +21,9 @@ pub(crate) use core::{
     version::normalize_version,
 };
 pub use core::{
-    tool_lister::Tool,
-    types::{Categorizable, Category, Detector, GroupedPmInfo, InstallMethod, PmInfo},
+    types::{
+        Categorizable, Category, Detector, GroupedPmInfo, InstallMethod, PmInfo, Tool, ToolLister,
+    },
     version::{UNKNOWN_VERSION, is_broken_version},
 };
 use std::{collections::HashSet, hash::Hash, path::Path, process::Command};
@@ -150,8 +151,20 @@ fn try_detect_at_path(path: &std::path::Path, name: &str, version_args: &[&str])
 /// Scan all tools managed by all package managers.
 /// Returns a map of package manager name to list of tools it manages.
 pub fn scan_managed_tools() -> std::collections::HashMap<String, Vec<Tool>> {
-    let resolver = core::tool_lister::Resolver::new();
-    resolver.scan()
+    use std::collections::HashMap;
+
+    let mut all_tools = HashMap::new();
+
+    for lister in tool_listers() {
+        if lister.is_available() {
+            let tools = lister.list();
+            if !tools.is_empty() {
+                all_tools.insert(lister.name().to_string(), tools);
+            }
+        }
+    }
+
+    all_tools
 }
 
 /// Get package manager names by category.
@@ -211,5 +224,23 @@ pub fn all_package_managers() -> Vec<Box<dyn Detector>> {
         Box::new(Pyenv),
         Box::new(Rbenv),
         Box::new(Rvm),
+    ]
+}
+
+/// All supported package managers that can list their installed tools.
+pub fn tool_listers() -> Vec<Box<dyn ToolLister>> {
+    vec![
+        // JavaScript
+        // Box::new(Npm),
+        // Box::new(Yarn),
+        // Box::new(Pnpm),
+        // Box::new(Bun),
+        // Python
+        Box::new(Pip),
+        Box::new(Pipx),
+        // Rust
+        Box::new(Cargo),
+        // Go
+        Box::new(Go),
     ]
 }

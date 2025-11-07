@@ -6,7 +6,6 @@
 //! - **Install detection**: Determines how package managers were installed
 //! - **Path discovery**: Utilities for finding package managers in non-standard
 //!   locations
-//! - **Tool listing**: Lists tools managed by each package manager
 //! - **Types**: Core data structures (`PmInfo`, `Category`) used throughout
 //! - **Update commands**: Generates appropriate update commands based on
 //!   installation context
@@ -17,7 +16,6 @@
 
 pub(super) mod install_method;
 pub(super) mod search_paths;
-pub mod tool_lister;
 pub mod types;
 pub(super) mod updater;
 pub(super) mod upstream;

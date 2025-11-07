@@ -1,8 +1,7 @@
 use std::process::Command;
 
 use crate::pm::core::{
-    tool_lister::{Tool, ToolLister},
-    types::{Categorizable, Category},
+    types::{Categorizable, Category, Tool, ToolLister},
     version::VersionExt,
 };
 

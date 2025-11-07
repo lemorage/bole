@@ -4,8 +4,7 @@ use crate::{
     find::{Bump, Find},
     pm::{
         core::{
-            tool_lister::{Tool, ToolLister},
-            types::{Categorizable, Category, PmInfo},
+            types::{Categorizable, Category, PmInfo, Tool, ToolLister},
             updater::update_cmd,
             upstream::Upstream,
             version::VersionExt,
