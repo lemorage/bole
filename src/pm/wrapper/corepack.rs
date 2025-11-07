@@ -31,6 +31,6 @@ impl Find for Corepack {
 
 impl Categorizable for Corepack {
     fn category(&self) -> Category {
-        Category::Tools
+        Category::Wrapper
     }
 }

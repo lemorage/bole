@@ -41,6 +41,6 @@ impl Find for Phpbrew {
 
 impl Categorizable for Phpbrew {
     fn category(&self) -> Category {
-        Category::Tools
+        Category::Versioner
     }
 }

@@ -41,6 +41,6 @@ impl Find for Pyenv {
 
 impl Categorizable for Pyenv {
     fn category(&self) -> Category {
-        Category::Tools
+        Category::Versioner
     }
 }

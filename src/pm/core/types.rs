@@ -18,8 +18,9 @@ pub enum Category {
     Gleam,
     Zig,
 
-    // Version managers / Wrappers
-    Tools,
+    // Meta tools
+    Versioner,
+    Wrapper,
 }
 
 impl Category {
@@ -37,7 +38,8 @@ impl Category {
             Category::Haskell,
             Category::Gleam,
             Category::Zig,
-            Category::Tools,
+            Category::Versioner,
+            Category::Wrapper,
         ]
     }
 
@@ -55,7 +57,8 @@ impl Category {
             Category::Haskell => "haskell",
             Category::Gleam => "gleam",
             Category::Zig => "zig",
-            Category::Tools => "tools",
+            Category::Versioner => "versioner",
+            Category::Wrapper => "wrapper",
         }
     }
 
@@ -85,7 +88,8 @@ impl Category {
             Category::Haskell => "Haskell package managers",
             Category::Gleam => "Gleam package managers",
             Category::Zig => "Zig package managers",
-            Category::Tools => "Version managers",
+            Category::Versioner => "Version managers",
+            Category::Wrapper => "Package manager wrappers",
         }
     }
 }
@@ -602,7 +606,7 @@ mod tests {
         assert!(categories.contains(&Category::JavaScript));
         assert!(categories.contains(&Category::Python));
         assert!(categories.contains(&Category::Rust));
-        assert!(categories.contains(&Category::Tools));
+        assert!(categories.contains(&Category::Versioner));
         assert!(categories.len() >= 10, "Should support major ecosystems");
     }
 
@@ -620,7 +624,8 @@ mod tests {
             (Category::Haskell, "haskell"),
             (Category::Gleam, "gleam"),
             (Category::Zig, "zig"),
-            (Category::Tools, "tools"),
+            (Category::Versioner, "versioner"),
+            (Category::Wrapper, "wrapper"),
         ];
 
         for (category, expected_name) in test_cases {
@@ -673,7 +678,8 @@ mod tests {
             (Category::Haskell, "Haskell package managers"),
             (Category::Gleam, "Gleam package managers"),
             (Category::Zig, "Zig package managers"),
-            (Category::Tools, "Version managers"),
+            (Category::Versioner, "Version managers"),
+            (Category::Wrapper, "Package manager wrappers"),
         ];
 
         for (category, expected_desc) in test_cases {

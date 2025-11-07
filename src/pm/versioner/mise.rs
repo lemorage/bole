@@ -41,6 +41,6 @@ impl Find for Mise {
 
 impl Categorizable for Mise {
     fn category(&self) -> Category {
-        Category::Tools
+        Category::Versioner
     }
 }

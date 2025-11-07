@@ -31,6 +31,6 @@ impl Find for Volta {
 
 impl Categorizable for Volta {
     fn category(&self) -> Category {
-        Category::Tools
+        Category::Versioner
     }
 }

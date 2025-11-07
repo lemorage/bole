@@ -42,6 +42,6 @@ impl Find for Asdf {
 
 impl Categorizable for Asdf {
     fn category(&self) -> Category {
-        Category::Tools
+        Category::Versioner
     }
 }

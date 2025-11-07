@@ -38,6 +38,6 @@ impl Find for Ni {
 
 impl Categorizable for Ni {
     fn category(&self) -> Category {
-        Category::JavaScript
+        Category::Wrapper
     }
 }

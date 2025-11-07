@@ -13,7 +13,8 @@ mod python;
 mod ruby;
 mod rust;
 mod system;
-mod wrappers;
+mod versioner;
+mod wrapper;
 mod zig;
 
 pub(crate) use core::{
@@ -32,14 +33,15 @@ use dashmap::DashMap;
 pub use gleam::Gleam;
 pub use go::Go;
 pub use haskell::{Cabal, Stack};
-pub use js::{Bun, Deno, Ni, Npm, Pnpm, Yarn};
+pub use js::{Bun, Deno, Npm, Pnpm, Yarn};
 pub use php::{Composer, Pecl};
 pub use python::{Conda, Pdm, Pip, Pipenv, Pipx, Poetry, Uv};
 pub use ruby::{Bundle, Bundler, Gem};
 pub use rust::Cargo;
 pub use system::{Homebrew, Macports, Nix};
+pub use versioner::{Asdf, Mise, Phpbrew, Pyenv, Rbenv, Rvm, Volta};
 use which::which_all;
-pub use wrappers::{Asdf, Corepack, Mise, Phpbrew, Pyenv, Rbenv, Rvm, Volta};
+pub use wrapper::{Corepack, Ni};
 pub use zig::Zig;
 
 /// Cache key for discovery results.
@@ -193,7 +195,6 @@ pub fn all_package_managers() -> Vec<Box<dyn Detector>> {
         // JavaScript/TypeScript
         Box::new(Bun),
         Box::new(Deno),
-        Box::new(Ni),
         Box::new(Npm),
         Box::new(Pnpm),
         Box::new(Yarn),
@@ -215,15 +216,17 @@ pub fn all_package_managers() -> Vec<Box<dyn Detector>> {
         Box::new(Cargo),
         // Zig
         Box::new(Zig),
-        // Universal Wrappers
+        // Versioners
         Box::new(Asdf),
-        Box::new(Volta),
         Box::new(Mise),
-        Box::new(Corepack),
         Box::new(Phpbrew),
         Box::new(Pyenv),
         Box::new(Rbenv),
         Box::new(Rvm),
+        Box::new(Volta),
+        // Wrappers
+        Box::new(Corepack),
+        Box::new(Ni),
     ]
 }
 

@@ -6,18 +6,18 @@ use crate::{
             updater::update_cmd,
             upstream::Upstream,
         },
-        find_all_pms,
+        find_all_pms_with_args,
     },
 };
 
-/// rbenv - Ruby version manager
-pub struct Rbenv;
+/// rvm - Ruby version manager
+pub struct Rvm;
 
-impl Rbenv {
-    const NAME: &'static str = "rbenv";
+impl Rvm {
+    const NAME: &'static str = "rvm";
 }
 
-impl Find for Rbenv {
+impl Find for Rvm {
     type Output = PmInfo;
 
     fn name(&self) -> &'static str {
@@ -25,16 +25,16 @@ impl Find for Rbenv {
     }
 
     fn search_paths(&self) -> &'static [&'static str] {
-        &["~/.rbenv/bin/rbenv"]
+        &["~/.rvm/bin/rvm"]
     }
 
     fn find(&self) -> Vec<PmInfo> {
-        find_all_pms(Self::NAME)
+        find_all_pms_with_args(Self::NAME, &["--version"])
             .into_iter()
             .map(|mut pm_info| {
-                // Clean rbenv's verbose output
+                // Clean rvm's verbose output
                 if let Some(version) = pm_info.version.split_whitespace().nth(1) {
-                    // "rbenv 1.2.0" -> "1.2.0"
+                    // "rvm 1.29.12 (latest) by Wayne E. Seguin..." -> "1.29.12"
                     pm_info.version = version.to_string();
                 }
                 pm_info
@@ -45,8 +45,8 @@ impl Find for Rbenv {
     fn check_bump(&self, pm_info: &PmInfo) -> Option<Bump> {
         let http = ureq::agent();
         let latest = Upstream::GitHub {
-            owner: "rbenv",
-            repo: "rbenv",
+            owner: "rvm",
+            repo: "rvm",
         }
         .latest(&http)
         .ok()?;
@@ -55,8 +55,8 @@ impl Find for Rbenv {
     }
 }
 
-impl Categorizable for Rbenv {
+impl Categorizable for Rvm {
     fn category(&self) -> Category {
-        Category::Tools
+        Category::Versioner
     }
 }
