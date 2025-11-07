@@ -12,6 +12,7 @@ use crate::{
             types::{Categorizable, Category, PmInfo},
             updater::update_cmd,
             upstream::Upstream,
+            version::VersionExt,
         },
         find_all_pms_with_args,
     },
@@ -145,8 +146,9 @@ impl ToolLister for Go {
                 let name = path.file_name()?.to_str()?.to_string();
 
                 // Use `go version -m` to get module info
-                let version =
-                    Self::get_tool_version(&path).unwrap_or_else(|| "unknown".to_string());
+                let version = Self::get_tool_version(&path)
+                    .as_deref()
+                    .version_or_unknown();
 
                 Some(Tool {
                     name,

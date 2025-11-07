@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use bole::pm::{GroupedPmInfo, PmInfo, all_package_managers};
+use bole::pm::{GroupedPmInfo, PmInfo, all_package_managers, is_broken_version};
 
 /// Filters for package manager lists.
 pub(crate) struct Filter;
@@ -11,7 +11,7 @@ impl Filter {
     /// Keep only package managers with no version (broken).
     pub(crate) fn broken(pms: Vec<PmInfo>) -> Vec<PmInfo> {
         pms.into_iter()
-            .filter(|pm| pm.version.trim().is_empty())
+            .filter(|pm| is_broken_version(&pm.version))
             .collect()
     }
 
@@ -19,7 +19,7 @@ impl Filter {
     #[allow(dead_code)]
     pub(crate) fn healthy(pms: Vec<PmInfo>) -> Vec<PmInfo> {
         pms.into_iter()
-            .filter(|pm| !pm.version.trim().is_empty())
+            .filter(|pm| !is_broken_version(&pm.version))
             .collect()
     }
 
@@ -36,7 +36,7 @@ impl Filter {
     /// Check if a package manager has an available update.
     fn is_outdated(pm: &PmInfo, detectors: &[Box<dyn bole::pm::Detector>]) -> bool {
         // Broken PMs can't be outdated
-        if pm.version.trim().is_empty() {
+        if is_broken_version(&pm.version) {
             return false;
         }
 
@@ -169,15 +169,17 @@ mod tests {
             test_pm("npm", "8.0.0"),
             test_pm("pip", "   "),
             test_pm("go", "\t\n"),
+            test_pm("deno", "??"),
         ];
 
         // Act
         let broken = Filter::broken(pms);
 
         // Assert
-        assert_eq!(broken.len(), 2);
+        assert_eq!(broken.len(), 3);
         assert_eq!(broken[0].name, "pip");
         assert_eq!(broken[1].name, "go");
+        assert_eq!(broken[2].name, "deno");
     }
 
     #[test]

@@ -8,6 +8,7 @@ use crate::{
             types::{Categorizable, Category, PmInfo},
             updater::update_cmd,
             upstream::Upstream,
+            version::VersionExt,
         },
         find_all_pms,
     },
@@ -72,7 +73,7 @@ impl ToolLister for Pip {
                         if let Some((name, version)) = line.split_once("==") {
                             Some(Tool {
                                 name: name.to_string(),
-                                version: version.to_string(),
+                                version: Some(version).version_or_unknown(),
                                 path: None,
                                 manager: Self::NAME.to_string(),
                             })

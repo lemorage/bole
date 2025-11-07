@@ -8,6 +8,7 @@ use crate::{
             types::{Categorizable, Category, PmInfo},
             updater::update_cmd,
             upstream::Upstream,
+            version::VersionExt,
         },
         find_all_pms_with_args,
     },
@@ -84,8 +85,7 @@ impl ToolLister for Cargo {
                             .trim_start_matches('v')
                             .split(':')
                             .next()
-                            .unwrap_or("unknown")
-                            .to_string();
+                            .version_or_unknown();
 
                         tools.push(Tool {
                             name: name.to_string(),

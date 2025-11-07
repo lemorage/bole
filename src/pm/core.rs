@@ -4,14 +4,16 @@
 //! rely on, including:
 //!
 //! - **Install detection**: Determines how package managers were installed
-//! - **Tool listing**: Lists tools managed by each package manager
-//! - **Version checking**: Unified interface to query upstream registries for
-//!   latest versions
-//! - **Update commands**: Generates appropriate update commands based on
-//!   installation context
 //! - **Path discovery**: Utilities for finding package managers in non-standard
 //!   locations
+//! - **Tool listing**: Lists tools managed by each package manager
 //! - **Types**: Core data structures (`PmInfo`, `Category`) used throughout
+//! - **Update commands**: Generates appropriate update commands based on
+//!   installation context
+//! - **Upstream checking**: Unified interface to query upstream registries for
+//!   latest versions
+//! - **Version handling**: Consistent version extraction and normalization with
+//!   `??` as the unknown marker
 
 pub(super) mod install_method;
 pub(super) mod search_paths;
@@ -19,3 +21,4 @@ pub mod tool_lister;
 pub mod types;
 pub(super) mod updater;
 pub(super) mod upstream;
+pub(super) mod version;

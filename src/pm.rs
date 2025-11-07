@@ -16,10 +16,14 @@ mod system;
 mod wrappers;
 mod zig;
 
-pub(crate) use core::search_paths::{get_search_locations, scan_common_directories};
+pub(crate) use core::{
+    search_paths::{get_search_locations, scan_common_directories},
+    version::normalize_version,
+};
 pub use core::{
     tool_lister::Tool,
     types::{Categorizable, Category, Detector, GroupedPmInfo, InstallMethod, PmInfo},
+    version::{UNKNOWN_VERSION, is_broken_version},
 };
 use std::{collections::HashSet, hash::Hash, path::Path, process::Command};
 
@@ -131,8 +135,7 @@ fn try_detect_at_path(path: &std::path::Path, name: &str, version_args: &[&str])
         return None;
     }
 
-    let version = String::from_utf8(output.stdout).ok()?.trim().to_string();
-
+    let version = normalize_version(output.stdout);
     let install_method = determine_install_method(path);
 
     Some(PmInfo {

@@ -3,6 +3,7 @@ use std::process::Command;
 use crate::pm::core::{
     tool_lister::{Tool, ToolLister},
     types::{Categorizable, Category},
+    version::VersionExt,
 };
 
 /// Pipx - Python application installer and manager
@@ -38,7 +39,7 @@ impl ToolLister for Pipx {
                         if parts.len() >= 2 {
                             Some(Tool {
                                 name: parts[0].to_string(),
-                                version: parts[1].to_string(),
+                                version: Some(parts[1]).version_or_unknown(),
                                 path: None, // pipx doesn't provide paths in short format
                                 manager: Self::NAME.to_string(),
                             })
