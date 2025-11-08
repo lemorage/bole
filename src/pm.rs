@@ -39,7 +39,7 @@ pub use python::{Conda, Pdm, Pip, Pipenv, Pipx, Poetry, Uv};
 pub use ruby::{Bundle, Bundler, Gem};
 pub use rust::Cargo;
 pub use system::{Homebrew, Macports, Nix};
-pub use versioner::{Asdf, Mise, Phpbrew, Pyenv, Rbenv, Rvm, Volta};
+pub use versioner::{Asdf, Mise, Nvm, Phpbrew, Pyenv, Rbenv, Rvm, Volta};
 use which::which_all;
 pub use wrapper::{Corepack, Ni};
 pub use zig::Zig;
@@ -219,6 +219,7 @@ pub fn all_package_managers() -> Vec<Box<dyn Detector>> {
         // Versioners
         Box::new(Asdf),
         Box::new(Mise),
+        Box::new(Nvm),
         Box::new(Phpbrew),
         Box::new(Pyenv),
         Box::new(Rbenv),

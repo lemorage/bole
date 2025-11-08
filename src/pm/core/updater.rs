@@ -42,6 +42,12 @@ pub(crate) fn update_cmd(pm_name: &str, method: &InstallMethod) -> &'static str 
         ("ni", Some(Origin::PackageManager("Homebrew"))) => "brew upgrade ni",
         ("ni", _) => "npm install -g @antfu/ni@latest",
 
+        // NVM
+        ("nvm", Some(Origin::PackageManager("Homebrew"))) => "brew upgrade nvm",
+        ("nvm", _) => {
+            "export NVM_DIR=\"${NVM_DIR:-$HOME/.nvm}\"; curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/install.sh | bash"
+        },
+
         // Python ecosystem
         ("pip", Some(Origin::PackageManager("Homebrew"))) => "brew upgrade python",
         ("pip", Some(Origin::PackageManager("MacPorts"))) => "sudo port upgrade python",

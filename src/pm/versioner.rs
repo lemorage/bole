@@ -2,6 +2,7 @@
 
 mod asdf;
 mod mise;
+mod nvm;
 mod phpbrew;
 mod pyenv;
 mod rbenv;
@@ -10,6 +11,7 @@ mod volta;
 
 pub use asdf::Asdf;
 pub use mise::Mise;
+pub use nvm::Nvm;
 pub use phpbrew::Phpbrew;
 pub use pyenv::Pyenv;
 pub use rbenv::Rbenv;
