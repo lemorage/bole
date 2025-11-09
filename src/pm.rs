@@ -8,6 +8,7 @@ mod gleam;
 mod go;
 mod haskell;
 mod js;
+mod ocaml;
 mod php;
 mod python;
 mod ruby;
@@ -34,6 +35,7 @@ pub use gleam::Gleam;
 pub use go::Go;
 pub use haskell::{Cabal, Stack};
 pub use js::{Bun, Deno, Npm, Pnpm, Yarn};
+pub use ocaml::Opam;
 pub use php::{Composer, Pecl};
 pub use python::{Conda, Pdm, Pip, Pipenv, Pipx, Poetry, Uv};
 pub use ruby::{Bundle, Bundler, Gem};
@@ -198,6 +200,8 @@ pub fn all_package_managers() -> Vec<Box<dyn Detector>> {
         Box::new(Npm),
         Box::new(Pnpm),
         Box::new(Yarn),
+        // OCaml
+        Box::new(Opam),
         // PHP
         Box::new(Composer),
         Box::new(Pecl),

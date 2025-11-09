@@ -48,6 +48,11 @@ pub(crate) fn update_cmd(pm_name: &str, method: &InstallMethod) -> &'static str 
             "export NVM_DIR=\"${NVM_DIR:-$HOME/.nvm}\"; curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/install.sh | bash"
         },
 
+        // OCaml ecosystem
+        ("opam", Some(Origin::PackageManager("Homebrew"))) => "brew upgrade opam",
+        ("opam", Some(Origin::PackageManager("MacPorts"))) => "sudo port upgrade opam",
+        ("opam", _) => "bash -c \"sh <(curl -fsSL https://opam.ocaml.org/install.sh)\"",
+
         // Python ecosystem
         ("pip", Some(Origin::PackageManager("Homebrew"))) => "brew upgrade python",
         ("pip", Some(Origin::PackageManager("MacPorts"))) => "sudo port upgrade python",

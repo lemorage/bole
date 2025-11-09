@@ -17,6 +17,7 @@ pub enum Category {
     Haskell,
     Gleam,
     Zig,
+    OCaml,
 
     // Meta tools
     Versioner,
@@ -38,6 +39,7 @@ impl Category {
             Category::Haskell,
             Category::Gleam,
             Category::Zig,
+            Category::OCaml,
             Category::Versioner,
             Category::Wrapper,
         ]
@@ -57,6 +59,7 @@ impl Category {
             Category::Haskell => "haskell",
             Category::Gleam => "gleam",
             Category::Zig => "zig",
+            Category::OCaml => "ocaml",
             Category::Versioner => "versioner",
             Category::Wrapper => "wrapper",
         }
@@ -68,6 +71,7 @@ impl Category {
         match self {
             Category::System => &["sys"],
             Category::JavaScript => &["js", "typescript", "ts", "node.js", "node"],
+            Category::OCaml => &["ml"],
             Category::Python => &["py"],
             Category::Ruby => &["rb"],
             Category::Rust => &["rs"],
@@ -88,6 +92,7 @@ impl Category {
             Category::Haskell => "Haskell package managers",
             Category::Gleam => "Gleam package managers",
             Category::Zig => "Zig package managers",
+            Category::OCaml => "OCaml package managers",
             Category::Versioner => "Version managers",
             Category::Wrapper => "Package manager wrappers",
         }
