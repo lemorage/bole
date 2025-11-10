@@ -1,4 +1,4 @@
-//! Command implementations for show, check, and list operations.
+//! Command implementations for show, check, and own operations.
 
 use std::collections::HashMap;
 
@@ -517,14 +517,14 @@ fn display_pm_detailed(pm: &PmInfo) {
     }
 }
 
-/// Configuration for the list command.
-/// Lists installed packages managed by package managers.
-pub(crate) struct ListCommand {
+/// Configuration for the own command.
+/// Shows which package managers own which tools.
+pub(crate) struct OwnCommand {
     pm_filter: Option<String>,
     format: Format,
 }
 
-impl ListCommand {
+impl OwnCommand {
     /// Create from CLI arguments.
     pub(crate) fn from_args(pm: Option<String>, tree: bool, json: bool, csv: bool) -> Self {
         Self {
@@ -533,7 +533,7 @@ impl ListCommand {
         }
     }
 
-    /// Execute the list command.
+    /// Execute the own command.
     pub(crate) fn execute(self) {
         // Scan all managed tools
         let all_tools = scan_managed_tools();

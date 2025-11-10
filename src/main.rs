@@ -9,7 +9,7 @@ mod pipeline;
 
 use banner::stream_banner;
 use clap::{CommandFactory, Parser, Subcommand};
-use commands::{CheckCommand, ListCommand, ShowCommand};
+use commands::{CheckCommand, OwnCommand, ShowCommand};
 
 /// A CLI to manage your package managers.
 #[derive(Parser, Debug)]
@@ -79,9 +79,8 @@ enum Commands {
         #[arg(short, long, help = "Show only outdated package managers")]
         outdated: bool,
     },
-    /// List installed packages/tools managed by package managers
-    #[command(alias = "ls")]
-    List {
+    /// Show which package managers own which tools
+    Own {
         /// Package manager to filter by (e.g., pip, cargo, npm)
         pm: Option<String>,
 
@@ -135,13 +134,13 @@ fn main() {
         }) => {
             CheckCommand::from_args(category, all, verbose, broken, outdated).execute();
         },
-        Some(Commands::List {
+        Some(Commands::Own {
             pm,
             tree,
             json,
             csv,
         }) => {
-            ListCommand::from_args(pm, tree, json, csv).execute();
+            OwnCommand::from_args(pm, tree, json, csv).execute();
         },
         None => {
             Bole::command().print_help().unwrap();
