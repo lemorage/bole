@@ -104,32 +104,30 @@ mod tests {
 
         fn spawn(self) -> thread::JoinHandle<()> {
             thread::spawn(move || {
-                for stream in self.listener.incoming() {
-                    if let Ok(mut stream) = stream {
-                        // Simulate network delay
-                        if self.response_delay_ms > 0 {
-                            thread::sleep(Duration::from_millis(self.response_delay_ms));
-                        }
-
-                        // Read request
-                        let mut reader = BufReader::new(&stream);
-                        let mut _request_line = String::new();
-                        let _ = reader.read_line(&mut _request_line);
-
-                        // Send HTTP response
-                        let response = match self.response_status {
-                            204 => "HTTP/1.1 204 No Content\r\n\r\n",
-                            200 => "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK",
-                            404 => "HTTP/1.1 404 Not Found\r\nContent-Length: 9\r\n\r\nNot Found",
-                            500 => {
-                                "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 5\r\n\r\nError"
-                            },
-                            _ => "HTTP/1.1 503 Service Unavailable\r\n\r\n",
-                        };
-
-                        let _ = stream.write_all(response.as_bytes());
-                        break; // Handle only one request per test
+                // Handle only one request per test
+                if let Some(mut stream) = self.listener.incoming().flatten().next() {
+                    // Simulate network delay
+                    if self.response_delay_ms > 0 {
+                        thread::sleep(Duration::from_millis(self.response_delay_ms));
                     }
+
+                    // Read request
+                    let mut reader = BufReader::new(&stream);
+                    let mut _request_line = String::new();
+                    let _ = reader.read_line(&mut _request_line);
+
+                    // Send HTTP response
+                    let response = match self.response_status {
+                        204 => "HTTP/1.1 204 No Content\r\n\r\n",
+                        200 => "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK",
+                        404 => "HTTP/1.1 404 Not Found\r\nContent-Length: 9\r\n\r\nNot Found",
+                        500 => {
+                            "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 5\r\n\r\nError"
+                        },
+                        _ => "HTTP/1.1 503 Service Unavailable\r\n\r\n",
+                    };
+
+                    let _ = stream.write_all(response.as_bytes());
                 }
             })
         }

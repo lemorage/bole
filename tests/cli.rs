@@ -1,7 +1,6 @@
 //! CLI behavior tests.
 
 use assert_cmd::Command;
-use predicates;
 
 /// Helper to create a bole command with color forced.
 fn cmd_with_color() -> Command {
@@ -59,7 +58,7 @@ fn show_all_changes_output() {
     let mut cmd = Command::cargo_bin("bole").unwrap();
 
     // Act
-    let assert = cmd.args(&["show", "-a"]).assert().success();
+    let assert = cmd.args(["show", "-a"]).assert().success();
     let output = assert.get_output();
     let stdout = String::from_utf8_lossy(&output.stdout);
 
@@ -76,7 +75,7 @@ fn show_tree_has_proper_indentation() {
     let mut cmd = Command::cargo_bin("bole").unwrap();
 
     // Act
-    let assert = cmd.args(&["show", "-t"]).assert().success();
+    let assert = cmd.args(["show", "-t"]).assert().success();
     let output = assert.get_output();
     let stdout = String::from_utf8_lossy(&output.stdout);
 
@@ -97,7 +96,7 @@ fn active_paths_are_green() {
     let mut cmd = cmd_with_color();
 
     // Act
-    let assert = cmd.args(&["show", "-ta"]).assert().success();
+    let assert = cmd.args(["show", "-ta"]).assert().success();
     let output = assert.get_output();
     let stdout = String::from_utf8_lossy(&output.stdout);
 
@@ -113,7 +112,7 @@ fn inactive_paths_are_dim() {
     let mut cmd = cmd_with_color();
 
     // Act
-    let assert = cmd.args(&["show", "-ta"]).assert().success();
+    let assert = cmd.args(["show", "-ta"]).assert().success();
     let output = assert.get_output();
     let stdout = String::from_utf8_lossy(&output.stdout);
 
@@ -129,7 +128,7 @@ fn version_format_preserved() {
     let mut cmd = Command::cargo_bin("bole").unwrap();
 
     // Act
-    let assert = cmd.args(&["show", "-t"]).assert().success();
+    let assert = cmd.args(["show", "-t"]).assert().success();
     let output = assert.get_output();
     let stdout = String::from_utf8_lossy(&output.stdout);
 
@@ -148,7 +147,7 @@ fn json_output_is_valid() {
     let mut cmd = Command::cargo_bin("bole").unwrap();
 
     // Act
-    let assert = cmd.args(&["show", "--json"]).assert().success();
+    let assert = cmd.args(["show", "--json"]).assert().success();
     let output = assert.get_output();
 
     // Assert
@@ -162,7 +161,7 @@ fn csv_has_proper_header() {
     let mut cmd = Command::cargo_bin("bole").unwrap();
 
     // Act
-    let assert = cmd.args(&["show", "--csv"]).assert().success();
+    let assert = cmd.args(["show", "--csv"]).assert().success();
     let output = assert.get_output();
     let csv = String::from_utf8_lossy(&output.stdout);
 
@@ -180,7 +179,7 @@ fn conflicting_formats_rejected() {
     let mut cmd = Command::cargo_bin("bole").unwrap();
 
     // Act & Assert
-    cmd.args(&["show", "--json", "--csv"]).assert().failure();
+    cmd.args(["show", "--json", "--csv"]).assert().failure();
 }
 
 #[test]
@@ -214,7 +213,7 @@ fn check_verbose_shows_progress() {
 
     // Act
     let assert = cmd
-        .args(&["check", "-v"])
+        .args(["check", "-v"])
         .timeout(std::time::Duration::from_secs(30))
         .assert()
         .success();
@@ -237,7 +236,7 @@ fn check_very_verbose_shows_categories() {
 
     // Act
     let assert = cmd
-        .args(&["check", "-vv"])
+        .args(["check", "-vv"])
         .timeout(std::time::Duration::from_secs(30))
         .assert()
         .success();
