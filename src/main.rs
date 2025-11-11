@@ -79,10 +79,10 @@ enum Commands {
         #[arg(short, long, help = "Show only outdated package managers")]
         outdated: bool,
     },
-    /// Show which package managers own which tools
+    /// Show which package managers own a specific tool
     Own {
-        /// Package manager to filter by (e.g., pip, cargo, npm)
-        pm: Option<String>,
+        /// Tool name to search for (e.g., typescript, ripgrep, uv)
+        tool: String,
 
         /// Display output in tree format
         #[arg(short, long, help = "Display output in tree format")]
@@ -135,12 +135,12 @@ fn main() {
             CheckCommand::from_args(category, all, verbose, broken, outdated).execute();
         },
         Some(Commands::Own {
-            pm,
+            tool,
             tree,
             json,
             csv,
         }) => {
-            OwnCommand::from_args(pm, tree, json, csv).execute();
+            OwnCommand::from_args(tool, tree, json, csv).execute();
         },
         None => {
             Bole::command().print_help().unwrap();

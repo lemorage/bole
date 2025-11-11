@@ -27,6 +27,7 @@ pub(crate) trait Formatter {
     fn format_grouped(&self, grouped: &[GroupedPmInfo]) -> String;
 
     /// Format installed tools grouped by package manager.
+    #[allow(dead_code)]
     fn format_tools(&self, tools: &HashMap<String, Vec<Tool>>) -> String;
 }
 

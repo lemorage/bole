@@ -519,16 +519,17 @@ fn display_pm_detailed(pm: &PmInfo) {
 
 /// Configuration for the own command.
 /// Shows which package managers own which tools.
+#[allow(unused)]
 pub(crate) struct OwnCommand {
-    pm_filter: Option<String>,
+    tool_filter: String,
     format: Format,
 }
 
 impl OwnCommand {
     /// Create from CLI arguments.
-    pub(crate) fn from_args(pm: Option<String>, tree: bool, json: bool, csv: bool) -> Self {
+    pub(crate) fn from_args(tool: String, tree: bool, json: bool, csv: bool) -> Self {
         Self {
-            pm_filter: pm,
+            tool_filter: tool,
             format: Format::from_flags(json, csv, tree),
         }
     }
@@ -538,27 +539,62 @@ impl OwnCommand {
         // Scan all managed tools
         let all_tools = scan_managed_tools();
 
-        // Apply PM filter if specified
-        let tools_to_show: HashMap<String, Vec<Tool>> = if let Some(ref pm_name) = self.pm_filter {
-            all_tools
-                .into_iter()
-                .filter(|(name, _)| name.eq_ignore_ascii_case(pm_name))
-                .collect()
-        } else {
-            all_tools
-        };
-
-        // Check if we found anything
-        if tools_to_show.is_empty() {
-            if let Some(pm) = self.pm_filter {
-                println!("No tools found managed by '{}'", pm);
-            } else {
-                println!("No managed tools found on this system");
-            }
+        if all_tools.is_empty() {
+            println!("No managed tools found on this system");
             return;
         }
 
-        print!("{}", self.format.format_tools(&tools_to_show));
+        // Transform to tool-centric view
+        let by_tool = group_by_tool_name(all_tools);
+
+        // Apply filter by tool name
+        let tools_to_show: HashMap<String, Vec<Tool>> = by_tool
+            .into_iter()
+            .filter(|(tool_name, _)| {
+                tool_name
+                    .to_lowercase()
+                    .contains(&self.tool_filter.to_lowercase())
+            })
+            .collect();
+
+        if tools_to_show.is_empty() {
+            println!("No tools matching '{}' found", self.tool_filter);
+            return;
+        }
+
+        display_tool_ownership(&tools_to_show);
+    }
+}
+
+/// Transform PM-centric data into tool-centric data.
+fn group_by_tool_name(pm_tools: HashMap<String, Vec<Tool>>) -> HashMap<String, Vec<Tool>> {
+    let mut by_tool: HashMap<String, Vec<Tool>> = HashMap::new();
+
+    for (_manager, tools) in pm_tools {
+        for tool in tools {
+            by_tool.entry(tool.name.clone()).or_default().push(tool);
+        }
+    }
+
+    by_tool
+}
+
+/// Display tools with their owning package managers.
+fn display_tool_ownership(tools: &HashMap<String, Vec<Tool>>) {
+    let mut sorted_tools: Vec<_> = tools.iter().collect();
+    sorted_tools.sort_by_key(|(name, _)| name.as_str());
+
+    // Table header
+    println!("{:<30} {:<15} {:<15}", "TOOL", "VERSION", "MANAGER");
+    println!("{}", "-".repeat(60));
+
+    for (tool_name, instances) in sorted_tools {
+        for tool in instances {
+            println!(
+                "{:<30} {:<15} {:<15}",
+                tool_name, tool.version, tool.manager
+            );
+        }
     }
 }
 
