@@ -28,11 +28,17 @@ pub(crate) enum NetworkStatus {
 /// Performs a lightweight connectivity check by attempting to reach
 /// well-known, highly available endpoints.
 fn has_internet_connection() -> bool {
-    // Configure agent with reasonable timeout to prevent hanging
-    let config = ureq::Agent::config_builder()
-        .timeout_global(Some(Duration::from_secs(TIMEOUT_SECS)))
+    // Configure agent with native-tls provider and reasonable timeout
+    let tls_config = ureq::tls::TlsConfig::builder()
+        .provider(ureq::tls::TlsProvider::NativeTls)
         .build();
-    let agent: ureq::Agent = config.into();
+
+    let config = ureq::config::Config::builder()
+        .timeout_global(Some(Duration::from_secs(TIMEOUT_SECS)))
+        .tls_config(tls_config)
+        .build();
+
+    let agent = config.new_agent();
 
     // Try multiple reliable endpoints to avoid false negatives
     let endpoints = [
@@ -183,10 +189,10 @@ mod tests {
         let _handle = server.spawn();
 
         // Act
-        let config = ureq::Agent::config_builder()
+        let config = ureq::config::Config::builder()
             .timeout_global(Some(Duration::from_secs(1)))
             .build();
-        let agent: ureq::Agent = config.into();
+        let agent = config.new_agent();
 
         let url = format!("http://127.0.0.1:{}", port);
         let response = agent.get(&url).call();
@@ -204,10 +210,10 @@ mod tests {
         let _handle = server.spawn();
 
         // Act
-        let config = ureq::Agent::config_builder()
+        let config = ureq::config::Config::builder()
             .timeout_global(Some(Duration::from_secs(1)))
             .build();
-        let agent: ureq::Agent = config.into();
+        let agent = config.new_agent();
 
         let url = format!("http://127.0.0.1:{}", port);
         let response = agent.get(&url).call();
@@ -225,10 +231,10 @@ mod tests {
         let _handle = server.spawn();
 
         // Act
-        let config = ureq::Agent::config_builder()
+        let config = ureq::config::Config::builder()
             .timeout_global(Some(Duration::from_secs(1)))
             .build();
-        let agent: ureq::Agent = config.into();
+        let agent = config.new_agent();
 
         let url = format!("http://127.0.0.1:{}", port);
         let start = std::time::Instant::now();
@@ -288,10 +294,10 @@ mod tests {
         let _handle = server.spawn();
 
         // Act
-        let config = ureq::Agent::config_builder()
+        let config = ureq::config::Config::builder()
             .timeout_global(Some(Duration::from_secs(1)))
             .build();
-        let agent: ureq::Agent = config.into();
+        let agent = config.new_agent();
 
         let url = format!("http://127.0.0.1:{}", port);
         let response = agent.get(&url).call();
