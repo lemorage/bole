@@ -1,10 +1,10 @@
 //! CLI behavior tests.
 
-use assert_cmd::Command;
+use assert_cmd::{Command, cargo};
 
 /// Helper to create a bole command with color forced.
 fn cmd_with_color() -> Command {
-    let mut cmd = Command::cargo_bin("bole").unwrap();
+    let mut cmd = Command::new(cargo::cargo_bin!("bole"));
     cmd.env("CLICOLOR_FORCE", "1");
     cmd
 }
@@ -12,7 +12,7 @@ fn cmd_with_color() -> Command {
 #[test]
 fn bare_command_shows_banner() {
     // Arrange
-    let mut cmd = Command::cargo_bin("bole").unwrap();
+    let mut cmd = Command::new(cargo::cargo_bin!("bole"));
 
     // Act & Assert
     cmd.assert()
@@ -27,8 +27,7 @@ fn help_flags_show_banner() {
 
     // Act & Assert
     for arg in help_args {
-        Command::cargo_bin("bole")
-            .unwrap()
+        Command::new(cargo::cargo_bin!("bole"))
             .arg(arg)
             .assert()
             .stdout(predicates::str::contains("BOLE"));
@@ -38,7 +37,7 @@ fn help_flags_show_banner() {
 #[test]
 fn show_command_has_tree_structure() {
     // Arrange
-    let mut cmd = Command::cargo_bin("bole").unwrap();
+    let mut cmd = Command::new(cargo::cargo_bin!("bole"));
 
     // Act
     let assert = cmd.arg("show").assert().success();
@@ -55,7 +54,7 @@ fn show_command_has_tree_structure() {
 #[test]
 fn show_all_changes_output() {
     // Arrange
-    let mut cmd = Command::cargo_bin("bole").unwrap();
+    let mut cmd = Command::new(cargo::cargo_bin!("bole"));
 
     // Act
     let assert = cmd.args(["show", "-a"]).assert().success();
@@ -72,7 +71,7 @@ fn show_all_changes_output() {
 #[test]
 fn show_tree_has_proper_indentation() {
     // Arrange
-    let mut cmd = Command::cargo_bin("bole").unwrap();
+    let mut cmd = Command::new(cargo::cargo_bin!("bole"));
 
     // Act
     let assert = cmd.args(["show", "-t"]).assert().success();
@@ -125,7 +124,7 @@ fn inactive_paths_are_dim() {
 #[test]
 fn version_format_preserved() {
     // Arrange
-    let mut cmd = Command::cargo_bin("bole").unwrap();
+    let mut cmd = Command::new(cargo::cargo_bin!("bole"));
 
     // Act
     let assert = cmd.args(["show", "-t"]).assert().success();
@@ -144,7 +143,7 @@ fn version_format_preserved() {
 #[test]
 fn json_output_is_valid() {
     // Arrange
-    let mut cmd = Command::cargo_bin("bole").unwrap();
+    let mut cmd = Command::new(cargo::cargo_bin!("bole"));
 
     // Act
     let assert = cmd.args(["show", "--json"]).assert().success();
@@ -158,7 +157,7 @@ fn json_output_is_valid() {
 #[test]
 fn csv_has_proper_header() {
     // Arrange
-    let mut cmd = Command::cargo_bin("bole").unwrap();
+    let mut cmd = Command::new(cargo::cargo_bin!("bole"));
 
     // Act
     let assert = cmd.args(["show", "--csv"]).assert().success();
@@ -176,7 +175,7 @@ fn csv_has_proper_header() {
 #[test]
 fn conflicting_formats_rejected() {
     // Arrange
-    let mut cmd = Command::cargo_bin("bole").unwrap();
+    let mut cmd = Command::new(cargo::cargo_bin!("bole"));
 
     // Act & Assert
     cmd.args(["show", "--json", "--csv"]).assert().failure();
@@ -186,7 +185,7 @@ fn conflicting_formats_rejected() {
 #[ignore = "`check` makes slow network requests"]
 fn check_shows_summary() {
     // Arrange
-    let mut cmd = Command::cargo_bin("bole").unwrap();
+    let mut cmd = Command::new(cargo::cargo_bin!("bole"));
 
     // Act
     let assert = cmd
@@ -209,7 +208,7 @@ fn check_shows_summary() {
 #[ignore = "`check -v` makes slow network requests"]
 fn check_verbose_shows_progress() {
     // Arrange
-    let mut cmd = Command::cargo_bin("bole").unwrap();
+    let mut cmd = Command::new(cargo::cargo_bin!("bole"));
 
     // Act
     let assert = cmd
@@ -232,7 +231,7 @@ fn check_verbose_shows_progress() {
 #[ignore = "`check -vv` makes slow network requests"]
 fn check_very_verbose_shows_categories() {
     // Arrange
-    let mut cmd = Command::cargo_bin("bole").unwrap();
+    let mut cmd = Command::new(cargo::cargo_bin!("bole"));
 
     // Act
     let assert = cmd
