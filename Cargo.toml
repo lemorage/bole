@@ -1,6 +1,6 @@
 [package]
 name = "bole"
-version = "0.2.4"
+version = "0.2.5"
 edition = "2024"
 authors = ["Glenn Miao (lemorage) <one.lemorage@gmail.com>"]
 documentation = "https://docs.rs/bole"
