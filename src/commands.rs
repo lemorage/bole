@@ -549,19 +549,8 @@ impl OwnCommand {
         // Transform to tool-centric view
         let by_tool = group_by_tool_name(all_tools);
 
-        // Filter by tool name (exact or substring)
-        let tools_to_show: HashMap<String, Vec<Tool>> = by_tool
-            .into_iter()
-            .filter(|(tool_name, _)| {
-                if self.exact {
-                    tool_name.eq_ignore_ascii_case(&self.tool_filter)
-                } else {
-                    tool_name
-                        .to_lowercase()
-                        .contains(&self.tool_filter.to_lowercase())
-                }
-            })
-            .collect();
+        // Filter by tool name
+        let tools_to_show = Filter::by_tool_name(by_tool, &self.tool_filter, self.exact);
 
         if tools_to_show.is_empty() {
             println!("No tools matching '{}' found", self.tool_filter);

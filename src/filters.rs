@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use bole::pm::{GroupedPmInfo, PmInfo, all_package_managers, is_broken_version};
+use bole::pm::{GroupedPmInfo, PmInfo, Tool, all_package_managers, is_broken_version};
 
 /// Filters for package manager lists.
 pub(crate) struct Filter;
@@ -46,6 +46,24 @@ impl Filter {
             .and_then(|d| d.check_bump(pm))
             .map(|bump| bump.latest != pm.version)
             .unwrap_or(false) // No detector or no bump info means not outdated
+    }
+
+    /// Filter tools by name (exact or substring match).
+    pub(crate) fn by_tool_name(
+        tools: HashMap<String, Vec<Tool>>,
+        pattern: &str,
+        exact: bool,
+    ) -> HashMap<String, Vec<Tool>> {
+        tools
+            .into_iter()
+            .filter(|(tool_name, _)| {
+                if exact {
+                    tool_name.eq_ignore_ascii_case(pattern)
+                } else {
+                    tool_name.to_lowercase().contains(&pattern.to_lowercase())
+                }
+            })
+            .collect()
     }
 }
 
