@@ -81,8 +81,12 @@ enum Commands {
     },
     /// Show which package managers own a specific tool
     Own {
-        /// Tool name to search for (e.g., typescript, ripgrep, uv)
+        /// Tool name to search for (substring matching)
         tool: String,
+
+        /// Match tool name exactly (case-insensitive)
+        #[arg(short = 'e', long)]
+        exact: bool,
 
         /// Display output in tree format
         #[arg(short, long, help = "Display output in tree format")]
@@ -136,11 +140,12 @@ fn main() {
         },
         Some(Commands::Own {
             tool,
+            exact,
             tree,
             json,
             csv,
         }) => {
-            OwnCommand::from_args(tool, tree, json, csv).execute();
+            OwnCommand::from_args(tool, exact, tree, json, csv).execute();
         },
         None => {
             Bole::command().print_help().unwrap();

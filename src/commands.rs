@@ -522,14 +522,16 @@ fn display_pm_detailed(pm: &PmInfo) {
 #[allow(unused)]
 pub(crate) struct OwnCommand {
     tool_filter: String,
+    exact: bool,
     format: Format,
 }
 
 impl OwnCommand {
     /// Create from CLI arguments.
-    pub(crate) fn from_args(tool: String, tree: bool, json: bool, csv: bool) -> Self {
+    pub(crate) fn from_args(tool: String, exact: bool, tree: bool, json: bool, csv: bool) -> Self {
         Self {
             tool_filter: tool,
+            exact,
             format: Format::from_flags(json, csv, tree),
         }
     }
@@ -547,13 +549,17 @@ impl OwnCommand {
         // Transform to tool-centric view
         let by_tool = group_by_tool_name(all_tools);
 
-        // Apply filter by tool name
+        // Filter by tool name (exact or substring)
         let tools_to_show: HashMap<String, Vec<Tool>> = by_tool
             .into_iter()
             .filter(|(tool_name, _)| {
-                tool_name
-                    .to_lowercase()
-                    .contains(&self.tool_filter.to_lowercase())
+                if self.exact {
+                    tool_name.eq_ignore_ascii_case(&self.tool_filter)
+                } else {
+                    tool_name
+                        .to_lowercase()
+                        .contains(&self.tool_filter.to_lowercase())
+                }
             })
             .collect();
 
