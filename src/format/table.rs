@@ -38,12 +38,15 @@ impl Formatter for TableFormatter {
         writeln!(output, "{:<30} {:<15} {:<15}", "TOOL", "VERSION", "MANAGER").unwrap();
         writeln!(output, "{}", "-".repeat(60)).unwrap();
 
-        for (manager, tool_list) in tools {
-            for tool in tool_list {
+        let mut sorted_tools: Vec<_> = tools.iter().collect();
+        sorted_tools.sort_by_key(|(name, _)| name.as_str());
+
+        for (_tool_name, instances) in sorted_tools {
+            for tool in instances {
                 writeln!(
                     output,
                     "{:<30} {:<15} {:<15}",
-                    tool.name, tool.version, manager
+                    tool.name, tool.version, tool.manager
                 )
                 .unwrap();
             }

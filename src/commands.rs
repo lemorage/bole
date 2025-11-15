@@ -519,7 +519,6 @@ fn display_pm_detailed(pm: &PmInfo) {
 
 /// Configuration for the own command.
 /// Shows which package managers own which tools.
-#[allow(unused)]
 pub(crate) struct OwnCommand {
     tool_filter: String,
     exact: bool,
@@ -538,7 +537,6 @@ impl OwnCommand {
 
     /// Execute the own command.
     pub(crate) fn execute(self) {
-        // Scan all managed tools
         let all_tools = scan_managed_tools();
 
         if all_tools.is_empty() {
@@ -557,7 +555,9 @@ impl OwnCommand {
             return;
         }
 
-        display_tool_ownership(&tools_to_show);
+        // Format and display
+        let output = self.format.format_tools(&tools_to_show);
+        println!("{}", output);
     }
 }
 
@@ -572,25 +572,6 @@ fn group_by_tool_name(pm_tools: HashMap<String, Vec<Tool>>) -> HashMap<String, V
     }
 
     by_tool
-}
-
-/// Display tools with their owning package managers.
-fn display_tool_ownership(tools: &HashMap<String, Vec<Tool>>) {
-    let mut sorted_tools: Vec<_> = tools.iter().collect();
-    sorted_tools.sort_by_key(|(name, _)| name.as_str());
-
-    // Table header
-    println!("{:<30} {:<15} {:<15}", "TOOL", "VERSION", "MANAGER");
-    println!("{}", "-".repeat(60));
-
-    for (tool_name, instances) in sorted_tools {
-        for tool in instances {
-            println!(
-                "{:<30} {:<15} {:<15}",
-                tool_name, tool.version, tool.manager
-            );
-        }
-    }
 }
 
 /// Diagnose why a PM is broken.
