@@ -110,38 +110,24 @@ impl Formatter for TreeFormatter {
         }
 
         let mut out = String::new();
-
-        // Sort managers for consistent output
         let mut sorted: Vec<_> = tools.iter().collect();
-        sorted.sort_by(|a, b| a.0.cmp(b.0));
+        sorted.sort_by_key(|(name, _)| name.as_str());
 
-        for (i, (manager, tool_list)) in sorted.iter().enumerate() {
-            let is_last = i == sorted.len() - 1;
-            let prefix = if is_last { "└──" } else { "├──" };
+        for (idx, (tool_name, instances)) in sorted.iter().enumerate() {
+            out.push_str(&format!("{}\n", tool_name));
 
-            // Show manager with tool count
-            let count = if tool_list.len() == 1 {
-                " (1 tool)".to_string()
-            } else {
-                format!(" ({} tools)", tool_list.len())
-            };
-
-            out.push_str(&format!("{} {}{}\n", prefix, manager, count));
-
-            // Render each tool as a child node
-            for (j, tool) in tool_list.iter().enumerate() {
-                let is_last_child = j == tool_list.len() - 1;
-                let continuation = if is_last { "    " } else { "│   " };
-                let child_prefix = if is_last_child {
-                    "└──"
-                } else {
-                    "├──"
-                };
-
+            // List versions with their package managers
+            for (i, tool) in instances.iter().enumerate() {
+                let is_last = i == instances.len() - 1;
+                let prefix = if is_last { "└──" } else { "├──" };
                 out.push_str(&format!(
-                    "{} {} {} v{}\n",
-                    continuation, child_prefix, tool.name, tool.version
+                    "  {} v{} via {}\n",
+                    prefix, tool.version, tool.manager
                 ));
+            }
+
+            if idx < sorted.len() - 1 {
+                out.push('\n');
             }
         }
 
