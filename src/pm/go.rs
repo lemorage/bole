@@ -109,17 +109,10 @@ impl ToolLister for Go {
     }
 
     fn list(&self) -> Vec<Tool> {
-        // Get GOPATH/bin directory where tools are installed
-        let gopath = match Command::new("go").args(["env", "GOPATH"]).output() {
-            Ok(output) if output.status.success() => {
-                String::from_utf8_lossy(&output.stdout).trim().to_string()
-            },
-            _ => env::var("GOPATH").unwrap_or_else(|_| {
-                env::var("HOME")
-                    .map(|home| format!("{}/go", home))
-                    .unwrap_or_else(|_| "/usr/local/go".to_string())
-            }),
-        };
+        let gopath = env::var("GOPATH")
+            .ok()
+            .or_else(|| env::var("HOME").ok().map(|home| format!("{}/go", home)))
+            .unwrap_or_else(|| "/usr/local/go".to_string());
 
         let bin_dir = PathBuf::from(gopath).join("bin");
         if !bin_dir.exists() {

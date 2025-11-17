@@ -26,6 +26,22 @@ impl ToolLister for Pipx {
     }
 
     fn list(&self) -> Vec<Tool> {
+        let pipx_home = std::env::var("PIPX_HOME")
+            .ok()
+            .or_else(|| {
+                Command::new("pipx")
+                    .args(["environment", "--value", "PIPX_HOME"])
+                    .output()
+                    .ok()
+                    .and_then(|o| String::from_utf8(o.stdout).ok())
+                    .map(|s| s.trim().to_string())
+            })
+            .unwrap_or_else(|| {
+                dirs::home_dir()
+                    .map(|h| format!("{}/.local/pipx", h.display()))
+                    .unwrap_or_else(|| "/usr/local/pipx".to_string())
+            });
+
         let output = Command::new("pipx").args(["list", "--short"]).output();
 
         match output {
@@ -36,10 +52,13 @@ impl ToolLister for Pipx {
                     .filter_map(|line| {
                         let parts: Vec<&str> = line.split_whitespace().collect();
                         if parts.len() >= 2 {
+                            let name = parts[0];
+                            let path = format!("{}/venvs/{}/bin/{}", pipx_home, name, name);
+
                             Some(Tool {
-                                name: parts[0].to_string(),
+                                name: name.to_string(),
                                 version: Some(parts[1]).version_or_unknown(),
-                                path: None, // pipx doesn't provide paths in short format
+                                path: Some(path),
                                 manager: Self::NAME.to_string(),
                             })
                         } else {

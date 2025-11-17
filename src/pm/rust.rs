@@ -68,6 +68,11 @@ impl ToolLister for Cargo {
     }
 
     fn list(&self) -> Vec<Tool> {
+        let cargo_home = std::env::var("CARGO_HOME")
+            .ok()
+            .or_else(|| dirs::home_dir().map(|h| format!("{}/.cargo", h.display())))
+            .unwrap_or_else(|| "/usr/local/cargo".to_string());
+
         let output = Command::new("cargo").args(["install", "--list"]).output();
 
         match output {
@@ -86,10 +91,12 @@ impl ToolLister for Cargo {
                             .next()
                             .version_or_unknown();
 
+                        let path = format!("{}/bin/{}", cargo_home, name);
+
                         tools.push(Tool {
                             name: name.to_string(),
                             version,
-                            path: None,
+                            path: Some(path),
                             manager: Self::NAME.to_string(),
                         });
                     }

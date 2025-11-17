@@ -63,13 +63,17 @@ impl Formatter for CsvFormatter {
     fn format_tools(&self, tools: &HashMap<String, Vec<Tool>>) -> String {
         let mut out = String::from("Tool,Version,Manager,Path\n");
 
-        for (manager, tool_list) in tools {
-            for tool in tool_list {
+        // Sort by tool name for consistent output
+        let mut sorted: Vec<_> = tools.iter().collect();
+        sorted.sort_by_key(|(name, _)| name.as_str());
+
+        for (_tool_name, instances) in sorted {
+            for tool in instances {
                 out.push_str(&format!(
                     "{},{},{},{}\n",
                     Self::escape(&tool.name),
                     Self::escape(&tool.version),
-                    Self::escape(manager),
+                    Self::escape(&tool.manager),
                     Self::escape(tool.path.as_deref().unwrap_or(""))
                 ));
             }

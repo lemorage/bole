@@ -73,7 +73,7 @@ impl ToolLister for Pip {
                             Some(Tool {
                                 name: name.to_string(),
                                 version: Some(version).version_or_unknown(),
-                                path: None,
+                                path: None, // Pip installs modules, not executables
                                 manager: Self::NAME.to_string(),
                             })
                         } else {
