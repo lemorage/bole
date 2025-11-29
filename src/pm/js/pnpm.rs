@@ -1,10 +1,13 @@
+use std::process::Command;
+
 use crate::{
     find::{Bump, Find},
     pm::{
         core::{
-            types::{Categorizable, Category, PmInfo},
+            types::{Categorizable, Category, PmInfo, Tool, ToolLister},
             updater::update_cmd,
             upstream::Upstream,
+            version::VersionExt,
         },
         find_all_pms,
     },
@@ -48,5 +51,52 @@ impl Find for Pnpm {
 impl Categorizable for Pnpm {
     fn category(&self) -> Category {
         Category::JavaScript
+    }
+}
+
+impl ToolLister for Pnpm {
+    fn name(&self) -> &'static str {
+        Self::NAME
+    }
+
+    fn is_available(&self) -> bool {
+        Command::new("pnpm").arg("--version").output().is_ok()
+    }
+
+    fn list(&self) -> Vec<Tool> {
+        let output = Command::new("pnpm")
+            .args(["list", "-g", "--depth=0"]) // No JSON
+            .output();
+
+        match output {
+            Ok(output) if output.status.success() => {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                let mut tools = Vec::new();
+
+                for line in stdout.lines() {
+                    // Skip headers and empty lines
+                    if line.is_empty() || line.starts_with("Legend:") {
+                        continue;
+                    }
+
+                    // Parse "package version" format
+                    let parts: Vec<&str> = line.split_whitespace().collect();
+                    if parts.len() >= 2 {
+                        tools.push(Tool {
+                            name: parts[0].to_string(),
+                            version: Some(parts[1]).version_or_unknown(),
+                            path: None,
+                            manager: Self::NAME.to_string(),
+                        });
+                    }
+                }
+                tools
+            },
+            _ => Vec::new(),
+        }
+    }
+
+    fn owns(&self, tool_name: &str) -> Option<Tool> {
+        self.list().into_iter().find(|t| t.name == tool_name)
     }
 }

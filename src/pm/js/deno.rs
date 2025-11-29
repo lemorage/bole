@@ -60,3 +60,7 @@ impl Categorizable for Deno {
         Category::JavaScript
     }
 }
+
+// NOTE: No ToolLister implementation.
+// Deno has no command to list installed tools (no manifest, no registry).
+// Scanning ~/.deno/bin/ would be unreliable.

@@ -239,10 +239,10 @@ pub fn all_package_managers() -> Vec<Box<dyn Detector>> {
 pub fn tool_listers() -> Vec<Box<dyn ToolLister>> {
     vec![
         // JavaScript
-        // Box::new(Npm),
-        // Box::new(Yarn),
-        // Box::new(Pnpm),
-        // Box::new(Bun),
+        Box::new(Npm),
+        Box::new(Yarn),
+        Box::new(Pnpm),
+        Box::new(Bun),
         // Python
         Box::new(Pip),
         Box::new(Pipx),
