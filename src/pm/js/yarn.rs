@@ -18,6 +18,32 @@ pub struct Yarn;
 
 impl Yarn {
     const NAME: &'static str = "yarn";
+
+    fn parse_yarn_ndjson(stdout: &str) -> Vec<Tool> {
+        stdout
+            .lines()
+            .filter_map(|line| serde_json::from_str::<serde_json::Value>(line).ok())
+            .filter(|json| json.get("type").and_then(|t| t.as_str()) == Some("tree"))
+            .flat_map(|json| {
+                json.get("data")
+                    .and_then(|d| d.get("trees"))
+                    .and_then(|t| t.as_array())
+                    .cloned()
+                    .unwrap_or_default()
+            })
+            .filter_map(|tree| {
+                let name = tree.get("name")?.as_str()?;
+                let (pkg, version) = name.rsplit_once('@')?;
+
+                Some(Tool {
+                    name: pkg.to_string(),
+                    version: Some(version).version_or_unknown(),
+                    path: None,
+                    manager: Self::NAME.to_string(),
+                })
+            })
+            .collect()
+    }
 }
 
 impl Find for Yarn {
@@ -65,43 +91,16 @@ impl ToolLister for Yarn {
     fn list(&self) -> Vec<Tool> {
         let output = Command::new("yarn")
             .args(["global", "list", "--json"])
-            .output();
+            .output()
+            .ok()
+            .filter(|o| o.status.success());
 
-        match output {
-            Ok(output) if output.status.success() => {
-                let stdout = String::from_utf8_lossy(&output.stdout);
-                // Yarn outputs multiple JSON objects, one per line
-                let mut tools = Vec::new();
-                for line in stdout.lines() {
-                    if let Ok(json) = serde_json::from_str::<serde_json::Value>(line) {
-                        if json.get("type").and_then(|t| t.as_str()) == Some("tree") {
-                            if let Some(data) = json.get("data") {
-                                if let Some(trees) = data.get("trees").and_then(|t| t.as_array()) {
-                                    for tree in trees {
-                                        if let Some(name) =
-                                            tree.get("name").and_then(|n| n.as_str())
-                                        {
-                                            // Parse "package@version" format
-                                            let parts: Vec<&str> = name.rsplitn(2, '@').collect();
-                                            if parts.len() == 2 {
-                                                tools.push(Tool {
-                                                    name: parts[1].to_string(),
-                                                    version: Some(parts[0]).version_or_unknown(),
-                                                    path: None,
-                                                    manager: Self::NAME.to_string(),
-                                                });
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                tools
-            },
-            _ => Vec::new(),
-        }
+        output
+            .map(|o| {
+                let stdout = String::from_utf8_lossy(&o.stdout);
+                Self::parse_yarn_ndjson(&stdout)
+            })
+            .unwrap_or_default()
     }
 
     fn owns(&self, tool_name: &str) -> Option<Tool> {

@@ -18,6 +18,24 @@ pub struct Bun;
 
 impl Bun {
     const NAME: &'static str = "bun";
+
+    fn parse_bun_tree(stdout: &str) -> Vec<Tool> {
+        stdout
+            .lines()
+            .filter(|line| !line.is_empty() && !line.starts_with("node_modules"))
+            .filter_map(|line| {
+                let clean = line.trim_start_matches(|c: char| !c.is_alphanumeric());
+                let (name, version) = clean.split_once('@')?;
+
+                Some(Tool {
+                    name: name.to_string(),
+                    version: Some(version).version_or_unknown(),
+                    path: None,
+                    manager: Self::NAME.to_string(),
+                })
+            })
+            .collect()
+    }
 }
 
 impl Find for Bun {
@@ -64,39 +82,18 @@ impl ToolLister for Bun {
     }
 
     fn list(&self) -> Vec<Tool> {
-        let output = Command::new("bun").args(["pm", "ls", "-g"]).output();
+        let output = Command::new("bun")
+            .args(["pm", "ls", "-g"])
+            .output()
+            .ok()
+            .filter(|o| o.status.success());
 
-        match output {
-            Ok(output) if output.status.success() => {
-                let stdout = String::from_utf8_lossy(&output.stdout);
-                let mut tools = Vec::new();
-
-                // Parse bun's output format (package@version)
-                for line in stdout.lines() {
-                    // Skip header and empty lines
-                    if line.is_empty() || line.starts_with("node_modules") {
-                        continue;
-                    }
-
-                    // Parse lines like "├── typescript@5.2.0"
-                    let line = line.trim_start_matches(|c: char| !c.is_alphanumeric());
-
-                    if line.contains('@') {
-                        let parts: Vec<&str> = line.splitn(2, '@').collect();
-                        if parts.len() == 2 {
-                            tools.push(Tool {
-                                name: parts[0].to_string(),
-                                version: Some(parts[1]).version_or_unknown(),
-                                path: None,
-                                manager: Self::NAME.to_string(),
-                            });
-                        }
-                    }
-                }
-                tools
-            },
-            _ => Vec::new(),
-        }
+        output
+            .map(|o| {
+                let stdout = String::from_utf8_lossy(&o.stdout);
+                Self::parse_bun_tree(&stdout)
+            })
+            .unwrap_or_default()
     }
 
     fn owns(&self, tool_name: &str) -> Option<Tool> {

@@ -18,6 +18,25 @@ pub struct Npm;
 
 impl Npm {
     const NAME: &'static str = "npm";
+
+    fn parse_npm_json(stdout: &[u8]) -> Option<Vec<Tool>> {
+        let json = serde_json::from_slice::<serde_json::Value>(stdout).ok()?;
+        let deps = json.get("dependencies")?.as_object()?;
+
+        Some(
+            deps.iter()
+                .map(|(name, info)| Tool {
+                    name: name.clone(),
+                    version: info
+                        .get("version")
+                        .and_then(|v| v.as_str())
+                        .version_or_unknown(),
+                    path: None,
+                    manager: Self::NAME.to_string(),
+                })
+                .collect(),
+        )
+    }
 }
 
 impl Find for Npm {
@@ -61,31 +80,13 @@ impl ToolLister for Npm {
     fn list(&self) -> Vec<Tool> {
         let output = Command::new("npm")
             .args(["list", "-g", "--depth=0", "--json"])
-            .output();
+            .output()
+            .ok()
+            .filter(|o| o.status.success());
 
-        match output {
-            Ok(output) if output.status.success() => {
-                // Parse JSON output
-                if let Ok(json) = serde_json::from_slice::<serde_json::Value>(&output.stdout) {
-                    if let Some(deps) = json.get("dependencies").and_then(|d| d.as_object()) {
-                        return deps
-                            .iter()
-                            .map(|(name, info)| Tool {
-                                name: name.clone(),
-                                version: info
-                                    .get("version")
-                                    .and_then(|v| v.as_str())
-                                    .version_or_unknown(),
-                                path: None,
-                                manager: Self::NAME.to_string(),
-                            })
-                            .collect();
-                    }
-                }
-                Vec::new()
-            },
-            _ => Vec::new(),
-        }
+        output
+            .and_then(|o| Self::parse_npm_json(&o.stdout))
+            .unwrap_or_default()
     }
 
     fn owns(&self, tool_name: &str) -> Option<Tool> {

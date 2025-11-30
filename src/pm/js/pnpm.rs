@@ -18,6 +18,25 @@ pub struct Pnpm;
 
 impl Pnpm {
     const NAME: &'static str = "pnpm";
+
+    fn parse_pnpm_list(stdout: &str) -> Vec<Tool> {
+        stdout
+            .lines()
+            .filter(|line| !line.is_empty() && !line.starts_with("Legend:"))
+            .filter_map(|line| {
+                let mut parts = line.split_whitespace();
+                let name = parts.next()?;
+                let version = parts.next()?;
+
+                Some(Tool {
+                    name: name.to_string(),
+                    version: Some(version).version_or_unknown(),
+                    path: None,
+                    manager: Self::NAME.to_string(),
+                })
+            })
+            .collect()
+    }
 }
 
 impl Find for Pnpm {
@@ -65,35 +84,17 @@ impl ToolLister for Pnpm {
 
     fn list(&self) -> Vec<Tool> {
         let output = Command::new("pnpm")
-            .args(["list", "-g", "--depth=0"]) // No JSON
-            .output();
+            .args(["list", "-g", "--depth=0"])
+            .output()
+            .ok()
+            .filter(|o| o.status.success());
 
-        match output {
-            Ok(output) if output.status.success() => {
-                let stdout = String::from_utf8_lossy(&output.stdout);
-                let mut tools = Vec::new();
-
-                for line in stdout.lines() {
-                    // Skip headers and empty lines
-                    if line.is_empty() || line.starts_with("Legend:") {
-                        continue;
-                    }
-
-                    // Parse "package version" format
-                    let parts: Vec<&str> = line.split_whitespace().collect();
-                    if parts.len() >= 2 {
-                        tools.push(Tool {
-                            name: parts[0].to_string(),
-                            version: Some(parts[1]).version_or_unknown(),
-                            path: None,
-                            manager: Self::NAME.to_string(),
-                        });
-                    }
-                }
-                tools
-            },
-            _ => Vec::new(),
-        }
+        output
+            .map(|o| {
+                let stdout = String::from_utf8_lossy(&o.stdout);
+                Self::parse_pnpm_list(&stdout)
+            })
+            .unwrap_or_default()
     }
 
     fn owns(&self, tool_name: &str) -> Option<Tool> {
